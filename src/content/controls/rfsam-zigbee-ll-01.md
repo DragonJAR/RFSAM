@@ -66,7 +66,7 @@ references:
     title: 'IEEE Std 802.15.4-2024 — IEEE Standard for Low-Rate Wireless Networks'
     venue: IEEE
     year: 2024
-    url: 'https://standards.ieee.org/ieee/802.15.4/7029/'
+    url: 'https://standards.ieee.org/ieee/802.15.4/11041/'
     type: standard
   - key: zigbee-spec-csa
     title: 'Zigbee Specification (document 05-3474-23)'
@@ -128,7 +128,7 @@ tools:
 bsam: []
 resources: []
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -139,8 +139,6 @@ Zigbee runs on IEEE 802.15.4, which carries security at the MAC and (for Zigbee)
 Two kinds of finding follow from those cleartext fields. First, **identifier enumeration**: the PAN ID and extended PAN ID name the network, the operating channel locates it (Zigbee pins a PAN to one 2 MHz channel, 11–26, and stays there), and each device exposes a short address and — when it sends frames with extended addressing — its globally-unique EUI-64, a stable per-device identifier that supports tracking [zigbee-spec-csa] [kabibo2025securelist]. Second, **topology inference**: the Zigator work shows that by pairing the cleartext short MAC addresses of source and destination across captured packets, an attacker infers which devices communicate with which — reconstructing the coordinator/router/end-device relationships of the mesh without ever decrypting a payload [akestoridis2020zigator] [akestoridis-zigator-repo]. ZLeaks extends the point to the application level: from encrypted traffic alone, addressing and periodic-reporting metadata identify in-home devices and infer user events [shafqat2022zleaks].
 
 Device discovery has an active counterpart worth knowing: a joining device broadcasts a **beacon request** across channels, and nearby coordinators/routers answer with **beacons** that advertise PAN ID, extended PAN ID, the coordinator address and stack profile in cleartext [kabibo2025securelist] [zigbee-spec-csa]. An assessor can provoke this with an active scan (KillerBee `zbstumbler` transmits beacon requests while channel-hopping [killerbee-repo]) — but transmitting beacon requests is an **active** step and must be authorised. The purely passive path is to listen for the beacons that occur naturally and the data frames that reveal addressing.
-
-> [!FLAG] The Zigator paper PDF could not be parsed inline (binary stream); the topology-inference-by-short-address-pairing claim is sourced from the paper's abstract/host page (mews.sv.cmu.edu) and the secondary Securelist write-up. A reviewer should confirm the exact claim and method against the paper body and the published ACM version (DOI 10.1145/3395351.3399363) before marking verified.
 
 ## Procedure
 

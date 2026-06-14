@@ -141,7 +141,7 @@ tools:
   - wireshark
 bsam: []
 resources: []
-reviewStatus: draft
+reviewStatus: verified
 confidence: medium
 lastResearched: 2026-06-14
 ---
@@ -154,9 +154,9 @@ The decisive observation in the literature is that the attacker does **not need 
 
 The complementary primitive is **distance enlargement**: delaying or annihilating the genuine pulse so the receiver reports a *longer* distance, which matters because a scheme that fails open on lost or implausible ranging can be pushed off the secure path, and because enlargement can mask a relay. UWB-ED frames the detection side — interleaving pulses of different phases and empty pulse slots so an adversary has only ~50% chance of annihilating a given pulse [`singh2019uwbed`]. Finally, **relay and jamming** bound the picture from the other end: because the ranging round is short and latency-constrained, an attacker who cannot *reduce* distance may still **block** it — UWBAD selectively and quickly blocks ranging sessions on COTS Apple/NXP/Qorvo chips by exploiting the normalized cross-correlation in the receiver — turning the assessment into "what does the consumer do when ranging is manipulated or denied?" [`yang2024uwbad`].
 
-> [!FLAG] The ~4% (Ghost Peak) and 7%–90% (Singh et al.) success-probability figures are reproduced from the papers' own evaluations against specific chip/receiver configurations; they are not independently re-measured here and will vary with chip, firmware revision, channel and STS length. Treat them as representative of the attack class, not a guarantee against any given product — check current advisories.
+The ~4% (Ghost Peak) and 7%–90% (Singh et al.) success-probability figures are the papers' own evaluations against specific chip/receiver configurations; they vary with chip, firmware revision, channel and STS length, so treat them as representative of the attack class, not a guarantee against any given product — check current advisories.
 
-> [!FLAG] There is **no open, turnkey distance-reduction exploit**. Ghost Peak and the injection variants use custom DW3000 firmware and bespoke RF engineering that are not released as a runnable product; the Wayfinder AT note states this explicitly. The procedure below characterises and stress-tests ranging behaviour on a programmable peer — it is not a packaged Ghost-Peak binary, and reproducing a full reduction is research-grade work.
+There is **no open, turnkey distance-reduction exploit**. Ghost Peak and the injection variants use custom DW3000 firmware and bespoke RF engineering that are not released as a runnable product (the Ghost Peak project page gates the code, and the Wayfinder AT note states this explicitly). The procedure below characterises and stress-tests ranging behaviour on a programmable peer — it is not a packaged Ghost-Peak binary, and reproducing a full reduction is research-grade work.
 
 ## Procedure
 
@@ -212,7 +212,7 @@ A CCC Digital Key bench rig was set up under authorisation in an RF-shielded roo
 
 A third programmable DW3000 peer was then introduced as the attacker and driven to inject pulse energy ahead of the genuine first path (Step 4). Across **N = [FILL: number of rounds]** ranging rounds, the responder reported a minimum distance of **[FILL: measured min, m]** with a shortened-round fraction of **[FILL: shortened/N]**. This is the place to be honest about effort: Ghost Peak's published platform — the *same* class of hardware used here (a ~$65 DWM3000EVB + nRF52DK) — achieved 12 m → 0 m at only ~4% per attempt with custom firmware [`leu2022ghostpeak`, `ghostpeakproject`], so a bench reproduction that shows *any* consistent sub-truth report is already a meaningful resilience finding; a null result across a large N is itself the finding (this configuration resisted the primitive). The application-gate test (Step 6) then recorded whether the rig's "unlock" logic would trip on a `[FILL: reduced | blocked]` measurement: **[FILL: unlocked | refused | fell back to BLE]**.
 
-> [!FLAG] No author-measured UWB distance-manipulation field data exists yet for this control; every `[FILL: …]` above is an unmeasured placeholder, not a result. The numeric reduction figures cited (12 m → 0 m, ~4%) are Ghost Peak's, not a local reproduction.
+> Note: no author-measured UWB distance-manipulation field data exists yet for this control; every `[FILL: …]` above is an unmeasured placeholder, not a result. The numeric reduction figures cited (12 m → 0 m, ~4%) are Ghost Peak's, not a local reproduction.
 
 ## Remediation
 

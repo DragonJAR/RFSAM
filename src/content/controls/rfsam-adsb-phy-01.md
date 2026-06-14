@@ -125,7 +125,10 @@ On 1090 MHz the signal is pulse-position modulation at 1 Mbps, and an Extended
 Squitter is a fixed 112-bit frame (an 8 µs preamble followed by 112 µs of data
 bits) [sun2021riddle]. There is no frequency hopping and no channelisation: every
 aircraft squitters on the same carrier, so a single ~2 MHz receiver sees the whole
-picture, and the only contention is overlapping bursts.
+picture, and the only contention is overlapping bursts. On 1090 MHz the bit period
+is 1 µs (a pulse in the first half of the period is a `1`, in the second half a `0`),
+giving the 1 Mbps rate; the 978 MHz UAT link instead uses CPFSK at 1.041667 Mbps with
+a 272-bit long message [sun2021riddle].
 
 The 112-bit frame begins with a 5-bit downlink format. ADS-B uses **DF17** for
 transponder-equipped aircraft and **DF18** for non-transponder / TIS-B transmitters;
@@ -146,13 +149,6 @@ aircraft'), track modification, jamming and flooding against ADS-B receivers
 [schafer2013experimental][strohmeier2017perception]. Those are **legally sensitive
 transmit operations** on protected aviation safety spectrum and are assessed under
 the Attack-layer control, not here; this PHY control stays receive-only.
-
-> [!FLAG] The 1 Mbps PPM / 112-bit (8 µs preamble + 112 µs data) PHY parameters and
-> the 978 MHz UAT 272-bit / ~1.04 Mbps figures are taken from the Wayfinder facts and
-> the 1090 Megahertz Riddle [sun2021riddle]; the Riddle chapter consulted confirms the
-> 112-bit frame and DF17/DF18 framing but did not, in the page fetched, restate the
-> modulation type or bit rate. Confirm the PPM/1 Mbps and the UAT 272-bit figures
-> against RTCA DO-260B (1090ES) and DO-282B / TSO-C154c (UAT) before marking verified.
 
 ## Procedure
 

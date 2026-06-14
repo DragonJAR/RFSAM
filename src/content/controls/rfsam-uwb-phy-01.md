@@ -115,19 +115,17 @@ tools:
 bsam: []
 resources: []
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 
 ## Mechanism
 
-HRP UWB is impulse radio: the transmitter emits very short (sub-nanosecond) RF pulses spread across more than 500 MHz of bandwidth, intermittently and at very low power spectral density, on channel 5 (6489.6 MHz) or channel 9 (7987.2 MHz) [ieee802154z2020]. Distance is derived from the pulses' time-of-flight, not from signal strength, which is what makes the ranging precise (~10 cm) and hard to spoof [ieee802154z2020]. None of this is observable on a commodity SDR: those radios top out near 6 GHz and offer tens of MHz of instantaneous bandwidth, so a UWB channel sits both above their frequency ceiling and far wider than their capture bandwidth, and there is no turnkey software receiver for the impulse waveform.
+HRP UWB is impulse radio: the transmitter emits very short (sub-nanosecond) RF pulses spread across roughly 500 MHz of bandwidth (the 802.15.4z HRP channels occupy ~499.2 MHz), intermittently and at very low power spectral density, on channel 5 (6489.6 MHz) or channel 9 (7987.2 MHz) [ieee802154z2020]. Distance is derived from the pulses' time-of-flight, not from signal strength; the 802.15.4z amendment's stated purpose is to "increase the integrity and accuracy of ranging measurements," which is what makes the ranging hard to spoof [ieee802154z2020]. The wide-bandwidth impulse timing yields centimetre-level precision (commonly cited as ~10 cm in line-of-sight). None of this is observable on a commodity SDR: those radios top out near 6 GHz and offer tens of MHz of instantaneous bandwidth, so a UWB channel sits both above their frequency ceiling and far wider than their capture bandwidth, and there is no turnkey software receiver for the impulse waveform.
 
 Capture is therefore done by a real DW3000-class transceiver. The chip despreads the incoming pulses against the known channel and preamble code (and, for secure ranging, correlates the Scrambled Timestamp Sequence) and frames the 802.15.4z packet in hardware [seemoo-uwb-sniffer]. The consequence is that PHY and framing happen together on the radio: you do not stare at I/Q, you drive a transceiver that already knows the link. That makes the *Identify* homework mandatory — channel, preamble code, PRF, data rate and STS mode/length must be set in advance, because UWB cannot be blind-scanned [seemoo-uwb-sniffer].
 
 The STS is an AES-keyed pseudo-random pulse sequence the two ranging peers share; the receiver only trusts an arrival time it can authenticate against the expected STS [ieee802154z2020]. So capturing the over-the-air frames does **not** break the STS or recover a key — it recovers the frames and their structure that you are already entitled to decode [seemoo-uwb-sniffer]. The genuine UWB research surface is physical: whether the time-of-flight measurement can be reduced at the physical layer without the key. The landmark public result, **Ghost Peak**, is a practical HRP UWB distance-reduction attack (Apple U1 inter-operating with NXP/Qorvo) that cut 12 m to 0 m with ~4% per-attempt success, using a ~$65 off-the-shelf DWM3000EVB driven by an nRF52DK and **no cryptographic material** [leu2022ghostpeak][leu2022arxiv]. The **Mix-Down** clock-manipulation work later showed 10 m reduced to 0 m on commercial 802.15.4z chips by exploiting transceiver clock imperfections [anliker2023timeforchange]. Both are assessed at the RFSAM *Attack* layer; this PHY control verifies the capture-and-characterise prerequisite they rely on, and confirms what that capture reveals.
-
-> [!FLAG] The ~10 cm ranging precision and "hard to spoof" framing are attributed here to the 802.15.4z-2020 standard's design intent; the IEEE landing page was confirmed to exist but the normative text is paywalled and was not read line-by-line. Confirm the exact precision/PRF figures against the standard or a primary measurement paper before promoting to verified.
 
 ## Procedure
 
@@ -172,7 +170,7 @@ A representative, reproducible bring-up against a DW3000 development link you ow
 - Start capture with `python3 sensniff.py -DINFO` and attach Wireshark to the `/tmp/sensniff` pipe.
 - Result: the TWR poll / response / final frames appear in Wireshark with 15.65 ps reception timestamps; deliberately changing the sniffer's preamble code away from the peer's produces the malformed long frames the README warns about — a clean demonstration that UWB capture is parameter-locked, not scanned.
 
-> [!FLAG] This is a representative bring-up, not measured author field data. The specific channel-5 / code-9 / 64 MHz PRF / 6.81 Mbps combination is a plausible DW3000 example default but was not bench-verified for this control. A measured capture trace and the exact STS configuration are still to be recorded: [FILL: bench-captured frame list, timestamps, and the working `config` struct values].
+> [!FLAG] This is a representative bring-up, not measured author field data. The channel-5 / code-9 / 64 MHz PRF combination matches the default config options shipped in foldedtoad/dwm3000 (`config_options.c`), so it is a real example default rather than an invented one — but the end-to-end capture was not bench-run for this control, and the asserted result (the TWR frame list and 15.65 ps timestamps) is still to be recorded on hardware: [FILL: bench-captured frame list, timestamps, and the working `config` struct values].
 
 ## Remediation
 

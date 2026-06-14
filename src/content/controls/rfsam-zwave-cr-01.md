@@ -96,10 +96,10 @@ references:
     url: 'https://www.pentestpartners.com/security-blog/z-shave-exploiting-z-wave-downgrade-attacks/'
     type: blog
   - key: silabs-ins13474
-    title: 'Z-Wave Security Whitepaper (INS13474)'
+    title: 'Z-Wave Security Whitepaper (INS13474-3)'
     authors: Silicon Labs
     venue: Silicon Labs
-    year: 2019
+    year: 2018
     url: 'https://www.silabs.com/documents/public/white-papers/INS13474-Z-Wave-Security-Whitepaper.pdf'
     type: standard
   - key: hall2016ezwave
@@ -133,15 +133,15 @@ lastResearched: 2026-06-14
 
 Z-Wave runs over the open ITU-T G.9959 (G)FSK PHY/MAC in a region-locked sub-GHz ISM slice, and the network is fingerprinted in the clear: a 32-bit Home ID and 8-bit Node ID sit in every frame header. Security is layered above this as command-class encryption, and which scheme is in force is decided once — at device **inclusion** (pairing). This control reads that decision off the air.
 
-**Legacy S0** uses AES-128 for confidentiality and a CBC-MAC for integrity, with a single network key shared by all nodes [silabs-ins13474]. Its flaw is in how that key is delivered: during inclusion the controller transmits the network key encrypted under a hardcoded temporary key that Fouladi and Ghanoun found to be **16 bytes of zero** [fouladi2013]. Because the temporary key is fixed and public, anyone who captured the inclusion exchange can decrypt the key transport and recover the network key, then decrypt — and forge — the rest of the S0 traffic [fouladi2013]. The same work showed the temporary key can also be abused to *reset* a device's network key [fouladi2013]. This is why the paired capture step insists on grabbing an inclusion: no inclusion capture, no S0 key.
+**Legacy S0** uses AES-128 for confidentiality and a single network key shared by all nodes [silabs-ins13474], with data-origin authentication built on a CBC-MAC over AES (the payload itself is encrypted in an AES feedback mode such as OFB) [fouladi2013]. Its flaw is in how that key is delivered: during inclusion the controller transmits the network key encrypted under a hardcoded temporary key that Fouladi and Ghanoun found to be **16 bytes of zero** [fouladi2013]. Because the temporary key is fixed and public, anyone who captured the inclusion exchange can decrypt the key transport and recover the network key, then decrypt — and forge — the rest of the S0 traffic [fouladi2013]. The same work showed the temporary key can also be abused to *reset* a device's network key [fouladi2013]. This is why the paired capture step insists on grabbing an inclusion: no inclusion capture, no S0 key.
 
 **Modern S2** (Z-Wave Gen5 / 700-series and later) closes this. Inclusion uses an Elliptic Curve Diffie-Hellman exchange over **Curve25519**; the size of exchanged keys is reduced enough for constrained IoT nodes, and the ECDH shared secret is never transmitted, so an S2 recording yields no key offline [silabs-ins13474]. S2 divides the network into three security classes — Access Control (door locks, garage doors), Authenticated (normal devices), and Unauthenticated — each with its own key, and authenticates the joining node via a Device Specific Key (DSK) whose value is the first 16 bytes of the node's 32-byte ECDH public key [silabs-ins13474].
 
 Two findings make "which scheme?" a security question rather than a label. First, the **Z-Shave downgrade**: the Node Info frame sent at inclusion is unencrypted and unauthenticated, so stripping `COMMAND_CLASS_SECURITY_2` (`0x9F`) from it makes the controller believe an S2-capable device lacks S2 and fall back to S0 — re-opening the all-zero-key break against a device that would otherwise have been safe [tierney2018zshave]. For interoperability, S2 nodes may still hold an S0 key, but they transfer it using the S2 temporary ECDH key rather than the vulnerable S0 exchange [silabs-ins13474]. Second, the inclusion-phase control packets are themselves an exposed, unauthenticated seam: Boucif et al. abuse unencrypted inclusion/operation packets (Nonce Get / S2 Nonce Get, Find Nodes In Range) for denial of service against the gateway [boucif2020crushing]. The open-source assessment methodology for reading these exchanges off an SDR is documented in the EZ-Wave framework [hall2016ezwave].
 
-> [!FLAG] Generation-to-scheme mapping is a heuristic, not a guarantee: a 700/800-series SoC *supports* S2 but a given network may still have included the device as S0 (or with unencrypted classes). Confirm the scheme by observing the actual inclusion / security command classes on the wire — do not infer it from the chipset alone.
+Generation-to-scheme mapping is a heuristic, not a guarantee: a 700/800-series SoC *supports* S2 but a given network may still have included the device as S0 (or with unencrypted classes) — a node can request several classes yet be granted only the S0 class by a constrained controller [silabs-ins13474]. Confirm the scheme by observing the actual inclusion / security command classes on the wire — do not infer it from the chipset alone.
 
-> [!FLAG] The all-zero temporary key (`fouladi2013`) is confirmed against original-era door locks (500-series and earlier). Re-confirm against the specific target generation/firmware before asserting recoverability; vendors have shipped mitigations and S2-only configurations since 2018.
+The all-zero temporary key was demonstrated by Fouladi and Ghanoun against the AES Z-Wave door locks of the era (their work predates the 500-series and S2) [fouladi2013]; later S2-capable silicon and S2-only configurations remove the exposure. Re-confirm the scheme against the specific target generation and firmware before asserting recoverability rather than inferring it from the protocol's history.
 
 ## Procedure
 

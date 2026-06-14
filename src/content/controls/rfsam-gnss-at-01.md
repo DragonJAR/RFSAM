@@ -122,8 +122,8 @@ tools:
   - usrp-b210
 bsam: []
 resources: []
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -134,9 +134,7 @@ Two attack families exploit this. **Spoofing** synthesises a valid-looking signa
 
 **Jamming** is the blunt counterpart: raising the in-band noise or interference floor over the target band above the receiver's despreading margin denies any fix at all. Because the legitimate signal is so weak, modest in-band power is enough to deny it; the resilience question is whether the receiver flags the loss of integrity or silently coasts and accepts the first plausible fix it reacquires [psiaki2016survey].
 
-The defensive state of the art splits into cryptographic and non-cryptographic checks. Galileo OSNMA adds optional navigation-message authentication on E1-B using a TESLA-style scheme, letting an OSNMA-aware receiver verify the message originated from the system; OSNMA Initial Service was declared in 2025 [galileo-osnma]. Receivers can also apply non-cryptographic consistency checks — power/distortion monitoring, RAIM, clock-jump and inertial cross-checks, angle-of-arrival with multiple antennas — surveyed in [psiaki2016survey]. Legacy GPS L1 C/A on its own offers none of these, which is what this control tests for.
-
-> [!FLAG] OSNMA Initial Service was declared operational 2025-07-24 per the GSC; confirm the current OSNMA service-declaration status and which specific receivers under test actually validate OSNMA before crediting a target with message-authentication resilience.
+The defensive state of the art splits into cryptographic and non-cryptographic checks. Galileo OSNMA adds optional navigation-message authentication on E1-B using a TESLA-style scheme (digitally signing the Open Service I/NAV message), letting an OSNMA-aware receiver verify the message originated from the system; EUSPA declared the OSNMA Initial Service operational on 24 July 2025 [galileo-osnma]. Crediting a target with message-authentication resilience requires confirming the specific receiver under test actually validates OSNMA, not merely that the constellation broadcasts it. Receivers can also apply non-cryptographic consistency checks — power/distortion monitoring, RAIM, clock-jump and inertial cross-checks, angle-of-arrival with multiple antennas — surveyed in [psiaki2016survey]. Legacy GPS L1 C/A on its own offers none of these, which is what this control tests for.
 
 ## Procedure
 
@@ -198,9 +196,7 @@ hackrf_transfer -t gpssim.bin -f 1575420000 -s 2600000 -a 1 -x 0
 
 raising `-a`/gain stepwise. Observed outcome: [FILL: at what relative power / after how many seconds] the module's reported position migrates from its true location toward `30.286502, 120.032669` and the fix follows the decoy, with [FILL: alarm raised? yes/no — record any integrity/anti-spoof flag]. Jamming run: a carrier at 1575.42 MHz is introduced; the module loses lock and [FILL: coasts / alarms / goes stale — record behaviour] and reacquires after [FILL: measured reacquisition time] once removed.
 
-This mirrors the public demonstrations — a portable spoofer capturing a commodity receiver [humphreys2008spoof] and the same class of attack steering a superyacht's navigation while its display showed no anomaly [utexas2013yacht] — at bench scale and under RF containment. The `[FILL: …]` markers are unmeasured placeholders for the operator to complete on their own hardware; they are not findings.
-
-> [!FLAG] No first-party measurements were taken for this draft. Every `[FILL: …]` value (satellite count, C/N0, capture power/time, alarm behaviour, reacquisition time) must be filled from an actual contained run before this becomes a stated finding.
+This mirrors the public demonstrations — a portable spoofer capturing a commodity receiver [humphreys2008spoof] and the same class of attack steering a superyacht's navigation while its display showed no anomaly [utexas2013yacht] — at bench scale and under RF containment. No first-party measurements were taken for this control: every `[FILL: …]` marker (satellite count, C/N0, capture power/time, alarm behaviour, reacquisition time) is an unmeasured placeholder for the operator to complete from an actual contained run on their own hardware. They are method scaffolding, not asserted findings.
 
 ## Remediation
 

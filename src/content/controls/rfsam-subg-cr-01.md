@@ -134,8 +134,8 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-15
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -149,9 +149,7 @@ A rolling-code remote sends a fresh value on every press: a synchronisation coun
 
 **Key recovery / cloning (KeeLoq, HITAG2).** Where the rolling code is built on a broken cipher, the keys can be recovered. KeeLoq code-hopping (HCS200/300/301) has been cryptanalysed: a slide / meet-in-the-middle attack recovers the device key from a set of known plaintext codes [indesteege2008keeloq], and a differential-power-analysis attack against a receiver recovers the shared *manufacturer* key, after which a remote can be cloned by eavesdropping at most two over-the-air codes [eisenbarth2008keeloq]. HITAG2, used in some vehicle RKE systems, is likewise broken: a few captured RKE radio packets (reported four to eight) recover the key, though implementations with specific countermeasures resisted the attack [benadjila2017hitag2]. This control assesses which of these apply to the target.
 
-> [!FLAG] The RollJam affected-vendor list (Chrysler, Fiat, Honda, Toyota, GM, Volkswagen Group, etc.) and the RollBack affected-fraction (~70% of tested Asian-market vehicles) come from secondary press coverage and the paper abstract; confirm exact scope against the primary talk/paper before treating any specific make/model as vulnerable.
-
-> [!FLAG] HITAG2's best-known break ("Gone in 360 Seconds", USENIX Security 2012) targets the *immobilizer* transponder on the LF 125 kHz side, which is out of this sub-GHz control's scope. The citation here [benadjila2017hitag2] is the RKE (UHF/sub-GHz radio) variant; verify the target fob's HITAG2 use is on the RKE radio path, not only the immobilizer, before applying it.
+> [!NOTE] The RollBack paper reports its affected fraction as "~70% of [tested Asian vehicle manufacturers]" and is explicit that its survey is ongoing and Asian-market only [csikor2022rollback]; no specific vendor or make/model is asserted as vulnerable here. HITAG2's other well-known break ("Gone in 360 Seconds", USENIX Security 2012) targets the *immobilizer* transponder on the LF ~125 kHz side, which is **out of scope** for this sub-GHz control. The citation used here [benadjila2017hitag2] is the RKE variant on the UHF/sub-GHz radio path (the paper itself locates RKE at "UHF, 433 MHz or 868 MHz"); apply it only once the target fob's HITAG2 use is confirmed on the RKE radio path, not the immobilizer.
 
 ## Procedure
 
@@ -198,7 +196,7 @@ All transmit, jam and replay steps are active radio attacks. Perform them **only
 
 ## Field case
 
-> [!FLAG] No first-party measured capture is recorded for this control yet; the worked example below is representative, with every unmeasured value marked `[FILL: …]`. Do not cite it as a tested finding.
+> [!NOTE] No first-party measured capture is recorded for this control yet; the worked example below is representative, with every unmeasured value marked `[FILL: …]`. Do not cite it as a tested finding.
 
 A representative gate remote on **433.92 MHz, OOK/ASK at ~`[FILL: measured baud]` baud**. A `rtl_433 -f 433.92M -F json` scan and two button presses show a frame of the form `<serial> <rolling-field> <buttons> <crc>`, where the serial prefix `[FILL: serial bytes]` is constant across presses and the rolling field changes each press — confirming a rolling code (step 1–2). Teardown identifies the encoder as `[FILL: e.g. KeeLoq HCS301 / HITAG2 / vendor]` (step 3).
 

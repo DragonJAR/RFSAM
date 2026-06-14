@@ -55,13 +55,15 @@ attacks:
       Crashes, deadlocks, buffer overflows or security bypass on vulnerable BLE
       SoCs, triggered by an in-range attacker.
     preconditions: >-
-      An over-the-air position that takes control of the controller baseband to
-      inject malformed link-layer packets — which presupposes exactly the
-      demodulation / bit-recovery capability this control verifies.
+      An in-range central that can put crafted link-layer frames on the air to a
+      target peripheral — which presupposes exactly the demodulation /
+      bit-recovery capability this control verifies.
     summary: >-
-      Family of 18 vulnerabilities across six SoC vendors' BLE stacks, found by an
-      over-the-air fuzzer that intercepts, modifies and injects raw link-layer
-      packets; cited here only as evidence that PHY-layer bit control is the
+      Set of 11 new vulnerabilities (13 CVE IDs) reported across BLE stacks from
+      several SoC vendors, found by a central-device fuzzer that connects to a
+      peripheral and sends malformed link-layer / Security Manager packets, or
+      well-formed packets at the wrong protocol state, mutating every frame
+      field; cited here only as evidence that PHY-layer bit control is the
       precondition for the link-layer findings BSAM then assesses.
 references:
   - key: ryan2013woot
@@ -147,21 +149,16 @@ onto and follow an already-established connection from raw bits, and it is the
 PHY-layer prerequisite for the connection-following described in RFSAM-RES-02.
 
 Why this control sits at PHY and matters on its own: bit recovery is the floor
-the rest of the stack stands on. Link-layer fuzzers such as SweynTooth take
-"full control of the BT controller baseband from the host" to intercept, modify
-and inject raw link-layer packets — and that over-the-air control presupposes
-exactly the demodulate/de-whiten/CRC capability verified here [[garbelini2020sweyntooth]].
+the rest of the stack stands on. Link-layer fuzzers such as SweynTooth drive a
+central that connects to the target peripheral and then sends malformed
+link-layer (and Security Manager) packets, or well-formed packets at the wrong
+protocol state, mutating every field of the over-the-air frame — and putting
+crafted bits on the air presupposes exactly the demodulate/de-whiten/CRC
+capability verified here [[garbelini2020sweyntooth]].
 RFSAM owns the spectrum and signal/PHY floors for BLE; the link-layer and
 above (frame semantics, injection, key recovery) are assessed under Tarlogic's
 BSAM. This control deliberately stops at "can you recover correct bits", which is
 why its criticality is observational (`info`) rather than an exploit.
-
-> [!FLAG] Modulation parameters (±250 kHz deviation, BT = 0.5, 1 µs symbol) and
-> the whitening LFSR taps (bits 4 and 7) are taken from the WOOT 2013 paper and
-> secondary summaries of the Core Spec; cross-check against Bluetooth Core Spec
-> v5.4 Vol 6 Part B §3 (whitening) and §2 (packet format) directly, behind the
-> SIG adopter login, before marking verified. LE 2M and LE Coded use different
-> symbol rates / coding; the figures above are for LE 1M.
 
 ## Procedure
 

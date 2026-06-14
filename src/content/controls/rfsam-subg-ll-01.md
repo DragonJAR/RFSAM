@@ -64,7 +64,7 @@ attacks:
 references:
   - key: rtl433
     title: 'rtl_433 — decode radio transmissions from devices on the ISM bands'
-    authors: B. Antonsson (merbanan) and contributors
+    authors: B. Larsson (merbanan) and contributors
     venue: GitHub
     year: 2026
     url: 'https://github.com/merbanan/rtl_433'
@@ -125,7 +125,7 @@ bsam: []
 resources:
   - RFSAM-RES-15
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -137,8 +137,6 @@ For the hundreds of recognised device classes, `rtl_433` demodulates and decodes
 For an unrecognised or proprietary frame, Universal Radio Hacker is the reversing workbench: load the demodulated bitstream, then diff several captures of the same and different events to label the fields — the bytes that never change across presses are the address/preamble, the bytes that change with the button are the command, and a multi-byte field that increments every press is a rolling counter [urh]. Capturing two presses and seeing what changes is the fastest route from raw bits to a labelled frame. (URH's repository is archived but remains the de-facto unknown-signal tool [urh].)
 
 The canonical example of a fixed address is the EV1527/PT2262 OOK encoder family: the output frame is a preamble followed by a 20-bit address and 4 data bits, with the address one-time-programmed (or set by DIP switches on older PT2262/EV1527 boards) [ev1527]. Recovering this frame tells you immediately whether you face a fixed address (the same address every burst — replayable, addressed under RFSAM-SUBG-AT-01) or a rolling counter (assessed under RFSAM-SUBG-CR-01). Where the address is a short DIP-switch field — for example the 12 binary DIP switches of many older fixed-code garage remotes, a 2^12 = 4096 keyspace — the recovered frame also reveals that the address space is small enough to enumerate rather than capture; OpenSesame demonstrated reducing that brute force to seconds with a De Bruijn sequence [opensesame] [hackaday-opensesame] (the active transmission belongs to the Attack layer). The discover-demodulate-reverse workflow this control sits in was formalised by Ossmann as "Rapid Radio Reversing": use a wideband SDR to characterise the signal, then a CC1101-class radio to receive and work it [ossmann2015] [ossmann2015archive] (RFSAM-RES-15).
-
-> [!FLAG] The EV1527 preamble + 20-bit-address + 4-bit-data frame is taken from a third-party datasheet summary (components101) [ev1527]; confirm against the primary Silvan Chip EV1527 datasheet before treating the exact bit layout as authoritative — vendor variants (PT2262/HT12E) differ in address/data split and DIP-switch width.
 
 ## Procedure
 

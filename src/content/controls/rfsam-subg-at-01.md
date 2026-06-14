@@ -65,10 +65,15 @@ attacks:
       replay it to operate the device now, and keep the freshly captured next code
       to operate it later.
   - name: RollBack (resynchronisation replay)
+    cve:
+      - CVE-2022-37305
+      - CVE-2022-37418
     refs:
       - rollback
+      - cve-2022-37305
+      - cve-2022-37418
     impact: Replaying a small set of previously captured consecutive codes resynchronises the counter so old codes become valid again — reusable indefinitely, no jamming.
-    preconditions: An RKE receiver that resynchronises its rolling-code counter on a short run of consecutive valid codes (demonstrated on several Honda, Kia, Mazda, Nissan and Hyundai models).
+    preconditions: An RKE receiver that resynchronises its rolling-code counter on a short run of consecutive valid codes (RollBack research found ~70% of tested Asian-market RKE systems vulnerable; NVD records it on certain Honda through 2018 — five consecutive signals, CVE-2022-37305 — and certain Nissan, Kia and Hyundai through 2017 — two consecutive signals, CVE-2022-37418).
     summary: >-
       Capture two-or-more consecutive codes once; replaying them in sequence rolls
       the receiver's counter back to a prior state, re-enabling already-used codes
@@ -121,6 +126,18 @@ references:
     year: 2022
     url: 'https://arxiv.org/abs/2210.11923'
     type: paper
+  - key: cve-2022-37305
+    title: 'CVE-2022-37305 — RollBack on certain Honda RKE receivers (five consecutive signals force resynchronisation)'
+    venue: NVD
+    year: 2022
+    url: 'https://nvd.nist.gov/vuln/detail/CVE-2022-37305'
+    type: cve
+  - key: cve-2022-37418
+    title: 'CVE-2022-37418 — RollBack on certain Nissan, Kia and Hyundai RKE receivers (two consecutive signals force resynchronisation)'
+    venue: NVD
+    year: 2022
+    url: 'https://nvd.nist.gov/vuln/detail/CVE-2022-37418'
+    type: cve
   - key: keeloq-dpa
     title: 'On the power of power analysis in the real world: a complete break of the KeeLoq code hopping scheme'
     authors: 'T. Eisenbarth, T. Kasper, A. Moradi, C. Paar, M. Salmasizadeh, M. T. Manzuri Shalmani'
@@ -149,13 +166,11 @@ Going active on a sub-GHz device means transmitting on its frequency to take ove
 
 A **fixed-code** device (a PT2262/EV1527/HT12-class OOK encoder, or a sensor) sends the same payload in the clear on every press, so there is no confidentiality to break and no counter to advance — a verbatim replay of any captured burst makes the receiver act on it [rollingcode]. Universal Radio Hacker re-transmits exactly what it captured (and can edit the bits, fix a checksum, or fuzz a field before sending) [urh]. Where the keyspace is small (8–12 DIP-switch bits) you need not even capture first: **OpenSesame** transmits a De Bruijn sequence that packs every possible code into a minimal overlapping bitstream — because a shift-register receiver also tests every shorter substring as the bits stream past — cutting a 12-bit brute force from minutes to about 8 seconds against fixed-code garages and gates [opensesame][opensesame-repo].
 
-A **rolling-code** device (KeeLoq / HCS301 and similar) sends a fresh value each press from a counter, so a naive replay of an old code is rejected [rollingcode]. This is replay *resistance*, not an encrypted channel you decrypt from a capture — and it is defeated without breaking the cipher. **RollJam** jams the receiver while recording the victim's first press (so the device never acts on it and the code stays unused), lets the user press again and captures that too, forwards the first code to operate the device now, and keeps the second, still-valid code to operate it later [rolljam-sdr][rolljam-rtlsdr]. **RollBack** removes the jamming entirely: replaying a short run of previously captured consecutive codes triggers a resynchronisation in many receivers, rolling the counter back to a prior state so already-used codes become valid again — captured once, reusable indefinitely; demonstrated on several Honda, Kia, Mazda, Nissan and Hyundai models [rollback].
+A **rolling-code** device (KeeLoq / HCS301 and similar) sends a fresh value each press from a counter, so a naive replay of an old code is rejected [rollingcode]. This is replay *resistance*, not an encrypted channel you decrypt from a capture — and it is defeated without breaking the cipher. **RollJam** jams the receiver while recording the victim's first press (so the device never acts on it and the code stays unused), lets the user press again and captures that too, forwards the first code to operate the device now, and keeps the second, still-valid code to operate it later [rolljam-sdr][rolljam-rtlsdr]. **RollBack** removes the jamming entirely: replaying a short run of previously captured consecutive codes triggers a resynchronisation in many receivers, rolling the counter back to a prior state so already-used codes become valid again — captured once, reusable indefinitely [rollback]. The RollBack research reports roughly 70% of tested Asian-market RKE systems vulnerable, and NVD records it against certain Honda (through 2018, five consecutive signals) [cve-2022-37305] and certain Nissan, Kia and Hyundai (through 2017, two consecutive signals) [cve-2022-37418]; the authors additionally tested Mazda among the vulnerable makes and found Toyota not susceptible.
 
 To truly *forge* the next valid rolling code offline you would need the manufacturer key programmed into the chip, which a passive RF capture never yields; recovering it requires physical side-channel access (differential power analysis), which is out of scope for this RF toolchain [keeloq-dpa].
 
-> [!FLAG] RollBack [rollback] was assigned CVEs in the disclosure, but a web result that mapped it to CVE-2022-37428 was wrong — that NVD entry is a PowerDNS Recursor denial-of-service, unrelated to RKE. I have therefore cited the paper directly and not attached a CVE; the exact RKE CVE id(s) still need confirmation against NVD before any are listed.
-
-> [!FLAG] RollJam is Samy Kamkar's DEF CON 2015 work; the canonical samy.pl write-up redirects and I could not confirm a stable original-author URL that resolves, so it is cited via a peer-reviewed SDR re-implementation [rolljam-sdr] and a contemporaneous technical report [rolljam-rtlsdr]. Per-vehicle/per-device susceptibility figures are representative — check current advisories.
+RollJam is Samy Kamkar's DEF CON 23 (2015) work; it is cited here via a peer-reviewed SDR re-implementation [rolljam-sdr] and a contemporaneous technical report [rolljam-rtlsdr], both of which independently describe the jam-record-replay primitive. The RollBack CVE ids above are the NVD-confirmed entries (an earlier web result that mapped RollBack to CVE-2022-37428 was wrong — that entry is an unrelated PowerDNS Recursor denial-of-service). Per-vehicle/per-device susceptibility figures are representative — check current advisories.
 
 ## Procedure
 

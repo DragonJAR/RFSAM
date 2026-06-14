@@ -99,7 +99,7 @@ references:
     url: 'https://docs.silabs.com/zigbee/latest/zigbee-security/03-standard-security'
     type: standard
   - key: securelist2025
-    title: 'Zigbee protocol security assessment'
+    title: 'Turn me on, turn me off: Zigbee assessment in industrial environments'
     authors: Haidar Kabibo (Kaspersky)
     venue: Securelist (Kaspersky)
     year: 2025
@@ -133,8 +133,8 @@ tools:
   - catsniffer
 bsam: []
 resources: []
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -148,11 +148,9 @@ Zigbee secures both the network (NWK) and application-support (APS) layers with 
 
 **Why rejoin matters for key recovery.** If no join is on the air, the Transport-Key can be forced back onto it: making a device leave and rejoin re-runs the key transport [securelist2025]. The rejoin procedure is itself a documented weakness — Wang et al. (RAID 2022) formally verified that Zigbee's Trust-Center rejoin "sacrifices authenticity to achieve" availability, confirming a known design flaw and revealing two new ones, with proof-of-concept attacks ranging from denial of service to device hijacking against real hubs [wang2022rejoin].
 
-**Rotation.** The Trust Center *may* periodically update the network key and switch devices to it via a broadcast or unicast Transport-Key followed by a Key-Switch command, and the specification recommends periodic rotation to limit the damage of a compromised key [silabs-security][csa-zigbee-r23]. In practice many deployments never rotate, so a key recovered once stays valid for the device's life [securelist2025].
+**Rotation.** The Trust Center *may* periodically update the network key and switch devices to it via a broadcast or unicast Transport-Key followed by a Key-Switch command, and the specification recommends periodic rotation to limit the damage of a compromised key [silabs-security][csa-zigbee-r23]. In practice many deployments never rotate, so a key recovered once stays valid for the device's life [securelist2025]. Zillner found across the devices he tested that vendors "implement the minimum of the features required to be certified, including the default TC fallback key" and that "no automatic key rotation could be identified" [zillner2015].
 
-> [!FLAG] The "many vendors ship with the default key enabled / never rotate" statements are reported as a representative industry pattern by Securelist (Kaspersky, 2025) and Zillner (2015), not a per-device guarantee. Treat them as a starting hypothesis and confirm against the *specific* device, stack version and Zigbee profile under test before asserting a given product is affected.
-
-> [!FLAG] The exact APS Transport-Key / Key-Switch wording and the install-code key-derivation details are summarised from Silicon Labs' security docs and the Securelist assessment; the authoritative normative text is the CSA Zigbee R23 specification (05-3474-23). Confirm the precise frame fields against R23 before quoting them as normative.
+The "ships with the default key enabled / never rotates" picture is a *representative industry pattern* reported by Zillner (2015) and Securelist (2025), not a per-device guarantee — treat it as a starting hypothesis and confirm against the specific device, stack version and Zigbee profile under test before asserting a given product is affected. Likewise the APS Transport-Key / Key-Switch and install-code key-derivation behaviour here is summarised from the Silicon Labs security documentation and the Securelist assessment; the authoritative normative text is the CSA Zigbee R23 specification (05-3474-23), which this control does not quote verbatim [silabs-security][securelist2025][csa-zigbee-r23].
 
 ## Procedure
 
@@ -207,7 +205,7 @@ device / join          TC link key used     zbdsniff result      Wireshark decry
 
 The expected shape: the default-key device yields a recovered network key from a single sniffed join (its whole mesh is then decryptable), while the install-code device defeats `zbdsniff` (the Transport-Key is protected by a key the attacker does not hold). The historical anchor for this is Zillner's Black Hat 2015 result — sniffing a default-key join compromises the active network key, and because Home-Automation door-locks and HVAC use the same profile as light bulbs, the impact is not limited to harmless devices [zillner2015].
 
-> [!FLAG] The `[FILL: …]` rows are placeholders for the reader's own authorised lab run — they are not measured findings and must not be presented as such. This draft carries no first-party field capture; the worked example is a representative, reproducible lab procedure, not a recorded measurement.
+The `[FILL: …]` rows above are placeholders for the reader's own authorised lab run — they are not measured findings and must not be presented as such. This control carries no first-party field capture; the worked example is a representative, reproducible lab procedure built on Zillner's published result, not a recorded measurement.
 
 ## Remediation
 

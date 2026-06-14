@@ -60,7 +60,7 @@ references:
     title: 'KillerBee — IEEE 802.15.4/ZigBee Security Research Toolkit (zbstumbler active network discovery)'
     authors: River Loop Security (riverloopsec)
     venue: GitHub
-    year: 2024
+    year: 2023
     url: 'https://github.com/riverloopsec/killerbee'
     type: tool
   - key: catsniffer-tools
@@ -78,11 +78,18 @@ references:
     url: 'https://github.com/kismetwireless/kismet'
     type: tool
   - key: silabs-an1017
-    title: 'AN1017: Zigbee and OpenThread Coexistence with Wi-Fi'
+    title: 'AN1017: Zigbee and Thread Coexistence with Wi-Fi (frequency separation; Zigbee ch 25/26 require reduced TX power for FCC in North America)'
     authors: Silicon Labs
     venue: Silicon Labs Application Note
     year: 2023
     url: 'https://www.silabs.com/documents/public/application-notes/an1017-coexistence-with-wifi.pdf'
+    type: blog
+  - key: metageek-coex
+    title: 'ZigBee and Wi-Fi Coexistence — Wi-Fi 1/6/11 overlap Zigbee 11–22; channel-planning guidance for the gaps above Wi-Fi traffic'
+    authors: MetaGeek (now Oscium)
+    venue: Oscium Training Resources
+    year: 2024
+    url: 'https://www.metageek.com/training/resources/zigbee-wifi-coexistence/'
     type: blog
 tools:
   - killerbee
@@ -102,9 +109,7 @@ A 2.4 GHz Zigbee PAN operates on a single IEEE 802.15.4 channel and stays there 
 
 There are two ways to find the channel, and they differ in whether they transmit. An **active scan** sends a MAC beacon request on each channel and records the beacons that answer, yielding the channel, the 16-bit PAN ID and stack/profile hints in seconds; KillerBee's `zbstumbler` is the canonical implementation, walking the channels and logging every PAN that responds [killerbee]. Active scanning is defined by the standard as the coordinator/device discovery primitive [ieee802154-2020], but it is observable to anyone listening and perturbs the network. A **passive survey** instead listens only — an energy/ED-style sweep or a frame-logging channel hop that never sends a beacon request. Kismet channel-hops the 802.15.4 band and logs every PAN, coordinator and device it hears to pcapng without transmitting [kismet]; on a CatSniffer, catnip's `cativity` mode draws a live per-channel activity table and can map coordinator/router/end-device topology [catsniffer-tools]. A wideband SDR waterfall (gqrx) is only a coarse cross-check: it shows energy, not Zigbee frames, and cannot by itself tell Zigbee from Wi-Fi or BLE in the shared band.
 
-Capture feasibility is dominated by Wi-Fi coexistence: 802.15.4 shares 2.4 GHz with 802.11, whose ~20 MHz channels overlap several Zigbee channels at once, so a target on a Wi-Fi-congested channel may be hard to capture cleanly [silabs-an1017]. Network designers are advised to place Zigbee in the spectral gaps between the common Wi-Fi channels 1/6/11, which is why channels 15, 20 and 25 (and 26, at the top edge) are frequently chosen [silabs-an1017].
-
-> [!FLAG] The specific "channels 15, 20, 25, 26 sit in the Wi-Fi gaps and are the common Zigbee choices" detail is widely repeated vendor/design guidance; AN1017 covers the coexistence mechanism but a reviewer should confirm AN1017 (or a primary source) states the exact channel-gap recommendation, and note channel 26 requires reduced TX power to meet FCC limits in North America.
+Capture feasibility is dominated by Wi-Fi coexistence: 802.15.4 shares 2.4 GHz with 802.11, whose ~20 MHz channels overlap several Zigbee channels at once, so a target on a Wi-Fi-congested channel may be hard to capture cleanly. AN1017 frames the defence as *frequency separation* — place the 802.15.4 channel as far as possible from the Wi-Fi channel, ideally at the opposite end of the 2.4 GHz ISM band — because adjacent-channel performance can be up to 20 dB worse than the "far-away" case [silabs-an1017]. The non-overlapping Wi-Fi channels 1/6/11 cover Zigbee channels 11–22, so practitioners commonly place a PAN on a higher channel above that traffic; community channel-planning guidance recommends channels such as 11, 15, 20 or 25, with channel 26 often the least Wi-Fi-affected but supported by fewer devices [metageek-coex]. Note a North-American regulatory constraint: AN1017 states Zigbee channels 25 and 26 require reduced transmit power to meet FCC requirements [silabs-an1017].
 
 ## Procedure
 
@@ -148,5 +153,5 @@ A representative bench survey of a Zigbee 3.0 smart-bulb hub on the author's own
 Channel survey is reconnaissance; "remediation" here is reducing the exposure and interference it depends on, layered by role.
 
 - **Developer / stack vendor:** Do not leak network identity before encryption is in force. The channel and PAN ID are inherently observable (they are layer-1/MAC), so the defence is to ensure nothing of value is readable from beacons or pre-join traffic, and to support install-code / Zigbee 3.0 joining so that locating the network does not advance an attacker toward the key (see the CR-layer control).
-- **Integrator:** Choose a channel deliberately. Placing the PAN in a Wi-Fi gap (e.g. 15/20/25) improves reliability and, incidentally, makes the network easier to capture cleanly — so weigh coexistence against exposure, and prefer install-code joining so a located PAN is not a joinable one [silabs-an1017]. Avoid the well-known default Trust Center link key.
+- **Integrator:** Choose a channel deliberately. Maximizing frequency separation from local Wi-Fi improves reliability [silabs-an1017], and placing the PAN on a higher channel above the common Wi-Fi traffic (e.g. 15/20/25) is the usual channel-planning advice [metageek-coex] — which incidentally also makes the network easier to capture cleanly, so weigh coexistence against exposure, and prefer install-code joining so a located PAN is not a joinable one. Avoid the well-known default Trust Center link key.
 - **Operator:** Treat the RF environment as observable. A surveyable, fixed-channel PAN is normal and cannot be hidden; monitor for anomalous beacon-request floods or unexpected rejoin activity (signs of active scanning/disruption) and ensure devices that briefly expose identifiers (e.g. at join) do so only during controlled commissioning, not continuously.

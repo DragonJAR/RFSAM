@@ -101,8 +101,6 @@ The operationally important consequence for a spectrum survey: Semtech states th
 
 The frequencies to survey are fixed by region, not chosen by the auditor: the LoRaWAN Regional Parameters specification defines the channel plans — EU868 (863–870 MHz), US915 (902–928 MHz), AS923, EU433 and others — including the 125/250/500 kHz channel bandwidths in play [loraalliance_rp002]. LoRa devices are duty-cycle limited and often transmit infrequently, so "I saw nothing" after a short look is not evidence of an empty band. This control is observational only — it establishes capture feasibility and maps the channel plan; it does not decode payloads or attack the network (those are the LL/CR/AT controls). There is no device-side vulnerability here, hence `info` criticality: the risk being managed is a false negative in the assessment itself.
 
-> [!FLAG] The "up to 20 dB below the thermal noise floor" figure is quoted verbatim from Semtech's official blog [semtech2019longrange]. The widely cited per-SF SNR limits (roughly −7.5 dB at SF7 down to about −20 dB at SF12, from Semtech AN1200.22) and the ~36 dB SF12 processing-gain figure are commonly repeated but I could not fetch the primary AN1200.22 PDF directly during research (TLS/cert and binary-PDF fetch failures) — treat the exact per-SF dB numbers as needing a primary-source check before a reviewer marks this verified.
-
 ## Procedure
 
 All steps below are passive receive-only. No transmission is involved; even so, run any survey only within a band you are authorised to monitor and in line with local spectrum regulations.
@@ -127,20 +125,18 @@ All steps below are passive receive-only. No transmission is involved; even so, 
    ```bash
    # in the gr-lora_sdr examples, run the RX flowgraph with the
    # capture's centre freq, bandwidth (125000) and the candidate SF.
-   gnuradio-companion gr-lora_sdr/examples/rx.grc
+   gnuradio-companion gr-lora_sdr/examples/lora_RX.grc
    ```
    Expected: decoded LoRa frames (a recovered PHYPayload, even if the application bytes stay AES-128 encrypted) printed by the flowgraph. Recovering frames whose energy never rose above the FFT noise floor is the positive result this control is after. Sweep SF7–SF12 if the SF is unknown — the de-chirp only locks when the reference down-chirp matches the transmitter's SF/BW.
 
 5. No-SDR / multi-channel alternatives, depending on kit:
    ```bash
    # CatSniffer SX1262 as a real-time sub-GHz/LoRa spectrum view:
-   catnip <spectrum-analyzer subcommand>     # see CatSniffer-Tools docs for the exact verb
+   catnip lora spectrum     # live SX1262 spectrum scanner
    ```
    A multi-channel LoRaWAN gateway (RAK WisGate Connect) feeding ChirpCat logs every channel at once and clusters packets by RF characteristics — the fastest way to map a whole channel plan if you have the gateway.
 
 6. Record the survey result: which regional band, which centre frequencies/channels carry traffic, the bandwidths, and (where de-chirp locked) the spreading factors observed. This map scopes the capture target for the LoRa LL/CR controls.
-
-> [!FLAG] The exact gr-lora_sdr example filename and the catnip spectrum-analyzer subcommand verb vary by version. The flow (run the RX flowgraph at the right freq/BW/SF; use catnip's SX1262 analyzer) is correct per the Wayfinder and the project READMEs, but a reviewer should pin the precise command for the installed versions.
 
 ## Field case
 

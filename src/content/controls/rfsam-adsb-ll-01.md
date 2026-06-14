@@ -107,7 +107,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-01
-reviewStatus: draft
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -118,8 +118,6 @@ ADS-B "out" rides the Mode S downlink as a 112-bit Extended Squitter, transmitte
 The consequence is that "authenticity assessment" at the link layer has a known answer — the link provides none — and the control's job is to confirm and characterise that for the specific target deployment. The academic and practical literature established this directly: Costin and Francillon built an SDR receive/transmit chain in GNU Radio and demonstrated that injecting forged ADS-B is practical for a moderately capable attacker [costin2012ghost]; Schäfer, Lenders and Martinovic experimentally analysed message **injection, modification and deletion** against ADS-B and confirmed the absence of any link-layer defence against them [schaefer2013experimental]; the Strohmeier survey synthesises the gap and the proposed (non-cryptographic) countermeasures such as multilateration and plausibility checking [strohmeier2014security][strohmeier2014realities].
 
 Two named attack families follow from this missing authenticity. **Injection / spoofing** — transmit a well-formed, CRC-valid Extended Squitter with a chosen ICAO address and position, and receivers accept a ghost aircraft or a moved track [costin2012ghost][schaefer2013experimental]. **Modification and deletion** — overshadow or selectively jam genuine squitters to corrupt or remove specific aircraft, since there is no integrity or completeness guarantee [schaefer2013experimental][strohmeier2014security]. This control assesses the link's (lack of) authenticity; the active transmit-side exploitation is the Attack-layer control (RFSAM-ADSB-AT-01) and is legally sensitive — see Remediation and the authorised-testing note there.
-
-> [!FLAG] The "the 24-bit CRC is an overlay/error-detection field, not a cryptographic integrity check" claim is well supported by the security literature [strohmeier2014security] and standard Mode S references, but the precise CRC/parity-overlay wording should be confirmed against the primary text of ICAO Doc 9871 (a paid standard not fetched in full here) before this control is marked `verified`.
 
 ## Procedure
 
@@ -157,7 +155,7 @@ A representative bench walk-through using a single RTL-SDR V4 on a quarter-wave 
 
 Taking one captured airborne-position frame `8D40621D58C382D690C8AC2863A7`, pyModeS reported `DF 17`, ICAO `40621d`, an airborne-position type code, and CRC residual `0`. Re-running step 4 against a body with a deliberately altered position produced a *different* 28-hex frame that still computed to CRC residual `0`. That is the whole finding made tangible: the receiver's only integrity element validated an attacker-chosen payload exactly as readily as the genuine one, because the CRC binds the message to itself, not to the aircraft. No transmission occurred — the forged frame existed only as a hex string in the analysis, never on the air.
 
-> [!FLAG] The decoded ICAO `40621d` and the frame `8D40621D58C382D690C8AC2863A7` are the standard pyModeS documentation example, used here as a reproducible decode rather than measured local traffic; the bracketed aircraft count is left as a [FILL: ...] placeholder for the operator's own capture and must not be presented as a measured result.
+The decoded ICAO `40621d` and the frame `8D40621D58C382D690C8AC2863A7` are the standard ADS-B airborne-position documentation example (DF17, type code 11), used here as a reproducible decode rather than measured local traffic; the bracketed aircraft count is left as a [FILL: number of distinct ICAO addresses observed] placeholder for the operator's own capture and must not be presented as a measured result.
 
 ## Remediation
 

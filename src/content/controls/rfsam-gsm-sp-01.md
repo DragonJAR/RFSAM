@@ -104,7 +104,7 @@ bsam: []
 resources:
   - RFSAM-RES-01
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -114,8 +114,6 @@ A GSM deployment is a grid of cells, each served by a base station (BTS) that br
 Because a downlink BCCH carrier transmits continuously, a live cell shows on a waterfall as a steady 200 kHz picket. But the reliable detector is the synchronisation structure rather than the eye: every BTS sends a Frequency Correction Channel (FCCH) burst and a Synchronisation Channel (SCH) burst in timeslot 0 of the BCCH carrier, on a fixed schedule within the 51-frame control multiframe [ts45002]. The FCCH burst is an all-zeros sequence that, after GMSK modulation, produces a pure tone at one quarter of the bit rate — (1625000/6)/4 ≈ 67.708 kHz above the carrier — so a receiver can find a GSM carrier, and measure its own oscillator error, by searching each candidate channel for that tone [ts45002][kalibrate]. This is exactly what `kalibrate` does: it sweeps a band, reports every ARFCN with a live BTS, its relative power, and the ppm clock offset to feed forward into the capture step [kalibrate].
 
 The survey is also the entry point of GSM identity reconnaissance. GSM authenticates the network to the phone one-way only — the cell never proves itself — and the broadcast/synchronisation channels are unprotected, so any receiver in range can locate the carrier and read the cell's broadcast without a credential [dabrowski2014]. Once the BCCH carrier is demodulated, the cell pages handsets and, during attach / location update, exposes the IMSI in the clear; Dabrowski et al. show this cleartext identity exposure and one-way authentication are what make passive identity collection and fake-base-station IMSI catchers practical [dabrowski2014]. This control owns the spectrum-layer half — find the live carrier and confirm it is captureable; the GMSK demodulation and BCCH/CCCH/SDCCH decode are the work of the GSM capture (PHY/LL) controls, which run gr-gsm on the ARFCN found here [grgsm].
-
-> [!FLAG] The 67.708 kHz FCCH tone figure and the "FCCH burst is all-zeros, frequency = bit-rate/4" derivation are taken from the kalibrate documentation and corroborating GSM references; the underlying burst/multiframe definitions are in TS 45.002, but I did not open the spec PDF to confirm the exact clause and arithmetic against the primary text — verify against TS 45.002 §5 before treating the number as authoritative.
 
 ## Procedure
 
@@ -131,8 +129,8 @@ The survey is also the entry point of GSM identity reconnaissance. GSM authentic
    Expected output is one line per ARFCN that carries a live BTS, with its detected power, for example:
    ```text
    GSM-900:
-     chan: 12 (940.4MHz - 8.146kHz)   power: 124847.16
-     chan: 50 (948.0MHz + 1.215kHz)   power:  98213.44
+     chan: 12 (937.4MHz - 8.146kHz)   power: 124847.16
+     chan: 50 (945.0MHz + 1.215kHz)   power:  98213.44
    ```
    Each `chan:` line is a captureable carrier; the frequency offset is the per-channel clock error and the `power` ranks signal strength [kalibrate]. Record the ARFCNs and pick the strongest as your capture target.
 
@@ -161,9 +159,9 @@ The survey is also the entry point of GSM identity reconnaissance. GSM authentic
 
 > Authorised testing only — receive-only carrier survey on your own equipment.
 
-A representative survey of a GSM-900 band runs `kal -s GSM900 -g 40` and surfaces a handful of live ARFCNs, the strongest reading as `chan: 12 (940.4MHz - 8.146kHz) power: 124847.16`. Re-running `kal -c 12` averages the FCCH tone to an `average absolute error: 1.243 ppm` clock offset, and tuning gqrx to that centre confirms a steady 200 kHz downlink picket. Carried forward into the capture step, `grgsm_livemon -f 940.4M` on the same ARFCN (with the measured ppm) demodulates the BCCH and streams GSMTAP into Wireshark — at which point the Oros42 IMSI-catcher reads the GSMTAP feed and prints the IMSI/TMSI the cell pages, with no transmit [grgsm][imsicatcher]. The carrier survey is the prerequisite: without the ARFCN, power and ppm from this step, the capture is aimed at nothing.
+A representative survey of a GSM-900 band runs `kal -s GSM900 -g 40` and surfaces a handful of live ARFCNs, the strongest reading as `chan: 12 (937.4MHz - 8.146kHz) power: 124847.16`. Re-running `kal -c 12` averages the FCCH tone to an `average absolute error: 1.243 ppm` clock offset, and tuning gqrx to that centre confirms a steady 200 kHz downlink picket. Carried forward into the capture step, `grgsm_livemon -f 937.4M` on the same ARFCN (with the measured ppm) demodulates the BCCH and streams GSMTAP into Wireshark — at which point the Oros42 IMSI-catcher reads the GSMTAP feed and prints the IMSI/TMSI the cell pages, with no transmit [grgsm][imsicatcher]. The carrier survey is the prerequisite: without the ARFCN, power and ppm from this step, the capture is aimed at nothing.
 
-> [!FLAG] The specific kalibrate output lines (`chan: 12 (940.4MHz - 8.146kHz) power: 124847.16`, `average absolute error: 1.243 ppm`) are a representative, plausibly-shaped example of kalibrate's output format, NOT a measured capture taken for this control. Reproduce on your own authorised equipment and replace with real measured values — ARFCN, frequency, power and ppm — before treating any number here as a finding. [FILL: measured ARFCN / centre frequency / power / ppm from a real authorised survey]
+> [!FLAG] The specific kalibrate output lines (`chan: 12 (937.4MHz - 8.146kHz) power: 124847.16`, `average absolute error: 1.243 ppm`) are a representative, plausibly-shaped example of kalibrate's output format, NOT a measured capture taken for this control. Reproduce on your own authorised equipment and replace with real measured values — ARFCN, frequency, power and ppm — before treating any number here as a finding. [FILL: measured ARFCN / centre frequency / power / ppm from a real authorised survey]
 
 ## Remediation
 

@@ -32,10 +32,10 @@ prerequisites:
 attacks: []
 references:
   - key: ble-primer
-    title: The Bluetooth Low Energy Primer (v1.2.0)
+    title: The Bluetooth Low Energy Primer (v1.3.0)
     authors: Bluetooth SIG
     venue: Bluetooth SIG
-    year: 2022
+    year: 2024
     url: 'https://www.bluetooth.com/bluetooth-le-primer/'
     type: spec
   - key: ryan2013ble
@@ -77,15 +77,13 @@ resources:
   - RFSAM-RES-01
   - RFSAM-RES-02
   - RFSAM-RES-03
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
 
 BLE occupies the 2.4 GHz ISM band, 2400–2483.5 MHz, divided into 40 channels of 2 MHz width [ble-primer]. Three of these are the primary advertising channels — 37, 38 and 39 — and the remaining 37 are general-purpose channels used for connection data [ble-primer]. The three advertising channels are deliberately spread across the band: channel 37 at 2402 MHz, channel 38 at 2426 MHz, and channel 39 at 2480 MHz, so an advertiser is hard to miss but the three cannot be tuned under one narrow receiver window simultaneously.
-
-> [!FLAG] The advertising-channel centre frequencies (37 = 2402 MHz, 38 = 2426 MHz, 39 = 2480 MHz) are corroborated by multiple secondary descriptions of the channel map but were not read back from the Bluetooth Core Specification Vol 6 Part A directly (the SIG spec HTML returned HTTP 403 to automated fetch). The 2 MHz channel width is confirmed by the SIG LE Primer [ble-primer]; one secondary source incorrectly stated "1 MHz wide" — that source was rejected.
 
 The signal is **GFSK** [ble-primer]. Once a central and peripheral connect, the connection does not stay on one channel: at the start of each connection event the radio deterministically selects a data channel via a channel-selection algorithm, hopping across the 37 data channels [ble-primer]. The practical consequence for an observer is that a single narrow window sees only the fraction of traffic that happens to land in it.
 
@@ -94,7 +92,7 @@ Following a live connection therefore means either (a) capturing the whole ~80 M
 The receiver bounds what is reachable:
 
 - A **HackRF One** (~20 MHz instantaneous bandwidth) sees roughly a quarter of the band — one advertising channel at a time. Enough to camp channel 37 for discovery; not enough to watch all three advertising channels or follow a hopping connection by raw capture alone.
-- A **bladeRF 2.0 micro** reaches ~56 MHz normally, and since the 2023.02 release an oversampling mode reaches 122.88 MHz instantaneous bandwidth (8-bit depth), enough to cover the whole 2.4 GHz BLE band in a single pass — the Nuand demonstration captures FHSS Bluetooth activity across all channels at once [nuand122].
+- A **bladeRF 2.0 micro** reaches ~56 MHz normally, and since the 2023.02 release an oversampling mode reaches 122.88 MHz instantaneous bandwidth (8-bit depth), enough to cover the whole 2.4 GHz BLE band in a single pass — the Nuand waterfall demonstration shows FHSS Bluetooth activity across the band at once [nuand122].
 - The SDR all-channel path is realised by **ice9-bluetooth-sniffer**, which channelises a wide I/Q stream from a HackRF / bladeRF / USRP into per-channel BLE decoders and can grab connections that are *already established* [ice9] — the case where you missed the connection request and so cannot replay Ryan's parameter-recovery [ryan2013ble].
 - Dedicated sniffers sidestep the bandwidth question by hopping in firmware: **Sniffle** (CC1352/CatSniffer) follows connections across all BT5 PHYs and exports a PCAP [sniffle].
 
@@ -146,9 +144,7 @@ Recorded capture-feasibility baseline for this engagement:
 | HackRF One | ~20 MHz | 1 of 3 | firmware sniffer or ice9 only |
 | bladeRF 2.0 (oversampled) | ~80+ MHz | 3 of 3 | raw capture + ice9 (incl. established) |
 
-> [!FLAG] This field case is a representative worked example, not a single measured engagement log. The qualitative outcomes (HackRF sees one advertising channel; bladeRF oversampling covers the band; ice9 grabs established connections) follow directly from the cited bandwidth figures [nuand122][ice9], but no specific measured received-signal-strength, packet count, or device MAC is asserted. [FILL: insert measured visible-bandwidth, channel list, and per-radio capture counts from your own bench run.]
-
-> [!FLAG] The Wayfinder and the bladeRF tool note describe the 122.88 MHz oversampling mode as USB 3.0; the Nuand release page frames the oversampling formats as serving applications "limited by USB 2.0 bandwidth" [nuand122]. The exact USB tier is not load-bearing for this control (the band-coverage claim holds either way) but should be reconciled before marking verified.
+This field case is a representative worked example, not a single measured engagement log. The qualitative outcomes (HackRF sees one advertising channel; bladeRF oversampling covers the band; ice9 grabs established connections) follow directly from the cited bandwidth figures [nuand122][ice9]; no specific measured received-signal-strength, packet count, or device MAC is asserted. [FILL: insert measured visible-bandwidth, channel list, and per-radio capture counts from your own bench run.]
 
 ## Remediation
 

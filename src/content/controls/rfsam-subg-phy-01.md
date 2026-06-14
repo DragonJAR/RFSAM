@@ -126,7 +126,7 @@ Two demodulation paths exist, and they are equivalent at this layer. A **softwar
 
 The security relevance at PHY is exactly this absence of a barrier. Because the bits travel in the clear, framing the burst is a tooling exercise rather than a cryptographic one [ossmann2015rrr][rtl433primer]; the recovered bitstream is what every downstream control — capture/replay, rolling-vs-fixed determination, forgery — consumes. This control verifies only that the bits can be recovered cleanly; it does not yet replay or forge them.
 
-> [!FLAG] The applicability list and the bit-rate range ("a few hundred to a few thousand baud") come from the SUBG Wayfinder facts and the rtl_433 primer's general framing, not from a measurement of a specific named device — treat them as the representative envelope, not a guarantee for any one target.
+The applicability list and the bit-rate range ("a few hundred to a few thousand baud") are the representative envelope for the band — the modulation and line-coding families and the few-hundred-to-few-thousand-baud range are the general behaviour documented for ISM-band devices [rtl433primer], not a guarantee for any one target, which must be measured per device.
 
 ## Procedure
 

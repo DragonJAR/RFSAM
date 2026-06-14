@@ -57,7 +57,7 @@ references:
     type: blog
   - key: rtl433
     title: 'rtl_433 — generic data receiver for the 433.92/315/868/915 MHz ISM bands'
-    authors: 'B. Asplund (merbanan) et al.'
+    authors: 'Benjamin Larsson (merbanan) et al.'
     venue: GitHub
     year: 2026
     url: 'https://github.com/merbanan/rtl_433'
@@ -92,7 +92,7 @@ bsam: []
 resources:
   - RFSAM-RES-01
   - RFSAM-RES-15
-reviewStatus: draft
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -106,7 +106,7 @@ The discovery method this control follows is Ossmann's "Rapid Radio Reversing": 
 
 Much of the layer-1 answer can also be read off the device before any RF. The FCC ID printed on a US-market label resolves the exact operating frequency, modulation and a full test report through the FCC's equipment-authorization search (or mirrors such as fccid.io) — frequently confirming the band and modulation without touching a radio [[fccid]]. That label lookup belongs to the IG step; this control confirms it on the air.
 
-Two complementary on-air views make the discovery fast. A **gqrx** waterfall shows the live carrier, the modulation shape and the rough burst timing as you trigger the device [[gqrx]]. Pointing **rtl_433** at the band turns every burst it already has a decoder for into a live JSON line naming the device and frequency — rtl_433 ships 320 device protocols and defaults to 433.92 MHz — which is often the fastest way to confirm what is on the air before committing a capture tool [[rtl433]]. For an unrecognised gadget rtl_433 still shows energy but no decode; its pulse analyzer (`-A`) then reports the pulse/gap timing so you can estimate the encoding by hand [[rtl433ops]].
+Two complementary on-air views make the discovery fast. A **gqrx** waterfall shows the live carrier, the modulation shape and the rough burst timing as you trigger the device [[gqrx]]. Pointing **rtl_433** at the band turns every burst it already has a decoder for into a live JSON line naming the device and frequency — rtl_433 ships ~320 device protocols (representative — the count grows as decoders are added) and defaults to 433.92 MHz — which is often the fastest way to confirm what is on the air before committing a capture tool [[rtl433]]. For an unrecognised gadget rtl_433 still shows energy but no decode; its pulse analyzer (`-A`) then reports the pulse/gap timing so you can estimate the encoding by hand [[rtl433ops]].
 
 This is a capability/observation control, not an attack: it establishes that a target's transmissions are findable and classifiable. The finding it sets up — and which later SUBG controls act on — is that any device transmitting unauthenticated OOK/FSK bursts in the clear (most cheap ISM remotes and sensors) is replayable or forgeable once characterised [[ossmann2016simplisafe]].
 
@@ -159,8 +159,6 @@ Zonenberg's original work used a logic analyser to reverse the protocol and a cu
 The layer-1 profile he recovered at the spectrum step: the keypad transmitted on **433 MHz** using **amplitude-shift keying** (Ossmann notes Zonenberg labelled it OOK and that "the difference between ASK and OOK is subtle"), with an uncommon **Pulse Interval and Width Modulation (PIWM)** encoding. Visualising the waveform, he identified the frequency and modulation and "within seconds" was decoding raw symbols; working out the PIWM encoding from the packet data was the hard part, taking roughly two hours [[ossmann2016simplisafe]]. That spectrum/PHY characterisation — frequency, ASK, burst timing — is exactly the output this control produces; the replay/disarm that followed is the downstream SUBG attack control, performed only against equipment under the tester's authority.
 
 The same discover-then-work-it flow applies unchanged to a garage/gate remote, a TPMS sensor, or a 433 MHz weather station: a representative weather sensor surfaces immediately as a named `rtl_433 -f 433.92M -F json` line (`model`, `id`, `temperature_C`), confirming band and protocol with no SDR waterfall reading at all.
-
-> [!FLAG] The "320 device protocols" and "default 433.92 MHz / 250k sample rate" figures for rtl_433 were read from the repository README and triq.org operation reference on 2026-06-14 and will drift as the project adds decoders — frame as "representative, check the current build" rather than a fixed count.
 
 ## Remediation
 

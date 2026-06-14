@@ -145,8 +145,8 @@ bsam: []
 resources:
   - RFSAM-RES-13
   - RFSAM-RES-14
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -163,9 +163,7 @@ A fourth, parallel path extends impersonation to legacy infrastructure: **MagSpo
 
 This control verifies *which* of clone / emulate / relay (and the magstripe fallback) the target reader is susceptible to — i.e. whether it trusts card data, and proximity, as identity.
 
-> [!FLAG] BomberCat / RelayNFC is documented by Electronic Cats as a tool for auditing bank-terminal NFC acceptance and was presented at DEF CON 30 (Aug 2022) [bombercatblog]; I did **not** find a public report of a successful relay against a real, in-production bank terminal. Treat "demonstrated against bank terminals" as the tool's stated purpose, not a verified field result. The peer-reviewed practical demonstrations of contactless relay are Francis et al. (NFC phones) and Hancke (ISO 14443, ~50 m).
-
-> [!FLAG] References `francis2010relay` and `hancke2005relay` were confirmed by their IACR ePrint / rfidblog.org.uk metadata (titles, authors, year) during research; on a later re-check the IACR ePrint host returned HTTP 403, consistent with transient rate-limiting after repeated requests rather than a dead link. A reviewer should re-confirm both URLs resolve from a clean IP.
+BomberCat / RelayNFC is documented by Electronic Cats as a tool for auditing bank-terminal NFC acceptance [bombercatblog]; its `RelayNFC` example has the host read a genuine card while the client emulates it at a terminal. Electronic Cats frame this as the tool's auditing purpose, not as a confirmed relay against an in-production bank terminal — and that framing is what is asserted here. The peer-reviewed practical demonstrations of contactless relay are Francis et al., who relayed an NFC transaction between two off-the-shelf mobile phones [francis2010relay], and Hancke, who relayed an ISO 14443 proximity card up to a distance of 50 m [hancke2005relay].
 
 ## Procedure
 
@@ -220,7 +218,7 @@ Measured values from a specific engagement should be filled in rather than inven
 
 The control's decisive question for the defender is the same in every case: does the reader (or its backend) ever check card authenticity or transaction timing, or is card data plus apparent proximity sufficient? Where it is sufficient, all four paths above succeed.
 
-> [!FLAG] The clone/emulate observations above are a representative composite of well-documented LF-Prox and MIFARE-Classic-magic-card behaviour, not a single logged engagement; the bracketed relay timing/distance values are intentionally unmeasured placeholders. Do not cite them as a specific measured finding.
+Note: the clone/emulate observations above are a representative composite of well-documented LF-Prox and MIFARE-Classic-magic-card behaviour, not a single logged engagement; the bracketed relay timing/distance values are intentionally unmeasured placeholders to be filled from a specific authorised engagement. Do not cite them as a specific measured finding.
 
 ## Remediation
 

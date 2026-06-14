@@ -114,7 +114,7 @@ resources:
   - RFSAM-RES-11
   - RFSAM-RES-12
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -124,8 +124,6 @@ lastResearched: 2026-06-14
 Where PMF is absent or not enforced, the canonical consequence is the deauthentication/disassociation denial-of-service: an attacker spoofs the AP or client MAC and transmits a single forged deauth frame to evict a station, repeatedly to deny service, or tactically to force a client to reconnect and emit a fresh 4-way handshake. Bellardo and Savage documented this management-frame DoS class in 2003 and noted that, unlike the confidentiality flaws of the era, these availability attacks need no key and target the protocol's own management plane [bellardo2003dos]. The forced-reconnect variant is the lever that feeds the handshake-capture path assessed under RFSAM-WIFI-CR-01.
 
 The second exposure is identity. A client doing *active* scanning broadcasts directed probe requests naming SSIDs it has joined before — its Preferred Network List. Cunche, Kaafar and Boreli showed in 2012 that these lists fingerprint a device and even let social links between owners be inferred from overlapping network histories [cunche2012linking]. MAC-address randomization was meant to blunt this, but Vanhoef et al. demonstrated in 2016 that probe-request information elements, scrambler seeds and sequence numbers fingerprint and track devices despite randomized MACs, correctly following a sizable fraction of devices for tens of minutes [vanhoef2016randomization]. More recently, McDougall et al. found users frequently type sensitive strings — including passwords and email addresses — into SSID fields, which then leak verbatim in probe requests [mcdougall2022probing]. Together these make management-frame capture both a tracking surface and the reconnaissance that seeds evil-twin (AP-impersonation) targeting, executed under the Wi-Fi Attack layer.
-
-> [!FLAG] The claim that PMF cannot protect probe request/response and beacon frames is taken from secondary summaries of 802.11w-2009; confirm against the normative amendment text (the IEEE page resolves but the full standard is paywalled) before promoting this control to `verified`.
 
 ## Procedure
 

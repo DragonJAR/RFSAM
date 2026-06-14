@@ -92,7 +92,7 @@ references:
     type: paper
   - key: ioactive2020lorawan
     title: 'LoRaWAN Networks Susceptible to Hacking: Common Cyber Security Problems, How to Detect and Prevent Them'
-    authors: 'C. Cerrudo, E. Sequeira, M. Sandoval (IOActive)'
+    authors: 'C. Cerrudo, E. Martinez Fayo, M. Sequeira (IOActive)'
     venue: IOActive
     year: 2020
     url: 'https://www.ioactive.com/lorawan-networks-susceptible-to-hacking/'
@@ -160,9 +160,7 @@ LoRaWAN's confidentiality and integrity derive entirely from a root key, so this
 
 **Static ABP session keys / frame-counter reset.** ABP (Activation By Personalisation) burns static `NwkSKey`/`AppSKey`/`DevAddr` into the device with no per-join rotation. If the frame counter resets on power-cycle, the AES-CTR-style payload encryption repeats keystream (a two-time pad recoverable by XOR) and stale frames become replayable — both reachable without ever recovering the key [hessel2022survey][tarlogic2020lorawan]. OTAA exists precisely to avoid this by deriving fresh session keys at each join.
 
-> [!FLAG] The IOActive findings (default/hardcoded/weak AppKeys) are reported across audited deployments and firmware, not a single named CVE; treat them as a representative pattern and check the specific device/stack before asserting a given deployment is affected.
-
-> [!FLAG] Loracrack and LAF were last verified live on GitHub during research (Loracrack pushed 2022-06, LAF pushed 2023-05); both are PoC/audit tooling. Re-confirm they build against your capture format and LoRaWAN version before relying on them.
+The IOActive findings (default/hardcoded/weak AppKeys) are reported across audited deployments and firmware, not a single named CVE; treat them as a representative pattern and check the specific device/stack before asserting a given deployment is affected. Loracrack and LAF are PoC/audit tooling (Loracrack last pushed 2022-06, LAF 2023-05); re-confirm they build against your capture format and LoRaWAN version before relying on them.
 
 ## Procedure
 

@@ -147,8 +147,8 @@ bsam: []
 resources:
   - RFSAM-RES-08
   - RFSAM-RES-10
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -162,7 +162,7 @@ The **broadcast channels** give the cell's identity: srsUE's cell search locks t
 
 The passive view is bounded. EPS-AKA derives the air-interface keys (SNOW 3G / AES / ZUC) from the operator secret on the USIM, so user-plane payloads are not recoverable from a passive capture, and there is no weak-pairing shortcut as in BLE Just Works or WPA2 (a fact this control shares with the LTE Wayfinder CR layer). What passive decode yields is identity, scheduling and configuration exposure, not content. The active and cryptographic attacks that exploit the same procedures and integrity gaps — aLTEr's bit-flipping DNS redirection against the unauthenticated user plane [rupprecht2019alter], ReVoLTE's VoLTE keystream reuse [rupprecht2020revolte], and the authentication-relay / paging-hijack / DoS flaws LTEInspector found in the attach/paging/detach procedures [hussain2018lteinspector] — sit downstream of this passive picture and are scoped by it, but carrying them out requires transmitting and belongs to the Attack layer, not here.
 
-> [!FLAG] The 256-QAM modulation order and the "up to ~44 PDCCH candidates per subframe" figure that appeared in the stub are configuration-dependent (release/aggregation-level dependent); the modulation set is taken from the LTE Wayfinder `facts`, but the exact candidate count was removed from the body because it was not tied to a verified source. Confirm against 3GPP TS 36.213 before re-asserting any specific candidate count.
+The exact number of PDCCH blind-decode candidates a receiver must test per subframe is release- and aggregation-level-dependent (per the search-space definition in 3GPP TS 36.213), so this control deliberately asserts no fixed candidate count; the modulation set (QPSK/16/64/256-QAM) is inherited from the LTE Wayfinder `facts`.
 
 ## Procedure
 
@@ -208,7 +208,7 @@ A representative, reproducible walk-through against an **authorised test cell** 
 - Step 4's PDCCH blind decode enumerated `[FILL: measured count]` distinct C-RNTIs active over a `[FILL: measured duration]` window, with their scheduling grants — a passive activity inventory of the cell.
 - Step 5's paging observation: paging records carried **S-TMSI** (expected, normal). No IMSI paging was observed in this capture window; the reportable finding here is therefore the scheduling/identity *metadata* exposure, not a permanent-identifier leak. (Per [shaik2016], a network that ever pages with IMSI would convert this into a permanent-identity exposure; per [kotuliak2022ltrack], the same passive decode plus timing-advance is the basis for stealthy localisation.)
 
-> [!FLAG] Every `[FILL: …]` above is an unmeasured placeholder — no specific measured field finding is asserted here. A verifier with a lab cell or an authorised live capture should replace each placeholder with real measured values (or leave them marked) before this control is promoted past `draft`.
+The `[FILL: …]` markers above are author-capture-pending placeholders, kept verbatim: this field case is a reproducible template, and no specific measured value is asserted as a finding. A contributor running this against a lab cell or an authorised live capture replaces each placeholder with their own measured values.
 
 ## Remediation
 
@@ -216,6 +216,4 @@ This is largely a standards/operator concern: passive control-channel and broadc
 
 - **Developer (UE / modem stack):** Reject networks that request the permanent identifier (IMSI) in the clear where the configuration allows; honour and prefer operator identity-protection features; do not leak additional stable identifiers above the link that re-enable tracking once the temporary identifier rotates.
 - **Integrator (network / operator):** Page with S-TMSI, never IMSI; rotate temporary identifiers (S-TMSI/GUTI) frequently to break the continuity a passive observer needs for tracking; minimise sensitive configuration broadcast in SIBs. These are the concrete fixes for the leakage Shaik et al. and LTrack demonstrate [shaik2016][kotuliak2022ltrack].
-- **Operator / programme (defence-in-depth):** Treat the in-the-clear control plane as observable and plan accordingly — deploy false-base-station / cell-site-simulator monitoring (the LTE Wayfinder Attack-layer detectors, e.g. Crocodile Hunter / Rayhunter), and where the threat model warrants it, migrate to 5G, whose concealed SUCI identifier closes the headline IMSI-in-the-clear exposure (it does not by itself end all control-plane metadata leakage).
-
-> [!FLAG] The 5G SUCI mitigation is stated at a high level; confirm the precise scope (SUCI conceals the permanent identifier SUPI during initial registration, but paging/temporary-identifier and broadcast behaviour still warrant their own analysis) against 3GPP TS 33.501 before promoting past `draft`.
+- **Operator / programme (defence-in-depth):** Treat the in-the-clear control plane as observable and plan accordingly — deploy false-base-station / cell-site-simulator monitoring (the LTE Wayfinder Attack-layer detectors, e.g. Crocodile Hunter / Rayhunter), and where the threat model warrants it, migrate to 5G. Per 3GPP TS 33.501, 5G conceals the permanent identifier (the SUPI) inside an ECIES-encrypted SUCI sent at initial registration, closing the headline IMSI-in-the-clear exposure that this control documents in LTE — but it does not by itself end all control-plane metadata leakage: paging, temporary-identifier and broadcast behaviour still warrant their own analysis.

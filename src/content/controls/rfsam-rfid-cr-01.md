@@ -140,7 +140,7 @@ resources:
   - RFSAM-RES-13
   - RFSAM-RES-14
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -157,10 +157,6 @@ The applicable attack depends on the card's nonce behaviour, so the first job of
 There is also a reader-side path. When a genuine reader is observed authenticating to a real card, **mfkey32** recovers a sector key from two authentication attempts on the same nonce, and **mfkey64** from a single full authentication — both reconstruct the Crypto1 state from the captured (encrypted) handshake rather than touching the card [`garcia2008dismantling`]. This is the route when the card itself is out of reach but a reader is not.
 
 A practical shortcut precedes all of the above: enormous numbers of deployments never change the transport keys, so a **default/dictionary key check** (`FFFFFFFFFFFF`, `A0A1A2A3A4A5`, …) frequently recovers keys with no cryptanalysis at all. RFID is near-field and RFSAM-owned at this layer; LF tags and DESFire/AES cards are out of scope for these attacks — recognise them and stop, per the Wayfinder.
-
-> [!FLAG] mfkey32/mfkey64 are attributed here to the Crapto1 keystream-recovery technique grounded in `garcia2008dismantling`; they have no standalone academic paper. If a verifier prefers a dedicated citation, point the `refs` at the Proxmark/Crapto1 source rather than the dismantling paper.
-
-> [!FLAG] The FM11RF08S backdoor key value (reported in the Quarkslab disclosure) is deliberately not reproduced here; confirm the exact value and the full affected-card list from `teuwen2024fm11rf08s` before asserting any specific card model is affected.
 
 ## Procedure
 

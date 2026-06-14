@@ -31,7 +31,7 @@ prerequisites:
       (ANZ) · 919.82 MHz (HK) · 922–926 MHz (JP) — one region per device. Z-Wave
       Long Range adds US 912/920 MHz.
     bandwidth: 'Narrow FSK channel (tens of kHz of occupied bandwidth); a few hundred kHz of SDR capture span is ample per channel'
-    modulation: '(G)FSK per ITU-T G.9959, at three data rates: 9.6 kbps (R1), 40 kbps (R2), 100 kbps (R3)'
+    modulation: 'Classic Z-Wave: (G)FSK per ITU-T G.9959, at three data rates: 9.6 kbps (R1), 40 kbps (R2), 100 kbps (R3). Z-Wave Long Range is different: 100 kbps DSSS-OQPSK (spread spectrum) on US 912/920 MHz.'
   skill: beginner
 attacks: []
 references:
@@ -48,6 +48,13 @@ references:
     venue: Silicon Labs (vendor documentation)
     year: 2026
     url: 'https://www.silabs.com/wireless/z-wave/global-regions'
+    type: standard
+  - key: silabs_lr
+    title: 'Z-Wave Long Range Overview — DSSS-OQPSK 100 kbps profile (US 912/920 MHz)'
+    authors: Silicon Labs
+    venue: Silicon Labs (vendor documentation)
+    year: 2026
+    url: 'https://www.silabs.com/wireless/z-wave/z-wave-long-range-overview'
     type: standard
   - key: fouladi2013honey
     title: "Honey, I'm Home!! — Hacking Z-Wave Home Automation Systems (Black Hat USA 2013, recorded talk)"
@@ -109,20 +116,20 @@ bsam: []
 resources:
   - RFSAM-RES-01
 reviewStatus: draft
-confidence: high
+confidence: medium
 lastResearched: 2026-06-14
 ---
 ## Mechanism
 
-Z-Wave's PHY and MAC are the open ITU-T Recommendation G.9959 — a short-range narrow-band sub-GHz radio with a preamble, frame, CRC and addressing, donated by the protocol's originators and published by the ITU in 2015 [itu_g9959]. The waveform is (G)FSK: the carrier shifts between two tones, at one of three data rates — 9.6 kbps (R1, legacy), 40 kbps (R2) and 100 kbps (R3) [itu_g9959]. Because there is no spread spectrum, a device on the right channel is a plain narrowband FSK burst that a cheap receiver can see directly — but only if it is tuned to the right channel.
+Z-Wave's PHY and MAC are the open ITU-T Recommendation G.9959 — a short-range narrow-band sub-GHz radio with a preamble, frame, CRC and addressing, donated by the protocol's originators and published by the ITU in 2015 [itu_g9959]. For classic Z-Wave the waveform is (G)FSK: the carrier shifts between two tones, at one of three data rates — 9.6 kbps (R1, legacy), 40 kbps (R2) and 100 kbps (R3) [itu_g9959]. Because classic Z-Wave uses no spread spectrum, a device on the right channel is a plain narrowband FSK burst that a cheap receiver can see directly — but only if it is tuned to the right channel. (Z-Wave Long Range is the exception — a spread-spectrum OQPSK PHY covered below.)
 
-The defining property at the spectrum layer is that Z-Wave is **region-locked**. Silicon Labs' regional documentation assigns each country/region one approved frequency: roughly 908.42 MHz in the US/North America, 868.42 MHz in Europe, 921.42 MHz in Australia/New Zealand, 919.82 MHz in Hong Kong, and a 922–926 MHz cluster in Japan, each tied to that region's regulatory limit (FCC Part 15, EN 300 220, AS/NZS 4268, ARIB STD-T108) [silabs_regions]. A device ships for one region and transmits only on that region's channel, so a radio parked on the wrong one — an EU dongle aimed at a US lock — sees a flat, empty waterfall and produces a false "nothing here". Confirming the region is therefore the first and load-bearing RF decision; the wider Z-Wave descent does not even start until the band is right. Z-Wave Long Range (US 912/920 MHz) is a separate, higher-power profile to account for as well [silabs_regions].
+The defining property at the spectrum layer is that Z-Wave is **region-locked**. Silicon Labs' regional documentation assigns each country/region its approved frequency: roughly 908.42 MHz in the US/North America, 868.42 MHz in Europe, 921.42 MHz in Australia/New Zealand, 919.82 MHz in Hong Kong, and a 922–926 MHz cluster in Japan, each tied to that region's regulatory limit (FCC Part 15.249, EN 300 220, AS/NZS 4268, ARIB STD-T108) [silabs_regions]. A device ships for one region and transmits only on that region's channel, so a radio parked on the wrong one — an EU dongle aimed at a US lock — sees a flat, empty waterfall and produces a false "nothing here". Confirming the region is therefore the first and load-bearing RF decision; the wider Z-Wave descent does not even start until the band is right. Z-Wave Long Range (US-only at present) is a separate profile to account for, and it is **not** the same PHY: it is a fourth channel that uses 100 kbps DSSS-OQPSK — a spread-spectrum waveform on 912 MHz (primary) and 920 MHz (backup) — rather than classic Z-Wave's narrowband FSK, with much higher output power [silabs_lr]. So the "narrowband FSK burst, no spread spectrum" property above describes classic Z-Wave; an LR device is a different, broadband signal and demands matching the demodulator accordingly.
 
 This is an observational, capability control, not an attack — hence `info` criticality. It establishes only that the device is transmitting, on which regional channel, and that the toolchain can hear it. The reason the region/feasibility step matters downstream is the rest of the descent: the public Z-Wave security research that the capture, crypto and attack controls build on all presupposes you can first hear the network. The original Black Hat USA 2013 work by Fouladi and Ghanoun built a dedicated radio capture device ("Z-Force") to intercept Z-Wave and then attack an AES-protected door lock [fouladi2013honey][sensepost2013zwave]; the later Z-Shave downgrade work likewise depends on capturing the inclusion exchange, where legacy S0 transports the network key under a fixed all-zero temporary key [pentestpartners2018zshave]. None of that is reachable until this control succeeds, and none of it works against the wrong region.
 
 The on-air confirmation has two complementary halves. A **gqrx** waterfall on the regional centre frequency shows the short FSK bursts a Z-Wave device emits when it reports or is polled — proving the device is alive and on the channel you expect before you commit a decoder [gqrx]. Then a software demodulator — **waving-z** or its ancestor **rtl-zwave**, both G.9959 FSK (de)modulators fed raw I/Q from `rtl_sdr` or a HackRF — turns those bursts into decoded frames, confirming not just energy but real Z-Wave traffic and the clear-text Home ID / Node ID headers [wavingz][rtlzwave]. For a scriptable assessment stack carried into the later steps, the EZ-Wave SDR suite does discovery and enumeration over a HackRF [ezwave].
 
-> [!FLAG] The per-region centre frequencies (908.42 / 868.42 / 921.42 / 919.82 MHz, JP 922–926 MHz) are read from the Silicon Labs Global Regions page [silabs_regions] and the protocol Wayfinder; the exact channel/data-rate set for a *specific* device should be confirmed against that device's regional model and FCC/CE grant (an IG-step task) before relying on a single number. Treat the list as representative, not exhaustive — Silicon Labs adds/adjusts regional profiles over time.
+The per-region centre frequencies above (908.42 / 868.42 / 921.42 / 919.82 MHz, JP 922–926 MHz) are read from the Silicon Labs Global Regions page [silabs_regions]. Treat the list as representative, not exhaustive — Silicon Labs adds/adjusts regional profiles over time, and several regions carry more than one channel (e.g. US also lists 916 MHz; ANZ 919.8 and 921.4 MHz) — so confirm the exact channel/data-rate set for a *specific* device against that device's regional model and FCC/CE grant (an IG-step task) before relying on a single number.
 
 ## Procedure
 
@@ -169,7 +176,7 @@ Concrete numbers for a worked write-up (fill from a real survey; do not present 
 - Observed Home ID / Node ID(s): [FILL: hex Home ID, decimal Node ID].
 - Classic Z-Wave vs Z-Wave Long Range: [FILL].
 
-> [!FLAG] This is a representative worked example, not a single measured field capture. The exact waving-z binary name (`wave-in`) and the `rtl_sdr`/EZ-Wave invocations follow the project READMEs and the protocol Wayfinder but vary by version/build — a reviewer should pin the precise command for the installed tools, and the bracketed `[FILL: …]` values must come from a real survey before this section is cited as a finding.
+> [!FLAG] This is a representative worked example, not a single measured field capture. The waving-z binary name (`wave-in`) and the rtl-zwave `-s 2048000` / 908.42 MHz invocations match the current project READMEs; only the optional EZ-Wave verb/flags still vary by build. The blocking item is the data: the bracketed `[FILL: …]` values must come from a real survey before this section is cited as a finding, and until they are filled the narrated flare/decode is illustrative, not measured.
 
 ## Remediation
 

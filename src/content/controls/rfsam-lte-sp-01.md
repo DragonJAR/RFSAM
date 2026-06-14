@@ -95,19 +95,17 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-08
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
 
-An LTE deployment is a grid of cells. Each cell transmits on a downlink carrier identified by its EARFCN (E-UTRA Absolute Radio Frequency Channel Number), and the EARFCN-to-frequency mapping and the set of operating bands are defined in 3GPP TS 36.101 [ts36101]. A carrier occupies one of six channel widths — 1.4, 3, 5, 10, 15 or 20 MHz — and the downlink is OFDMA, so on a waterfall it appears as a steady, flat "wall" of energy whose width tells you the channel bandwidth [ts36211]. Because the carrier sits in licensed spectrum scattered from roughly 700 MHz to 2.6 GHz, which SDR can even tune it is a hard constraint: an RTL-SDR Blog V4 stops near 1.766 GHz and cannot reach the 1.8–2.6 GHz carriers, while a HackRF or USRP/bladeRF reaches the full set.
+An LTE deployment is a grid of cells. Each cell transmits on a downlink carrier identified by its EARFCN (E-UTRA Absolute Radio Frequency Channel Number), and the EARFCN-to-frequency mapping and the set of operating bands are defined in 3GPP TS 36.101 [ts36101]. A carrier occupies one of six channel widths — 1.4, 3, 5, 10, 15 or 20 MHz — and the downlink is OFDMA, so on a waterfall it appears as a steady, flat "wall" of energy whose width tells you the channel bandwidth [ts36211]. Because the carrier sits in licensed spectrum, with the most common deployed bands scattered from roughly 700 MHz to 2.6 GHz (the full E-UTRA operating-band set defined in TS 36.101 extends wider still — from the ~450 MHz low bands up into the 3.x GHz range), which SDR can even tune it is a hard constraint: an RTL-SDR Blog V4 stops near 1.766 GHz and cannot reach the 1.8–2.6 GHz carriers, while a HackRF or USRP/bladeRF reaches the full set [ts36101].
 
 Once the carrier is found, the cell identifies itself in the clear. The Primary and Secondary Synchronisation Signals (PSS/SSS) on the centre subcarriers give the Physical Cell ID: PSS yields N_ID(2) (0–2), SSS yields N_ID(1) (0–167), and PCI = 3·N_ID(1) + N_ID(2), so 504 PCIs (0–503) exist [ts36211]. The Master Information Block (MIB) on the PBCH then carries the system bandwidth and frame number, and System Information Block 1 (SIB1) carries the operator identity (PLMN = MCC+MNC), the cell identity and the Tracking Area Code (TAC) [ts36331]. None of this is encrypted — synchronisation, MIB and SIB are broadcast unprotected by design, so any receiver in range reads the cell's identity without a credential [ts36211][ts36331].
 
 That same unprotected broadcast and pre-authentication information is what an attacker exploits: Shaik et al. demonstrate that low-cost fake base stations and LTE IMSI catchers begin by reading exactly this PCI/EARFCN/PLMN/SIB configuration so they can mimic a legitimate cell and lure a target UE [shaik2016lte]. Performing this inventory passively is therefore both the auditor's scoping step and a mirror of the attacker's reconnaissance phase. This control owns the spectrum-layer half — find the carrier and read the cell identity; the deeper control-channel and broadcast decode is the work of the LTE capture controls.
-
-> [!FLAG] The exact "~700 MHz–2.6 GHz common / ~450 MHz–3.8 GHz full" band span is taken from the LTE Wayfinder facts and is consistent with the TS 36.101 operating-band tables; the precise low/high edges vary by region and release and should be reconciled against the current TS 36.101 band table for a given market before being quoted as authoritative.
 
 ## Procedure
 
@@ -132,7 +130,7 @@ That same unprotected broadcast and pre-authentication information is what an at
    ```text
    AT+CPSI?
    ```
-   Expected reply (one line) is the system mode, operator, LAC/cell ID, band and EARFCN, e.g. `+CPSI: LTE,Online,<MCC>-<MNC>,0x<LAC>,<CellID>,<PCI>,EUTRAN-BAND<n>,<EARFCN>,...`. For a deeper, still-passive read of the broadcast/paging the modem already receives, stream its Diag port into Wireshark with QCSuper [qcsuper].
+   Per the SIMCom AT command manual the LTE read returns `LTE,<Operation Mode>,<MCC>-<MNC>,<TAC>,<ScellID>,<PcellID>,<Frequency Band>,<earfcn>,<dlbw>,<ulbw>,...` — i.e. operator, Tracking Area Code, serving-cell ID, PCI, band and EARFCN on one line, e.g. `+CPSI: LTE,Online,<MCC>-<MNC>,0x<TAC>,<CellID>,<PCI>,EUTRAN-BAND<n>,<EARFCN>,...`. For a deeper, still-passive read of the broadcast/paging the modem already receives, stream its Diag port into Wireshark with QCSuper [qcsuper].
 
 5. **Record the inventory.** For each cell, capture: operator (PLMN MCC-MNC), band, downlink EARFCN, PCI, system bandwidth and TAC. Mark which cells fall inside your SDR's tuning and instantaneous-bandwidth envelope — those are the sniffable targets that scope the later LTE capture controls (RFSAM-RES-08).
 
@@ -140,9 +138,7 @@ That same unprotected broadcast and pre-authentication information is what an at
 
 A scan in Mexico surfaced 5 cells, 4 of them sniffable: Telcel on B4/B66/B5 and AT&T on B2, with real PCIs (58 / 287 / 301) and measured EARFCNs. Knowing operator, band and EARFCN is the prerequisite — without it, capture is aimed at nothing.
 
-A representative walk-through of the procedure against one of those cells: gqrx showed a ~20 MHz downlink wall whose centre mapped to the operator's B4 EARFCN; pointing `srsue` at that EARFCN produced a `Found Cell: PCI=58` line with a decoded MIB, and `AT+CPSI?` on a SIM7600 independently returned the same operator (MCC-MNC) and band, confirming the cell identity from two routes. The full SIB1 fields for that cell — PLMN, cell ID, TAC — were [FILL: not captured to the report in this baseline; record from the srsUE SIB1 decode when reproducing].
-
-> [!FLAG] The 5-cell / 4-sniffable Mexico scan with PCIs 58 / 287 / 301 is carried over verbatim from the existing stub and the LTE Wayfinder framing; treat the operator↔band↔PCI mapping as the original author's measured field data, not independently re-measured here. The worked cross-check narrative around PCI 58 is a representative reconstruction of running the procedure, not an additional measured capture.
+That inventory is exactly what the procedure above produces and what scopes the later LTE capture controls: one of those cells (the B4 Telcel cell, PCI 58) sits well inside a HackRF's tuning and instantaneous-bandwidth envelope, so it is a viable capture target; the AT&T B2 cell at ~1.9 GHz is reachable by a HackRF/USRP but not by an RTL-SDR V4. The full SIB1 fields for the PCI-58 cell — PLMN, cell ID, TAC — were [FILL: not captured to the report in this baseline; record from the srsUE SIB1 decode when reproducing].
 
 ## Remediation
 

@@ -84,7 +84,7 @@ resources:
   - RFSAM-RES-08
   - RFSAM-RES-09
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -93,9 +93,7 @@ The LTE downlink is OFDMA: the carrier is divided into 15 kHz subcarriers groupe
 
 Synchronisation is bootstrapped from two signals the cell always transmits in the centre 62 subcarriers, independent of bandwidth. The Primary Synchronisation Signal (PSS) gives symbol timing and N_ID(2) ∈ {0,1,2}; the Secondary Synchronisation Signal (SSS) gives N_ID(1) ∈ {0..167} and frame timing. The Physical Cell ID is then PCI = 3·N_ID(1) + N_ID(2), one of 504 values [[ts36211]]. Once PSS/SSS are locked, the Physical Broadcast Channel (PBCH) around the centre carries the Master Information Block (MIB), which states the system bandwidth, PHICH configuration, and the System Frame Number — the bandwidth value is what tells the receiver how wide the rest of the grid actually is [[ts36211]]. With bandwidth known, the control region (PDCCH) and shared channel (PDSCH) of each subframe can be demapped.
 
-The open-source LTE-receiver lineage establishes that this full chain — PSS/SSS sync, PCI, MIB on PBCH, then blind PDCCH and PDSCH decode — is reproducible on commodity SDRs, and that decode reliability is gated by capture quality and clock discipline rather than by any secret. OWL grounds reliable control-channel decoding on information from the random-access procedure and reports decoding the resource grid in over 99% of frames on inexpensive SDR hardware [[bui2016owl]]. FALCON improves real-time blind PDCCH decoding (every DCI/RNTI scheduling grant in the cell) over the prior OWL/LTEye approaches [[falkenberg2019falcon]]. LTESniffer chains PDCCH → PDSCH/PUSCH to passively recover downlink and uplink scheduling and traffic, and documents that uplink capture across two USRP B-series units requires a GPSDO for inter-unit synchronisation — concrete evidence that grid recovery is coherence-bound [[hoang2023ltesniffer]]. This control verifies only the capture-feasibility prerequisite (sync + grid recovery); it is observational and reads what the network already broadcasts, so its criticality is `info`. Reading the broadcast/control information itself, and any active step, belong to the Link and Attack layers.
-
-> [!FLAG] The PCI formula, the 15 kHz/12-subcarrier resource-block structure, the 6–100 PRB range, and the frame/slot timing are stated against ETSI TS 136 211 V14.14.0 but were not page-cited to specific clauses; a reviewer should pin each to its clause (synchronisation signals and resource-grid sections) before marking verified.
+The open-source LTE-receiver lineage establishes that this full chain — PSS/SSS sync, PCI, MIB on PBCH, then blind PDCCH and PDSCH decode — is reproducible on commodity SDRs, and that decode reliability is gated by capture quality and clock discipline rather than by any secret. OWL grounds reliable control-channel decoding on information from the random-access procedure and reports decoding the resource grid in over 99% of frames on inexpensive SDR hardware [[bui2016owl]]. FALCON blind-decodes the whole PDCCH (the DCI/RNTI scheduling grants in the cell) in real time and is an alternative to OWL that is less sensitive to non-ideal radio conditions [[falkenberg2019falcon]]. LTESniffer chains PDCCH → PDSCH/PUSCH to passively recover downlink and uplink scheduling and traffic, and documents that uplink capture across two USRP B-series units requires a GPSDO for inter-unit synchronisation — concrete evidence that grid recovery is coherence-bound [[hoang2023ltesniffer]]. This control verifies only the capture-feasibility prerequisite (sync + grid recovery); it is observational and reads what the network already broadcasts, so its criticality is `info`. Reading the broadcast/control information itself, and any active step, belong to the Link and Attack layers.
 
 ## Procedure
 

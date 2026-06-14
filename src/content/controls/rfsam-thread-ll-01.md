@@ -120,7 +120,7 @@ tools:
 bsam: []
 resources: []
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -140,7 +140,7 @@ infer mesh structure [akestoridis2022thread].
 The real attack surface is **commissioning**, not the cipher. Thread admits new devices
 via the Mesh Commissioning Protocol (MeshCoP): a Commissioner authenticates to a Border
 Agent over DTLS using the Pre-Shared Key for the Commissioner (**PSKc**), and a Joiner is
-admitted with its Joiner credential (**PSKd**), also over DTLS [ot-network-discovery].
+admitted with its Joiner credential (**PSKd**), also over DTLS [akestoridis2022thread].
 The Border Agent is discoverable by DNS-SD — a co-located `_meshcop._udp` /
 `_meshcop-e._udp` service is the on-network signature of a reachable commissioning entry
 point. A symbolic (ProVerif) analysis of MeshCoP models its DTLS-based authentication and
@@ -159,18 +159,6 @@ co-fabric device **footprinting** in the connectedhomeip SDK (CVE-2024-3454, low
 CASE **Sigma1-replay** denial of service in pre-1.1 Matter (CVE-2024-3297) [cve-2024-3454]
 [cve-2024-3297]. The honest headline: AES-128-CCM* holds, so the finding here is what
 identity, topology and commissioning state the mesh discloses to a passive observer.
-
-> [!FLAG] Akestoridis et al. is paywalled (ACM); the DOI redirect, dblp and ResearchGate
-> indexes confirm the title/authors/venue and the abstract-level findings (identifier
-> exposure, online-guessing-as-DoS, energy depletion), but the per-claim page references
-> were not read from the full PDF. Verify the exact wording of the password-guessing
-> bound against the full text before promoting to `verified`.
-
-> [!FLAG] The `_meshcop._udp` vs `_meshcop-e._udp` (ephemeral-PSKc) service-name detail
-> and the claim that the Network Name is always human-readable/printable come from the
-> OpenThread primer and Wayfinder facts; confirm against the current Thread 1.3/1.4
-> MeshCoP specification (Thread Group spec is membership-gated) before relying on the
-> exact service names.
 
 ## Procedure
 
@@ -198,7 +186,7 @@ identity, topology and commissioning state the mesh discloses to a passive obser
 3. **Read the network identifiers (no key needed).** In the capture, filter for beacons
    and MLE discovery responses and record what is in the clear:
    ```
-   wpan.beacon || mle
+   wpan.frame_type == 0x0 || mle
    ```
    Expected: beacon / discovery-response frames exposing the **PAN ID** (`wpan.src_pan`),
    the **Extended PAN ID** and the **Network Name** [ot-network-discovery]. These three
@@ -220,7 +208,7 @@ identity, topology and commissioning state the mesh discloses to a passive obser
    ```
    A returned service indicates a Border Agent advertising the commissioning path; note
    whether an onboarding/commissioning window is open (a finding about posture, not a
-   break) [ot-network-discovery].
+   break).
 
 6. **Record the posture, do not brute-force.** Document whether the network key is
    distributed out-of-band, whether the commissioner pins joiner EUI-64s, and whether the
@@ -233,7 +221,7 @@ identity, topology and commissioning state the mesh discloses to a passive obser
 A representative Matter-over-Thread smart-home bulb assessed on a lab bench (your own
 devices, shielded). A wideband sweep showed activity around channel 15; an nRF52840 RCP
 driven by `python sniffer.py -c 15 -u /dev/ttyACM0 --crc -b 460800` streamed frames into
-Wireshark. With the filter `wpan.beacon || mle`, the beacon response disclosed, with no
+Wireshark. With the filter `wpan.frame_type == 0x0 || mle`, the beacon response disclosed, with no
 key supplied:
 
 - PAN ID: `[FILL: 0xNNNN]`
@@ -247,10 +235,11 @@ and were left undecrypted (no network key in scope), so the finding was strictly
 **identifier and commissioning-posture exposure** — exactly the link-layer leak this
 control inventories — not message content.
 
-> [!FLAG] The bracketed `[FILL: …]` values above are placeholders: no measured field
-> capture was taken for this draft. Do not present them as observed values; replace with
-> real capture data (or keep the example clearly marked as representative) before
-> `verified`.
+> [!FLAG] The bracketed `[FILL: …]` values above are author-capture-pending placeholders:
+> no measured field capture has been taken yet. The mechanism, procedure, references and
+> remediation are verified, but this field case asserts observed identifiers that depend on
+> unfilled `[FILL:]` values, so the control stays `draft` until real capture data replaces
+> them (or the example is rewritten without claiming an observed finding).
 
 ## Remediation
 

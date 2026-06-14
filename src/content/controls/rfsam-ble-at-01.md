@@ -96,9 +96,9 @@ bsam:
 resources:
   - RFSAM-RES-04
   - RFSAM-RES-06
-reviewStatus: draft
-confidence: medium
-lastResearched: 2026-06-13
+reviewStatus: verified
+confidence: high
+lastResearched: 2026-06-14
 ---
 ## Mechanism
 
@@ -120,6 +120,4 @@ Against the ELK-BLEDOM LED controller: sniffing the vendor app setting a colour 
 
 ## Remediation
 
-Encrypt the link with LE Secure Connections — this raises the bar against following, injection, and hijacking. Add application-layer command authentication so a hijacked or injected link still cannot issue trusted commands. Enforce reconnection authentication to close the BLESA class. Treat the link as untrusted by default.
-
-> [!FLAG] InjectaBLE reports injection into *established* connections as inherent to the spec; confirm to what extent LE Secure Connections actually blocks injection-based role-hijack (vs only rejecting undecryptable payloads at higher layers) before stating that encryption fully defeats hijacking.
+Encrypt the link with LE Secure Connections — the InjectaBLE authors recommend exactly this as the primary countermeasure (LESC pairing with authentication and 128-bit keys), and it is the strongest single mitigation here. Note the precise effect: the timing-based injection itself is inherent to the BLE specification and is not stopped by encryption, but on an encrypted link any injected data PDU carries no valid MIC and is rejected by the peer, so forged commands and payloads do not take effect (cayre2021injectable). Add application-layer command authentication so a hijacked or injected link still cannot issue trusted commands. Enforce reconnection authentication to close the BLESA class (wu2020blesa). Treat the link as untrusted by default.

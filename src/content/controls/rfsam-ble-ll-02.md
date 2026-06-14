@@ -104,11 +104,11 @@ references:
     url: 'https://github.com/nccgroup/Sniffle'
     type: tool
   - key: btcorespec
-    title: 'Bluetooth Core Specification (Link Layer: access address, channel map, channel selection)'
+    title: 'Bluetooth Core Specification 5.4 — Vol 6 Part B, Link Layer (§2.3.3.1 CONNECT_IND PDU; §4.5.8 data channel selection)'
     authors: Bluetooth SIG
     venue: Bluetooth SIG
-    year: 2021
-    url: 'https://www.bluetooth.com/specifications/specs/core-specification-5-4/'
+    year: 2023
+    url: 'https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Core-54/out/en/low-energy-controller/link-layer-specification.html'
     type: spec
 tools:
   - sniffle
@@ -128,15 +128,13 @@ lastResearched: 2026-06-14
 ---
 ## Mechanism
 
-When a central accepts an advertiser, it sends a `CONNECT_IND` (`CONNECT_REQ`) PDU that carries everything a third party needs to follow the connection: the 32-bit access address that will tag every subsequent data PDU, the CRC initialisation value, the channel map, the hop increment and the connection interval [btcorespec]. From that moment the two devices leave the advertising channels (37/38/39) and exchange data PDUs on the 37 data channels, changing channel every connection event according to a channel selection algorithm [btcorespec]. A sniffer that read the `CONNECT_IND` can compute the same channel sequence and hop along with the connection, recording every PDU — the technique Mike Ryan established for BLE [ryan2013btle].
+When a central accepts an advertiser, it sends a `CONNECT_IND` (`CONNECT_REQ`) PDU whose `LLData` field carries everything a third party needs to follow the connection: the 32-bit access address that will tag every subsequent data PDU, the CRC initialisation value, the channel map, the hop increment and the connection interval (Vol 6 Part B §2.3.3.1) [btcorespec]. From that moment the two devices leave the advertising channels (37/38/39) and exchange data PDUs on the 37 data channels, changing channel every connection event according to a channel selection algorithm (Vol 6 Part B §4.5.8) [btcorespec]. A sniffer that read the `CONNECT_IND` can compute the same channel sequence and hop along with the connection, recording every PDU — the technique Mike Ryan established for BLE [ryan2013btle].
 
 Two channel selection algorithms exist. Connections where at least one peer is pre-BLE-5, or where the `ChSel` bit is unset, use **CSA #1**, a simple `(channel + hopIncrement) mod 37` walk filtered by the channel map [btcorespec]. BLE 5 connections use **CSA #2**, a PRNG-style mapping that is harder to track; Cauquil reverse-engineered it and showed the hop sequence can be predicted from the access address alone, by measuring hops across a handful of channels [cauquil2019csa2]. Either way, following is a passive-observation problem, not a cryptographic one — the connection parameters are not secret.
 
 The harder case is a connection that is **already established** when the sniffer arrives: there is no `CONNECT_IND` left to read. The access address is still recoverable because it is in the header of every data PDU, but the channel map and the connection-event counter must be reconstructed. A wide-band radio watching several data channels at once can do this by elimination — each observed connection event rules out every counter value incompatible with it — until the hop sequence is pinned down [ballabriga2020sdr]. This is the basis of the SDR all-channel capture path (ice9), which is the only practical way to grab a long-lived connection you did not see start.
 
 This is a **capture-feasibility** control. It produces a PCAP of link-layer traffic; it does not itself decide whether that traffic is a finding. If the connection is unencrypted, the captured data PDUs are readable in the clear, and the judgement of whether that exposes sensitive data, or whether encryption should have been mandatory, is BSAM's (BSAM-DI-04 sensitive-data exposure, BSAM-EN-02 force use of encryption). RFSAM owns only the RF prerequisite — reaching the point where those BSAM controls can be applied to real captured traffic. The same captured hop sequence is also the prerequisite that the active controls build on: decrypting a weakly-paired link (RFSAM-BLE-CR-01) and hijacking a live connection (RFSAM-BLE-AT-01) both start from following the connection that this control captures (RFSAM-RES-04).
-
-> [!FLAG] The CSA #1 parameter set carried in `CONNECT_IND` (access address, CRCInit, channel map, hop increment, hopInterval) and the CSA #1/#2 selection rule are cited to the Bluetooth Core Specification landing page rather than to the specific Volume 6, Part B sections (Link Layer); a verifier should confirm the exact section numbers (e.g. Vol 6 Part B §2.3.3.1 and §4.5.8) against a pinned spec version before marking this verified.
 
 ## Procedure
 
@@ -162,13 +160,11 @@ All steps are passive reception. Capture only devices you own or are explicitly 
 
 4. **Classify the link as encrypted or clear.** In Wireshark, look for `LL_ENC_REQ` / `LL_ENC_RSP` and `LL_START_ENC_REQ` near the start of the connection. If they are absent, the link is unencrypted and the L2CAP/ATT payloads dissect directly — this is the input BSAM-DI-04 / BSAM-EN-02 judge. If they are present, the data PDUs after `LL_START_ENC_RSP` appear as encrypted blobs (decryption, where the pairing was weak, is RFSAM-BLE-CR-01's scope, not this control's).
 
-5. **(Already-running connection, no `CONNECT_IND`.)** If the connection is already up when you start, the dedicated sniffer in steps 1–2 cannot lock on. Use the SDR all-channel path, which recovers the access address from data PDUs and reconstructs the hop sequence by elimination [ballabriga2020sdr]:
+5. **(Already-running connection, no `CONNECT_IND`.)** If the connection is already up when you start, the dedicated sniffer in steps 1–2 cannot lock on. Use the SDR all-channel path, which recovers the access address from data PDUs and reconstructs the hop sequence by elimination [ballabriga2020sdr]. `-l`/`--capture` captures live and `-w` writes the PCAP; `-a` sniffs all channels (requires a bladeRF 2.0), or use `-c`/`-C` to capture a slice of the band on a HackRF/USRP:
    ```bash
-   ice9-bluetooth -l -o established.pcap
+   ice9-bluetooth -l -a -w established.pcap
    ```
-   `-l` lists detected access addresses (the connections in the air); pick the target's AA and follow it per the tool's usage, writing `established.pcap`. Expected output: a candidate access address appears, then data PDUs on that AA accumulate in the PCAP. This path needs CPU/GPU for channelisation and a wide-band radio (bladeRF for the full 80 MHz, HackRF for a slice).
-
-> [!FLAG] The `ice9-bluetooth` invocation (`-l` to list, `-o` for PCAP) is written from the tool's documented all-channel/established-connection workflow but the exact flag spelling was not re-confirmed against the installed binary's `--help`; a verifier should run `ice9-bluetooth --help` and correct the flags before marking verified.
+   (HackRF slice instead of `-a`: `ice9-bluetooth -l -c 2440 -C 20 -w established.pcap`.) ice9 channelises the band, detects every BLE burst — including the PDUs of connections already in progress — and logs them to `established.pcap`; there is no separate "list addresses" step, so you filter the capture by the target's access address in Wireshark afterward (per step 3). Expected output: data PDUs accumulate in the PCAP and the connection's access address becomes visible once you filter on `btle.data_header`. This path needs CPU/GPU for channelisation and a wide-band radio (bladeRF for the full 80 MHz, HackRF for a slice).
 
 ## Field case
 

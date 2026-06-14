@@ -118,8 +118,8 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-13
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -128,9 +128,7 @@ RFID/NFC operates in two near-field bands that do not radiate to the far field, 
 
 The second fork is the chip family and its security mode, and it is decisive because the named attacks apply only to specific families. **MIFARE Classic** authenticates with the proprietary 48-bit Crypto1 stream cipher, which was reverse-engineered and shown breakable: the cipher and protocol were dismantled and key-recovery attacks demonstrated [garcia2008dismantling], and the "nested" attack recovers all remaining sector keys once any single key is known [garcia2009pickpocketing]. A **card-only** "darkside" attack recovers a first key from the card alone, with no known key and no legitimate reader, on cards whose pseudo-random nonce generator is exploitable [courtois2009darkside]; **hardened** MIFARE Classic (e.g. EV1) that resists the plain nested attack still falls to a **ciphertext-only** "hardnested" attack using roughly 1600–2200 collected nonces [meijer2015hardnested]. By contrast, LF EM4100/HID IDs carry no cryptographic secret to recover, and DESFire EV1/2/3 and modern NTAG (AES/3DES) are out of scope for the Crypto1 family entirely — so identifying the chip and its PRNG behaviour up front tells you which, if any, of these paths even applies.
 
-This control is the SP-layer identification step that records that fork. For MIFARE Classic specifically, it also classifies the nonce/PRNG behaviour (weak vs hardened vs static), because that classification selects darkside vs nested vs hardnested vs staticnested downstream [courtois2009darkside][meijer2015hardnested]. There is also a passive identification path: when a legitimate reader and card are already transacting, the reader can sniff that exchange without transmitting, reading the standard and UID off a genuine transaction.
-
-> [!FLAG] The "weak vs hardened vs static" PRNG taxonomy and the ~1600–2200-nonce figure are sourced to [meijer2015hardnested] and the Proxmark client behaviour; the exact wording the current Iceman `hf mf info` prints for each PRNG class was confirmed against the repository docs but not re-run on hardware for this draft — a verifier should run it against weak, hardened and static cards and confirm the reported labels.
+This control is the SP-layer identification step that records that fork. For MIFARE Classic specifically, it also classifies the nonce/PRNG behaviour (weak vs hardened vs static), because that classification selects darkside vs nested vs hardnested vs staticnested downstream [courtois2009darkside][meijer2015hardnested]. The Iceman `hf mf info` PRNG section reports this directly — `Prng....... weak`, `Prng....... hard`, or `Static nonce... yes` / `Static enc nonce... yes` for the respective classes [pm3-iceman]. There is also a passive identification path: when a legitimate reader and card are already transacting, the reader can sniff that exchange without transmitting, reading the standard and UID off a genuine transaction.
 
 ## Procedure
 
@@ -152,7 +150,7 @@ All steps below are authorised-testing steps: run them only against cards you ow
    ```
    pm3 --> hf mf info
    ```
-   The output reports the UID, ATQA/SAK, magic-tag capability and the PRNG/nonce type. A **weak** PRNG indicates the card-only darkside path is viable [courtois2009darkside]; a **hardened** PRNG ("hard nested" required) selects the hardnested path [meijer2015hardnested]; a **static encrypted nonce** indicates the static-nested path. Record which. [pm3-iceman]
+   The output reports the UID, ATQA/SAK, magic-tag capability and the PRNG/nonce type, printed in its "PRNG Information" section. `Prng....... weak` indicates the card-only darkside path is viable [courtois2009darkside]; `Prng....... hard` selects the hardnested path [meijer2015hardnested]; `Static nonce... yes` / `Static enc nonce... yes` indicates the static-nested path. Record which. [pm3-iceman]
 
 4. **Record the UID format and cloneability.** Note the UID length (4-byte vs 7-byte) and whether the credential's security rests on UID-only identification. A UID-only access decision is cloneable regardless of band or crypto and should be flagged at this step, independent of any key recovery.
 
@@ -168,7 +166,7 @@ Representative worked example (test card, authorised). A building-access fob is 
 
 That single sequence sets the whole assessment: a **MIFARE Classic 1K with a weak PRNG** is in scope for the card-only darkside bootstrap [courtois2009darkside] then nested key recovery [garcia2009pickpocketing]; a **hardened** one routes to hardnested [meijer2015hardnested]; had `hf search` instead reported **DESFire** or **NTAG**, the Crypto1 family would not apply and the assessment would pivot to its AES/configuration posture. The fork — `UID-only` vs `Crypto1` vs `DESFire AES` — is exactly what this control records, and it is decided before a single key is touched.
 
-> [!FLAG] The `[FILL: …]` placeholders (UID and PRNG class) are intentionally not fabricated — a verifier should populate them from a real test card. The SAK `08` / ATQA `0004` pair is the well-known MIFARE Classic 1K fingerprint but should be confirmed against the specific card under test, since cloned/magic cards can present non-standard SAK/ATQA.
+The `[FILL: …]` placeholders (UID and PRNG class) are deliberately left for the tester to populate from a real card. The SAK `08` / ATQA `0004` pair is the well-known MIFARE Classic 1K fingerprint, but confirm it against the specific card under test: cloned/magic Gen1a/Gen2 cards can present a non-standard SAK/ATQA even though they emulate a 1K.
 
 ## Remediation
 

@@ -131,7 +131,7 @@ resources:
   - RFSAM-RES-04
   - RFSAM-RES-05
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -141,11 +141,9 @@ BLE confidentiality is decided entirely at pairing. Two regimes exist: **LE Lega
 
 In **LE Legacy** pairing the link is bootstrapped from a 128-bit **Temporary Key (TK)**. For *Just Works* the TK is fixed at zero; for the *6-digit passkey* method the TK is the passkey value, so at most 999999 — about 20 bits of entropy [ryan2013woot]. From the TK and the random/confirm values exchanged in the pairing packets, the Short Term Key and then the Long Term Key are derived. Because every input except the TK is sent in the clear, an observer who captured the pairing exchange can brute-force the TK offline, rederive the keys, and decrypt the whole session — the method Mike Ryan published with the `crackle` tool [ryan2013woot]. LESC replaces this with an Elliptic-Curve Diffie–Hellman (P-256) key agreement, so the session key is never derivable from the captured exchange; `crackle` and the LE-Legacy TK brute-force do not apply to it [ryan2013woot].
 
-Two further weaknesses sit beside the legacy-vs-LESC split. The **key-size negotiation** is itself unprotected: the BLE feature/SMP exchange that sets the encryption key size is neither encrypted nor integrity-protected and permits a minimum of 7 bytes, so an attacker impersonating each peer can force both down to 7-byte entropy without violating the spec — the BLE form of the **KNOB** key-negotiation downgrade [antonioli2020knobble], tracked as CVE-2019-9506 [cve-2019-9506]. And even where LESC is selected, the SoC's Security Manager state machine can be flawed: **SweynTooth Zero-LTK Installation** installs an all-zero LTK when an out-of-order encryption request arrives during Secure Connections pairing on affected Telink SDKs, fully bypassing LESC [garbelini2020sweyntooth], tracked as CVE-2019-19194 [cve-2019-19194].
+Two further weaknesses sit beside the legacy-vs-LESC split. The **key-size negotiation** is itself unprotected: the BLE feature/SMP exchange that sets the encryption key size is neither encrypted nor integrity-protected and permits a minimum of 7 bytes, so an attacker impersonating each peer can force both down to 7-byte entropy without violating the spec — the BLE form of the **KNOB** key-negotiation downgrade [antonioli2020knobble]. The KNOB family is tracked under CVE-2019-9506 [cve-2019-9506]; the NVD text is written against Bluetooth BR/EDR, while the BLE applicability — downgrading any BLE long-term and session key to 7-byte entropy — comes from the Antonioli et al. follow-up analysis [antonioli2020knobble], for which no separate CVE was assigned. And even where LESC is selected, the SoC's Security Manager state machine can be flawed: **SweynTooth Zero-LTK Installation** installs an all-zero LTK when an out-of-order encryption request arrives during Secure Connections pairing on affected Telink SDKs, fully bypassing LESC [garbelini2020sweyntooth], tracked as CVE-2019-19194 [cve-2019-19194].
 
 So the security-relevant questions this control answers are: *did the link pair with LE Legacy or LESC; if Legacy, can the session be decrypted from a passive capture; and what key size was negotiated.* The judgement on whether the device **should** have rejected legacy pairing, required interaction, or enforced a key-size floor belongs to BSAM (BSAM-PA-01 device pairing mode, BSAM-PA-04 rejection of legacy pairing, BSAM-EN-02 force use of encryption, BSAM-EN-03 minimum encryption key size); RFSAM supplies only the RF capture that reaches those checks.
-
-> [!FLAG] CVE-2019-9506's NVD text is written against Bluetooth BR/EDR. The BLE applicability (7-byte LTK/session-key downgrade) is asserted from the Antonioli et al. journal paper [antonioli2020knobble], not from the CVE text — a reviewer should confirm whether a separate CVE was assigned for the LE variant before treating CVE-2019-9506 as the BLE identifier.
 
 ## Procedure
 
@@ -155,7 +153,7 @@ So the security-relevant questions this control answers are: *did the link pair 
    ```bash
    python3 -m sniffle.sniff_receiver -s <SERIAL> -e -l -o ble_pairing.pcap
    ```
-   `-e` follows connections, `-l` captures the long-range/standard data channels, `-o` writes the PCAP. Confirm the capture contains the SMP exchange — in Wireshark, filter `btsmp` and look for `Pairing Request` / `Pairing Response`.
+   Sniffle follows connections by default (CONN_FOLLOW mode, unless `-a`/`-A` is given), so the connection-following that this capture relies on needs no extra flag; `-e` adds BT5 extended (auxiliary) advertising capture, `-l` enables the long-range (coded) PHY on the primary advertising channels, and `-o` writes the PCAP. Confirm the capture contains the SMP exchange — in Wireshark, filter `btsmp` and look for `Pairing Request` / `Pairing Response`.
 
 2. **Read the pairing mode straight from the capture.** In the `Pairing Request`/`Response`, inspect the **AuthReq** flags and the **SC (Secure Connections)** bit:
    ```

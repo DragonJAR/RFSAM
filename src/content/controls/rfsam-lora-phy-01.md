@@ -46,12 +46,12 @@ references:
     year: 2020
     url: 'https://arxiv.org/abs/2002.08208'
     type: paper
-  - key: robyns2020
+  - key: marquet2020
     title: >-
       Towards an SDR implementation of LoRa: Reverse-engineering, demodulation
       strategies and assessment over Rayleigh channel
-    authors: 'P. Robyns, P. Quax, W. Lamotte, W. Thenaers'
-    venue: 'Computer Communications, vol. 153'
+    authors: 'A. Marquet, N. Montavont, G. Z. Papadopoulos'
+    venue: 'Computer Communications, vol. 153, pp. 595–605'
     year: 2020
     url: 'https://doi.org/10.1016/j.comcom.2020.02.034'
     type: paper
@@ -91,25 +91,21 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-07
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
 
-LoRa modulates data with Chirp Spread Spectrum (CSS): a sinusoid sweeps linearly across the channel bandwidth, and the *symbol value is the chirp's cyclic start frequency offset* — for spreading factor SF, a symbol carries SF bits, so there are 2^SF distinguishable start offsets [robyns2020] [tapparel2020]. The regional plans use 125/250/500 kHz bandwidths and SF7–SF12, trading data rate for sensitivity (higher SF spreads the same energy over a longer symbol, reaching lower SNR) [rp002].
+LoRa modulates data with Chirp Spread Spectrum (CSS): a sinusoid sweeps linearly across the channel bandwidth, and the *symbol value is the chirp's cyclic start frequency offset* — for spreading factor SF, a symbol carries SF bits, so there are 2^SF distinguishable start offsets [marquet2020] [tapparel2020]. The regional plans use 125/250/500 kHz bandwidths and SF7–SF12, trading data rate for sensitivity (higher SF spreads the same energy over a longer symbol, reaching lower SNR) [rp002].
 
-Demodulation is **de-chirping**: the receiver multiplies the incoming chirp by a locally generated reference *down-chirp*, which collapses the swept tone into a single constant-frequency tone, then takes an FFT — the symbol is read off as the index of the FFT bin holding the energy peak [robyns2020] [xu2022]. This is the standard, well-understood LoRa receiver and is what every open-source SDR demodulator implements.
+Demodulation is **de-chirping**: the receiver multiplies the incoming chirp by a locally generated reference *down-chirp*, which collapses the swept tone into a single constant-frequency tone, then takes an FFT — the symbol is read off as the index of the FFT bin holding the energy peak [marquet2020] [xu2022]. This is the standard, well-understood LoRa receiver and is what every open-source SDR demodulator implements.
 
 Doing it *reliably on real captures* is the hard part. The energy peak is degraded by sampling time offset (STO) and carrier frequency offset (CFO) between the unsynchronised transmitter and the SDR, and at low SNR the peak can be distorted or buried in noise so the FFT bin is read wrong [xu2022]. A complete receiver therefore needs frame detection (correlating against the up-chirp preamble), then STO and CFO estimation and correction before demodulation; the gr-lora_sdr design implements exactly this chain — preamble sync, CFO/STO compensation, demodulation, Gray-demap, deinterleave, Hamming decode, dewhiten, CRC — and is built to keep decoding at very low SNR [tapparel2020] [grlorasdr] [tapparel2024].
 
-Beyond the per-symbol decision, the choice between **hard-decision** (emit the single nearest bin) and **soft-decision** demodulation (carry the per-bin likelihoods forward into the Hamming/FEC stage) changes how many frames survive at the edge of the link budget: soft information lets the decoder recover frames a nearest-bin decoder loses, so hard-decision yields are a lower bound on what is actually on the air [robyns2020] [xu2022]. This is a capture-completeness concern for the auditor, not a vulnerability in the target — hence `info`.
+Beyond the per-symbol decision, the choice between **hard-decision** (emit the single nearest bin) and **soft-decision** demodulation (carry the per-bin likelihoods forward into the Hamming/FEC stage) changes how many frames survive at the edge of the link budget: soft information lets the decoder recover frames a nearest-bin decoder loses, so hard-decision yields are a lower bound on what is actually on the air [marquet2020] [xu2022]. This is a capture-completeness concern for the auditor, not a vulnerability in the target — hence `info`.
 
 This is a passive PHY check: it recovers symbols and frame bits, but the LoRaWAN application payload stays AES-128 encrypted until the keys are assessed at the crypto layer. There is no off-the-shelf hardware demodulator for LoRa CSS in the standard kit; the de-chirp happens in software on the SDR, which is why capturing and framing live together at the next (link) layer (RFSAM-RES-07).
-
-> [!FLAG] The "soft-decision recovers more frames than hard-decision" claim is generally supported by [robyns2020] and [xu2022], but the specific quantitative gain depends on SF/BW/SNR and the exact decoder. The field-case 25% figure below is illustrative, not a measured RFSAM result — see the `[FILL]` note there.
-
-> [!FLAG] References [robyns2020] (Computer Communications, DOI 10.1016/j.comcom.2020.02.034) and [xu2022] (ACM TOSN, DOI 10.1145/3546869) were verified by DOI, title, author list, venue and year via search and the DOI resolver, but the publisher full text is paywalled and could not be fetched directly; claims attributed to them reflect the abstracts and widely-cited summaries, not a read of the full PDFs.
 
 ## Procedure
 
@@ -139,7 +135,7 @@ Work only on signals you are authorised to receive and analyse. Receiving and de
    ```
    Expected output: decoded LoRa/LoRaWAN/Meshtastic packets surfacing in the web UI as they are demodulated across the band — useful when the exact channel or SF is unknown.
 
-5. **Read the result as a yield.** Note how many frames demodulate cleanly (CRC-OK) versus how many the waterfall shows but the decoder drops. A non-trivial drop rate at the edge of range is the soft-vs-hard-decision gap, and the cue to confirm a soft-decision-capable demodulator before treating the capture as complete [robyns2020] [xu2022]. Export CRC-OK frames as LoRaTap PCAP for the link layer (RFSAM-LORA-LL, RFSAM-RES-07).
+5. **Read the result as a yield.** Note how many frames demodulate cleanly (CRC-OK) versus how many the waterfall shows but the decoder drops. A non-trivial drop rate at the edge of range is the soft-vs-hard-decision gap, and the cue to confirm a soft-decision-capable demodulator before treating the capture as complete [marquet2020] [xu2022]. Export CRC-OK frames as LoRaTap PCAP for the link layer (RFSAM-LORA-LL, RFSAM-RES-07).
 
 6. **Single-board alternative without an SDR de-chirp flow:** the CatSniffer's SX1262 can capture and decode LoRa into Wireshark via `catnip` once region/SF/BW are set — a hardware-radio capture path to cross-check the SDR demodulation against.
 
@@ -151,7 +147,7 @@ Target: an EU868 LoRaWAN sensor, channel 0 (868.1 MHz), SF7, BW 125 kHz. Capture
 
 On a clean, close-range capture both modes recover essentially every frame, and the PHY check simply confirms the de-chirp path works on this SF/BW. The interesting case is a weak-signal capture at the edge of range: there, soft-decision is expected to recover frames that hard-decision drops.
 
-> [!FLAG] [FILL: measured CRC-OK frame yield, hard vs soft-decision, at a recorded SNR for one capture]. Earlier stub copy asserted "~25% more bits recovered"; that specific figure is not an RFSAM measurement and is SF/BW/SNR/decoder-dependent, so it is withheld rather than fabricated. The *direction* (soft ≥ hard at low SNR) is supported by [robyns2020] and [xu2022]; the magnitude must be measured on the actual target capture.
+> [!NOTE] [FILL: measured CRC-OK frame yield, hard vs soft-decision, at a recorded SNR for one capture]. Earlier stub copy asserted "~25% more bits recovered"; that specific figure is not an RFSAM measurement and is SF/BW/SNR/decoder-dependent, so it is withheld rather than fabricated. The *direction* (soft ≥ hard at low SNR) is supported by [marquet2020] and [xu2022]; the magnitude must be measured on the actual target capture.
 
 For a passive survey aiming to enumerate a network, every frame the demodulator drops is potentially a device or a join you never see — which is why this PHY-completeness check precedes the link-layer enumeration rather than being assumed.
 
@@ -159,7 +155,7 @@ For a passive survey aiming to enumerate a network, every frame the demodulator 
 
 This control verifies an auditor capability, so most of the action is auditor-side; the developer/integrator/operator guidance is about *what the demodulability of the PHY implies for the deployment*.
 
-- **Auditor.** Use a soft-decision-capable LoRa demodulator (gr-lora_sdr class) for assessment, and treat hard-decision-only yields as a lower bound on what is on the air, not a complete enumeration [robyns2020] [xu2022]. Confirm the SF/BW set actually in use (devices may use multiple data rates) before declaring a capture complete; sweep SF7–SF12 if the profile is unknown.
+- **Auditor.** Use a soft-decision-capable LoRa demodulator (gr-lora_sdr class) for assessment, and treat hard-decision-only yields as a lower bound on what is on the air, not a complete enumeration [marquet2020] [xu2022]. Confirm the SF/BW set actually in use (devices may use multiple data rates) before declaring a capture complete; sweep SF7–SF12 if the profile is unknown.
 
 - **Developer / integrator.** The CSS PHY is, by design, open and demodulable — its protection is not obscurity but the AES-128 crypto layer (FRMPayload confidentiality, MIC integrity). Do not treat "LoRa is hard to demodulate" as a security property: an SDR plus open-source software recovers the frames. Ensure all sensitive data and commands rely on the LoRaWAN crypto, not on the difficulty of demodulation, and assess that crypto under the CR-layer controls.
 

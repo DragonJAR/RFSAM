@@ -47,9 +47,10 @@ attacks:
       NextEPC, Athonet and SD-Core); some findings need no valid SIM.
     summary: >-
       Domain-informed (ASN.1-structure-aware) fuzzing of LTE/5G RAN-core
-      interfaces that reported 119 vulnerabilities (97 CVEs) across seven LTE and
-      three 5G implementations. Representative — check the per-stack advisories
-      for the build in scope.
+      interfaces that reported 119 vulnerabilities (the paper states 93 assigned
+      CVEs in its abstract and 96 in its introduction) across seven cellular core
+      implementations, three of which are also 5G. Representative — check the
+      per-stack advisories for the build in scope.
   - name: UNISOC NAS-parsing buffer overflow
     cve:
       - CVE-2022-20210
@@ -57,9 +58,11 @@ attacks:
       - cpr2022unisoc
       - cve-2022-20210
     impact: >-
-      A malformed NAS message (the disclosure describes a crafted attach/registration
-      reject) overflows a fixed-size buffer in the modem's NAS parser, crashing
-      the modem (DoS) with potential for code execution.
+      A malformed NAS message (Check Point's disclosure pinpoints the Mobile
+      Identity / IMSI unpacking in the Attach Accept handler, where a length
+      field of zero makes the parser copy 0xFFFFFFFE bytes) overflows a
+      heap buffer in the modem's NAS parser, crashing the modem (DoS) with
+      potential for code execution.
     preconditions: >-
       Target device uses an affected, unpatched UNISOC baseband; attacker can
       deliver the malformed NAS message — in practice from a rogue cell the device
@@ -178,11 +181,9 @@ lastResearched: 2026-06-14
 
 The baseband is a second computer inside every cellular device: a modem SoC running its own real-time OS on a dedicated core, with firmware that parses attacker-influenceable radio messages over the air. Memory-corruption bugs there yield code execution *below* the application processor and its hardening (ASLR/DEP/code-signing), which is exactly the gap Weinmann's foundational WOOT 2012 work demonstrated by exploiting memory corruptions in deployed cellular protocol stacks [weinmann2012baseband]. That surface has stayed live and moved down the stack: the UNISOC NAS-parser overflow is a CVE-tracked remote DoS/RCE in the modem's Non-Access-Stratum message parsing [cpr2022unisoc] [cve-2022-20210], and LLFuzz's over-the-air fuzzing of the *lower* layers (PDCP/RLC/MAC) found eleven previously-unknown memory corruptions across fifteen commercial basebands from five vendors, seven of them assigned CVEs [hoang2025llfuzz]. Baseband-adjacent SoC bugs reach real targeted-surveillance use, too: CVE-2024-43047, a use-after-free in the Qualcomm DSP/FASTRPC path, was credited to Google Project Zero and Amnesty Security Lab and flagged by Google TAG as possibly under limited, targeted exploitation [cve-2024-43047] [securityweek2024qualcomm].
 
-Symmetrically, where the network side is in scope, the eNodeB/EPC parses attacker-influenced RRC/NAS messages and is increasingly open-source. The RANsacked study applied ASN.1-structure-aware fuzzing to the RAN-core interface and reported 119 vulnerabilities (97 CVEs) across seven LTE and three 5G implementations — srsRAN, Open5GS, Magma, OpenAirInterface, NextEPC, Athonet and SD-Core — several of which let a single unauthenticated packet persistently crash the MME/AMF, with some reachable without a valid SIM [bennett2024ransacked]. That makes the implementation-and-version of an in-scope core a finding in its own right: an unpatched build can be matched to a known single-packet crash on inventory alone.
+Symmetrically, where the network side is in scope, the eNodeB/EPC parses attacker-influenced RRC/NAS messages and is increasingly open-source. The RANsacked study applied ASN.1-structure-aware fuzzing to the RAN-core interface and reported 119 vulnerabilities (the paper gives the assigned-CVE total as 93 in its abstract and 96 in its introduction) across seven cellular core implementations — srsRAN/srsEPC, Open5GS, Magma, OpenAirInterface, NextEPC, SD-Core and HPE Athonet, three of which (Magma, Open5GS, OAI) are also exercised as 5G cores — several of which let a single unauthenticated, pre-authentication packet persistently crash the MME/AMF, with the NAS-reachable findings triggerable before the UE is verified (i.e. without a valid SIM) [bennett2024ransacked]. That makes the implementation-and-version of an in-scope core a finding in its own right: an unpatched build can be matched to a known single-packet crash on inventory alone.
 
-This control therefore inventories two things — (1) the device baseband vendor and firmware version, and (2), where the eNodeB/EPC is in scope, the RAN/core implementation and version — and cross-references both against the corpora above. It is the LTE analogue of RFSAM-BLE-IG-01; the difference is that BLE defers the corpus check to BSAM, whereas the BSAM registry has no cellular control, so RFSAM owns the cross-reference here. The corpora below are representative; CVE inventories date fast, so confirm against current vendor security bulletins for the exact chipset/build in scope rather than treating any list as exhaustive [bennett2024ransacked].
-
-> [!FLAG] The RANsacked totals (119 vulnerabilities / 97 CVEs; the named stack list) are taken from the paper and reporting, not from a per-CVE audit. No individual RANsacked CVE ID is asserted here because I did not verify the paper's appendix mapping of each CVE to a specific stack and version; a verifier should pull the specific CVE IDs for the exact build in scope from the paper/NVD before relying on any single one.
+This control therefore inventories two things — (1) the device baseband vendor and firmware version, and (2), where the eNodeB/EPC is in scope, the RAN/core implementation and version — and cross-references both against the corpora above. It is the LTE analogue of RFSAM-BLE-IG-01; the difference is that BLE defers the corpus check to BSAM, whereas the BSAM registry has no cellular control, so RFSAM owns the cross-reference here. The corpora below are representative; CVE inventories date fast, so confirm against current vendor security bulletins for the exact chipset/build in scope rather than treating any list as exhaustive [bennett2024ransacked]. No single RANsacked CVE ID is asserted here: the paper's per-stack, per-version CVE mapping lives in its appendix (Table 6), so pull the specific CVE IDs for the exact build in scope from the paper or NVD before relying on any one of them.
 
 ## Procedure
 

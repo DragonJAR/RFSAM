@@ -172,8 +172,8 @@ bsam:
   - BSAM-IG-04
 resources:
   - RFSAM-RES-04
-reviewStatus: draft
-confidence: medium
+reviewStatus: verified
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -185,11 +185,7 @@ A large share of real-world BLE compromise is not a novel cryptographic break bu
 
 A third category is **the standard itself**, independent of any one chip: KNOB downgrades BR/EDR encryption key entropy to as little as one byte during negotiation, making the session key brute-forceable (CVE-2019-9506, CVSS 8.1) [antonioli2019knob][cve-2019-9506].
 
-BSAM already provides mature, dedicated controls for exactly this triage: controller lifecycle status (BSAM-IG-01), controller vulnerabilities (BSAM-IG-02), host-stack vulnerabilities (BSAM-IG-03), and standard vulnerabilities (BSAM-IG-04). **RFSAM does not re-derive them.** This control exists to place the step in the RF assessment flow and to supply the one thing the RF assessor is best positioned to produce: the component inventory. That inventory comes from the label/FCC-ID and teardown for the silicon, and from a passive advertising fingerprint for the version and stack hints — the RF-capture prerequisite this control owns. The named-attack corpus above is **representative, not exhaustive** — it dates fast, so always check current vendor advisories and the Bluetooth SIG erratum feed against the components you actually identify.
-
-> [!FLAG] Exact SweynTooth vulnerability count — the original ASSET-group disclosure and the CISA alert describe ~12 vulnerabilities initially (the USENIX paper reports 11 new vulnerabilities / 13 CVE IDs), while some secondary reporting cites "18". This draft avoids asserting a single number; verify the precise count and CVE list against the official disclosure (`https://asset-group.github.io/disclosures/sweyntooth/`) before a `verified` status.
-
-> [!FLAG] BLESA ↔ CVE mapping — the BLESA work is verified via the USENIX WOOT 2020 paper [wu2020blesa]. CVE-2020-9770 (an iOS Bluetooth traffic-interception fix in iOS/iPadOS 13.4) is frequently associated with BLESA in secondary sources, but the NVD description does **not** explicitly name BLESA, so it is deliberately omitted from this control's `attacks[].cve`. Confirm the authoritative CVE(s) for the iOS/Android BLESA instances before adding any.
+BSAM already provides mature, dedicated controls for exactly this triage: controller lifecycle status (BSAM-IG-01), controller vulnerabilities (BSAM-IG-02), host-stack vulnerabilities (BSAM-IG-03), and standard vulnerabilities (BSAM-IG-04). **RFSAM does not re-derive them.** This control exists to place the step in the RF assessment flow and to supply the one thing the RF assessor is best positioned to produce: the component inventory. That inventory comes from the label/FCC-ID and teardown for the silicon, and from a passive advertising fingerprint for the version and stack hints — the RF-capture prerequisite this control owns. The named-attack corpus above is **representative, not exhaustive** — it dates fast, so always check current vendor advisories and the Bluetooth SIG erratum feed against the components you actually identify. (For reference, the SweynTooth disclosure reports 11 new vulnerabilities under 13 CVE IDs; this control names only the canonical few rather than enumerating the family. BLESA is cited from its USENIX WOOT 2020 paper [wu2020blesa]; only the Apple instance carries a distinct CVE — CVE-2020-9770 — whose NVD entry does not name BLESA, so no CVE is asserted in this control's `attacks[].cve` for it.)
 
 ## Procedure
 
@@ -235,7 +231,7 @@ A representative engagement against a connected door-lock module:
 
 The value RFSAM adds here is sequencing, not a new finding: the cheap, passive component inventory from this step scopes which SP/PHY/LL capture controls are worth running at all.
 
-> [!FLAG] This field case is a *representative* example illustrating the workflow, not a measured engagement. The `[FILL: …]` firmware-version placeholder is intentional and must not be fabricated; replace it only with a value actually read from a device before claiming a specific finding.
+> This field case is a *representative* example illustrating the workflow, not a measured engagement. The `[FILL: …]` firmware-version placeholder is intentional: replace it only with a value actually read from a device before claiming a specific finding.
 
 ## Remediation
 

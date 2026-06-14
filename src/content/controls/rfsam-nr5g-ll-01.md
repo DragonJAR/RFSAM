@@ -87,7 +87,7 @@ references:
     authors: 'M. Chlosta, D. Rupprecht, C. Pöpper, T. Holz'
     venue: ACM WiSec 2021
     year: 2021
-    url: 'https://montsecure.com/files/5g_suci_catcher.pdf'
+    url: 'https://informatik.rub.de/veroeffentlichungenbkp/syssec/veroeffentlichungen/2021/pdfs/2021_5G_SUCI_Catchers__Still_catching_them_all_.pdf'
     type: paper
   - key: hussain2019reasoner
     title: '5GReasoner: A Property-Directed Security and Privacy Analysis Framework for 5G Cellular Network Protocol'
@@ -189,8 +189,6 @@ A representative, reproducible walk-through against an **authorised test cell** 
   - If `[FILL: …]` = Profile A/B, the permanent identity was not recoverable; the reportable exposure is the in-the-clear cell configuration plus the documented AKA-based SUCI linkability [chlosta2021suci].
 
 > [!FLAG] Every `[FILL: …]` above is an unmeasured placeholder — no specific measured 5G finding is asserted. A verifier with an authorised SA lab cell (or an authorised live capture) should replace each placeholder with real measured values before this control is promoted past `draft`.
-
-> [!FLAG] The exact Wireshark filter/field names (`nr-rrc.SIB1`, `nas-5gs.mm.*`, the SUCI Protection Scheme Identifier field) and QCSuper's precise 5G-capture flags are from current tooling/standards knowledge and the cited tool repos, but were not re-run end-to-end on hardware for this draft; confirm the exact dissector field paths against a live capture and the current Wireshark NAS-5GS dissector before promoting past `draft`.
 
 ## Remediation
 

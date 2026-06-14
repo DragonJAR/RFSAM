@@ -61,8 +61,8 @@ attacks:
     impact: >-
       A spoofer transmits a valid-looking, slightly stronger L1 C/A signal to
       capture the receiver and drag its position/time; its onset can present as
-      an anomalous power rise and abnormally high or uniform C/N0 across
-      satellites.
+      a C/N0 that is implausibly high for the elevated received power — an
+      abnormal imbalance between C/N0 and power.
     preconditions: >-
       A counterfeit L1 signal stronger than the live sky at the receiver. This
       SP-layer survey detects the interference signature only; the spoofing
@@ -108,7 +108,7 @@ resources:
   - RFSAM-RES-01
 bsam: []
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 
@@ -116,11 +116,9 @@ lastResearched: 2026-06-14
 
 A GPS L1 C/A signal is BPSK on a 1575.42 MHz carrier, spread by a 1023-chip code at 1.023 Mcps that repeats every 1 ms, with one PRN code per satellite (CDMA). It arrives extremely weak: the GPS SPS Performance Standard guarantees a received signal power of only **-158.5 dBW (-128.5 dBm) for the L1 C/A-code** under the IS-GPS-200 reference conditions, which is below the thermal noise floor — the signal is recovered only by correlating against the known PRN code [spsps2020]. The practical consequence for an SP-layer survey is decisive: **you cannot see the GNSS signal on a waterfall.** A clean, quiet band at L1 *is* the healthy picture; what you survey for is everything that does not belong there.
 
-Because the civilian signal is fixed-frequency, public and arriving below the noise, the entire attack surface at this layer is interference, not secrecy. Interference monitoring is conventionally split into detection/recognition, direction finding, and source location; the detection methods relevant to a single-site survey are **energy detection in the frequency domain (FFT-based)** for a spectrum view, **AGC monitoring** at the RF front end (the receiver's gain control swings under strong in-band power), and **C/N0 (carrier-to-noise) monitoring** in the tracking loops, which falls when interference raises the effective noise [qiao2023survey]. No single metric is sufficient alone: a robust read combines the waterfall with the receiver's own reports. Low-cost COTS receivers, when their C/N0 is paired with a calibrated received-power metric, can separate **nominal, jammed, spoofed and blocked** conditions — jamming collapses C/N0, while a spoof can present as an anomalous power rise with abnormally high or uniform C/N0 across satellites [kriezis2025cots].
+Because the civilian signal is fixed-frequency, public and arriving below the noise, the entire attack surface at this layer is interference, not secrecy. Interference monitoring is conventionally split into detection/recognition, direction finding, and source location; the detection methods relevant to a single-site survey are **energy detection in the frequency domain (FFT-based)** for a spectrum view, **AGC monitoring** at the RF front end (the receiver's gain control swings under strong in-band power), and **C/N0 (carrier-to-noise) monitoring** in the tracking loops, which falls when interference raises the effective noise [qiao2023survey]. No single metric is sufficient alone: a robust read combines the waterfall with the receiver's own reports. Low-cost COTS receivers, when their C/N0 is paired with a calibrated received-power metric, can separate **nominal, jammed, spoofed and blocked** conditions — jamming collapses C/N0, while a spoof can present as a C/N0 that is implausibly high for the elevated received power (an abnormal imbalance between C/N0 and power that satellite signals, at fixed transmit power, cannot produce) [kriezis2025cots].
 
 Two interference families bound the survey. **Jamming** (broadband noise or a CW carrier over L1) denies the fix — the case the waterfall and a C/N0 collapse make obvious. **Spoofing onset** is subtler: a counterfeit L1 signal slightly stronger than the live sky, detectable here only as an interference *signature* (the spoofing technique itself is an Attack-layer concern). The operational relevance is current: aviation authorities report GNSS jamming and spoofing incidents rising sharply, with GPS signal-loss events up roughly 220% between 2021 and 2024 across Eastern Europe and the Middle East [easa2025gnss].
-
-> [!FLAG] The "abnormally high or uniform C/N0 across satellites" spoofing signature is summarised from [kriezis2025cots]; confirm against the paper's exact discriminator definitions and thresholds before relying on it as a field test, as spoof presentations vary by spoofer power and receiver.
 
 ## Procedure
 
@@ -144,7 +142,7 @@ All steps are passive receive-only. No transmission is involved at the SP layer,
    gpsd -n /dev/ttyACM0
    cgps -s         # or: gpsmon /dev/ttyACM0
    ```
-   Expected (healthy): several satellites with C/N0 in roughly the 35–50 dB-Hz range and a 3D fix within a few minutes. **Interference signature:** C/N0 across all tracked satellites drops together and satellites-used falls toward zero (jamming/blocked), versus implausibly high or uniform C/N0 with a stable-but-suspect fix (possible spoof) [kriezis2025cots]. Record C/N0 per PRN and the fix status.
+   Expected (healthy): several satellites with C/N0 in roughly the 35–50 dB-Hz range and a 3D fix within a few minutes. **Interference signature:** C/N0 across all tracked satellites drops together and satellites-used falls toward zero (jamming/blocked), versus C/N0 that stays implausibly high for the elevated received power with a stable-but-suspect fix (possible spoof) [kriezis2025cots]. Record C/N0 per PRN and the fix status.
 
 4. **(Optional) Cross-check with a software receiver on the same I/Q.** If you captured raw L1 I/Q (RFSAM-RES-01), run gnss-sdr and compare its reported C/N0 against the COTS module — agreement strengthens the read and a divergence is itself a finding:
    ```bash

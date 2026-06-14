@@ -142,10 +142,6 @@ A5/2 falls to a **ciphertext-only** attack: Barkan, Biham and Keller showed that
 
 The second axis is identity. The permanent subscriber identity (IMSI) is meant to be hidden behind a network-assigned temporary identity (TMSI); the IMSI is only supposed to appear on the air during attach or location update when no valid TMSI is held. The network can, however, compel disclosure: the Identification procedure of the L3 mobility-management protocol lets the network send an Identity Request for the IMSI or IMEI, which the handset answers [3gpp24008]. Because GSM authentication is **one-way** — the handset authenticates to the network, but the network never proves itself to the handset — a passive observer that sees the cell paging by IMSI, or sees an IMSI in an Identity Response, has both a privacy finding (the subscriber is trackable) and the on-air signature that an active IMSI catcher exploits by impersonating the cell and demanding the IMSI plus weak or absent ciphering [dabrowski2014imsi]. This control measures the *passive* exposure; the active rogue-cell technique is authorised-testing-only and belongs to the GSM AT-layer control.
 
-> [!FLAG] The specific message names and the IMSI/IMEI Identification procedure are attributed to 3GPP/ETSI TS 24.008; the cited Internet Archive copy is version 3.19.0 (Release 1999). A verifier should confirm the section numbering against the release that matches the network under test, as clause numbers shift between releases.
-
-> [!FLAG] Barkan–Biham–Keller's primary URL is the IACR CRYPTO 2003 archive PDF; it was confirmed by search but the IACR host returned HTTP 403 to the automated fetch (anti-bot), and the Springer chapter copy (DOI 10.1007/978-3-540-45146-4_35) redirects to an auth/cookie page. Both are the genuine paper; a verifier should open the IACR PDF in a browser to confirm direct resolution.
-
 ## Procedure
 
 All steps are **passive reception** of what the network already broadcasts, on equipment you own or are authorised to test. Step 5 (key recovery) decrypts traffic and is **authorised-testing-only**: a licensed lab or RF-shielded enclosure with explicit permission and your own test SIMs — recovering keys from live traffic you are not authorised to intercept is illegal in most jurisdictions.
@@ -182,7 +178,7 @@ All steps are **passive reception** of what the network already broadcasts, on e
    - In Wireshark, inspect **Paging Request** messages — filter `gsm_a.dtap` and look at the mobile-identity IE: if the cell pages by **IMSI** (rather than TMSI), or you see an **Identity Request** for the IMSI followed by an **Identity Response** carrying it, the permanent identity is exposed [3gpp24008].
    - Cross-check passively with the Oros42 IMSI-catcher, which consumes the same GSMTAP stream and prints harvested identities:
      ```bash
-     python3 simple_IMSI-catcher.py --sniffer
+     python3 simple_IMSI-catcher.py --sniff
      ```
      Expected: lines pairing TMSI/IMSI with country/operator for handsets the cell pages — concrete evidence of on-air identity exposure with **no transmission** [dabrowski2014imsi].
 

@@ -184,7 +184,7 @@ resources:
   - RFSAM-RES-11
   - RFSAM-RES-12
 reviewStatus: draft
-confidence: medium
+confidence: high
 lastResearched: 2026-06-14
 ---
 ## Mechanism
@@ -200,8 +200,6 @@ Since 2018 the auditor often does not even need a client. The AP's first EAPOL f
 Two confidentiality breaks recover *plaintext* without recovering the PSK, and are worth noting when scoping: **KRACK** forces reinstallation of the PTK during the handshake, resetting the nonce/replay counter and enabling decryption on unpatched endpoints [vanhoef2017krack][cve-2017-13077]; **Kr00k** causes affected Broadcom/Cypress chips to encrypt frames buffered across a disassociation with an all-zero key [cve-2019-15126]. Both are implementation/patch-state findings rather than passphrase-strength findings.
 
 This corpus is representative, not exhaustive — Wi-Fi attack surface and patch state move quickly, so check current vendor advisories for the specific chipset and firmware.
-
-> [!FLAG] The "~11,000 guesses" figure for the two-half WPS PIN search is the widely cited bound from [viehbock2011wps]; confirm the exact arithmetic (10^4 + 10^3 minus checksum constraints) against the whitepaper text before promoting this control to verified.
 
 ## Procedure
 
