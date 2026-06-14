@@ -166,7 +166,7 @@ const tools = [
   {
     slug: 'wireshark', name: 'Wireshark', vendor: 'open source', type: 'software',
     protocols: ['any'], homepage: 'https://www.wireshark.org',
-    note: 'The universal packet dissector. BLE/Bluetooth and many capture tools export to PCAP for decoding and filtering here.',
+    note: 'The universal packet dissector. Capture tools across these protocols export to PCAP, and Wireshark dissects, decodes and lets you filter the frames here — supplying a network/link key where one is needed to decrypt in place.',
   },
   {
     slug: 'aircrack-ng', name: 'aircrack-ng', vendor: 'open source', type: 'software',
