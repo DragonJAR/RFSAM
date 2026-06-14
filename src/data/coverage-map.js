@@ -10,6 +10,14 @@ export const coverageMap = [
     { id: 'RFSAM-BLE-CR-01',  title: 'Pairing and encryption assessment',               layer: 'CR',  status: 'existing' },
     { id: 'RFSAM-BLE-AT-01',  title: 'Hijack a live BLE connection',                    layer: 'AT',  status: 'existing' },
   ]},
+  { protocol: 'BTC', controls: [
+    { id: 'RFSAM-BTC-IG-01', title: 'Identify the device, BR/EDR mode and vulnerability corpus', layer: 'IG', status: 'existing' },
+    { id: 'RFSAM-BTC-SP-01', title: 'Inquiry-scan and confirm a reachable BR/EDR device',        layer: 'SP', status: 'existing' },
+    { id: 'RFSAM-BTC-LL-01', title: 'Capture Bluetooth Classic baseband traffic',                layer: 'LL', status: 'existing' },
+    { id: 'RFSAM-BTC-CR-01', title: 'Assess pairing and encryption key strength',                layer: 'CR', status: 'existing' },
+    { id: 'RFSAM-BTC-AT-01', title: 'Test baseband/LMP resilience and availability',             layer: 'AT', status: 'existing' },
+    { id: 'RFSAM-BTC-AP-01', title: 'Enumerate and exercise exposed BR/EDR profiles',            layer: 'AP', status: 'existing' },
+  ]},
   { protocol: 'WIFI', controls: [
     { id: 'RFSAM-WIFI-SP-01', title: 'Band and channel survey',         layer: 'SP', status: 'existing' },
     { id: 'RFSAM-WIFI-LL-01', title: 'Management-frame exposure',       layer: 'LL', status: 'existing' },

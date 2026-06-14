@@ -1,7 +1,7 @@
 export const LAYER_IDS = ['IG', 'SP', 'PHY', 'LL', 'CR', 'AT', 'AP'];
 
 export const PROTOCOL_IDS = [
-  'BLE', 'WIFI', 'LORA', 'LTE', 'RFID', 'SUBG',
+  'BLE', 'BTC', 'WIFI', 'LORA', 'LTE', 'RFID', 'SUBG',
   'ZIGBEE', 'ZWAVE', 'THREAD', 'GNSS', 'ADSB', 'NR5G', 'GSM', 'UWB',
 ];
 
