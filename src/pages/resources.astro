@@ -1,0 +1,21 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+const resources = (await getCollection('resources')).sort((a, b) => a.data.id.localeCompare(b.data.id));
+const rendered = await Promise.all(resources.map(async (r) => ({ data: r.data, Content: (await render(r)).Content })));
+---
+<BaseLayout title="Resources">
+  <div class="container">
+    <h1 style="font-size:34px">Resources</h1>
+    <p style="color:var(--mut);margin-top:8px">Reusable procedures referenced by the controls.</p>
+    <div style="margin-top:20px">
+      {rendered.map(({ data, Content }) => (
+        <div id={data.id.toLowerCase()} style="border-bottom:1px solid var(--line);padding:16px 0;scroll-margin-top:70px">
+          <div class="mono" style="font-size:11.5px;color:var(--cyan)">{data.id}</div>
+          <div style="font-family:var(--disp);font-weight:600;margin:4px 0 6px">{data.title}</div>
+          <div style="color:var(--mut);font-size:13.5px;line-height:1.6"><Content /></div>
+        </div>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
