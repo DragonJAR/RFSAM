@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { protocols } from '../../data/protocols.js';
+import { toolchains } from '../../data/toolchains.js';
+
+const cards = protocols.map((p) => ({ p, status: toolchains[p.id]?.status ?? 'planned' }));
+---
+<BaseLayout title="Wayfinder">
+  <div class="container">
+    <div class="mono" style="font-size:11px;letter-spacing:.18em;color:var(--orange);text-transform:uppercase">RF Wayfinder</div>
+    <h1 style="font-size:38px;margin-top:10px;max-width:18ch">Pick a technology. Walk its descent. See the kit and the reasons.</h1>
+    <p style="font-size:16px;color:var(--mut);max-width:64ch;margin-top:14px">
+      For each RF technology the wayfinder lays out the assessment descent — spectrum down to application —
+      and, at every step, the hardware, software and projects that get the job done, with the reasons to
+      pick one path over another. Choose a technology to begin.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:28px">
+      {cards.map(({ p, status }) => (
+        <a href={`/wayfinder/${p.id.toLowerCase()}`}
+           style={`display:block;border:1px solid ${status === 'complete' ? 'var(--orange)' : 'var(--line)'};border-radius:10px;padding:18px;background:var(--panel)`}>
+          <div style="font-family:var(--disp);font-weight:600;font-size:16px">{p.name}</div>
+          <div class="mono" style="font-size:10px;color:var(--mut2);margin-top:3px">{p.band}</div>
+          <div class="mono" style={`font-size:10px;margin-top:12px;letter-spacing:.06em;color:${status === 'complete' ? 'var(--orange)' : 'var(--mut2)'}`}>
+            {status === 'complete' ? 'TOOLCHAIN READY →' : 'TOOLCHAIN PLANNED'}
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

@@ -4,6 +4,7 @@ import { meta } from '../data/meta.js';
 const { title } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const nav = [
+  { href: '/wayfinder', label: 'Wayfinder' },
   { href: '/methodology', label: 'Methodology' },
   { href: '/controls', label: 'Controls' },
   { href: '/tools', label: 'Tools' },

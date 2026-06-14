@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { protocols } from '../../data/protocols.js';
+import { layers } from '../../data/layers.js';
+import { toolchains } from '../../data/toolchains.js';
+
+export function getStaticPaths() {
+  return protocols.map((p) => ({ params: { protocol: p.id.toLowerCase() }, props: { protocolId: p.id } }));
+}
+
+const { protocolId } = Astro.props;
+const proto = protocols.find((p) => p.id === protocolId);
+const tc = toolchains[protocolId] ?? { status: 'planned', reference: null, layers: {} };
+
+const allTools = await getCollection('tools');
+const toolBySlug = (slug) => allTools.find((t) => t.id === slug)?.data;
+
+const allControls = await getCollection('controls');
+const controlsAt = (layerId) =>
+  allControls.filter((c) => c.data.protocol === protocolId && c.data.layer === layerId)
+    .sort((a, b) => a.data.id.localeCompare(b.data.id));
+
+// Show the descent (IG → AP) for every protocol; populated where the toolchain exists.
+const descent = layers;
+---
+<BaseLayout title={`Wayfinder · ${proto.name}`}>
+  <div class="container">
+    <div class="mono" style="font-size:11px;color:var(--mut2)"><a href="/wayfinder">Wayfinder</a> / {proto.name}</div>
+    <h1 style="font-size:34px;margin-top:12px">{proto.name}</h1>
+    <div class="mono" style="font-size:12px;color:var(--mut2);margin-top:4px">{proto.band}</div>
+
+    {tc.reference && (
+      <div style="border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:8px;padding:14px 18px;margin-top:18px;background:var(--panel)">
+        <div class="mono" style="font-size:10px;letter-spacing:.14em;color:var(--amber)">REFERENCE METHODOLOGY</div>
+        <div style="font-family:var(--disp);font-weight:600;margin-top:6px">
+          <a href={tc.reference.url} target="_blank" rel="noopener">{tc.reference.name} ↗</a>
+        </div>
+        <p style="font-size:13.5px;color:#CFD9E4;margin-top:6px;line-height:1.6">{tc.reference.note}</p>
+      </div>
+    )}
+
+    {tc.status !== 'complete' && (
+      <div style="border:1px dashed var(--line2);border-radius:8px;padding:14px 18px;margin-top:18px;color:var(--mut)">
+        The toolchain for {proto.name} is planned — the descent below links to any existing controls; the per-step
+        hardware/software guidance is being filled in.
+      </div>
+    )}
+
+    <div style="margin-top:28px">
+      {descent.map((l) => {
+        const def = tc.layers?.[l.id];
+        const tools = def?.tools ?? [];
+        const ctrls = controlsAt(l.id);
+        if (!def && ctrls.length === 0 && tc.status === 'complete') return null;
+        return (
+          <section style="margin-top:22px;border-left:3px solid var(--line);padding-left:18px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style={`width:10px;height:10px;border-radius:50%;background:${l.color}`}></span>
+              <span class="mono" style={`font-size:12px;color:${l.color}`}>{l.id}</span>
+              <span style="font-family:var(--disp);font-weight:600;font-size:16px">{l.name}</span>
+            </div>
+            {def?.note && <p style="font-size:13.5px;color:var(--mut);margin:8px 0 0;line-height:1.6">{def.note}</p>}
+            {tools.length > 0 && (
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:12px">
+                {tools.map((t) => {
+                  const data = toolBySlug(t.tool);
+                  return data ? <ToolCard tool={data} role={t.role} why={t.why} caveat={t.caveat} /> : null;
+                })}
+              </div>
+            )}
+            {ctrls.length > 0 && (
+              <div class="mono" style="font-size:11px;margin-top:10px;color:var(--mut2)">
+                Controls: {ctrls.map((c, i) => (
+                  <>{i > 0 ? ' · ' : ''}<a style="color:var(--cyan)" href={`/controls/${c.data.id.toLowerCase()}`}>{c.data.id}</a></>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>

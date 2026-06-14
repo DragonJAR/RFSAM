@@ -63,6 +63,23 @@ export async function runValidation() {
     const { data, content } = matter(readFileSync(join(dir, f), 'utf8'));
     all.push(...checkControl({ data, body: content, file: f }, reg));
   }
+
+  // Toolchain integrity: every referenced tool slug must exist, and every
+  // hardware tool's `software` slugs must exist.
+  const { toolchains } = await import('../src/data/toolchains.js');
+  for (const [proto, tc] of Object.entries(toolchains)) {
+    for (const [layer, def] of Object.entries(tc.layers ?? {})) {
+      for (const t of def.tools ?? []) {
+        if (!reg.toolSlugs.has(t.tool)) all.push(`toolchains.${proto}.${layer}: unknown tool slug '${t.tool}'`);
+      }
+    }
+  }
+  for (const f of readdirSync('src/content/tools').filter((f) => f.endsWith('.md'))) {
+    const { data } = matter(readFileSync(join('src/content/tools', f), 'utf8'));
+    for (const s of data.software ?? []) {
+      if (!reg.toolSlugs.has(s)) all.push(`tools/${f}: unknown software slug '${s}'`);
+    }
+  }
   return all;
 }
 
