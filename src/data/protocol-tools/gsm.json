@@ -18,13 +18,32 @@
     "repo": "https://github.com/ptrkrysik/gr-gsm"
   },
   {
-    "slug": "imsi-catcher-detector",
-    "name": "IMSI-catcher",
+    "slug": "imsi-catcher",
+    "name": "IMSI-catcher (Oros42)",
     "vendor": "Oros42",
     "type": "software",
     "protocols": ["GSM"],
-    "note": "Python tool that reads the GSMTAP stream produced by gr-gsm and pulls the IMSI / TMSI identities the network pages over the air, printing the cellphones it sees around you. Passive identity exposure demonstrator and a building block for IMSI-catcher (fake-BTS) detection.",
+    "note": "Python tool that reads the GSMTAP stream produced by gr-gsm and pulls the IMSI / TMSI identities the network pages over the air, printing the cellphones it sees around you. A PASSIVE IMSI catcher — it harvests identities off the broadcast/control channels without transmitting anything (no rogue cell); the active catcher is a rogue BTS (osmo-bts / OpenBTS).",
     "repo": "https://github.com/Oros42/IMSI-catcher"
+  },
+  {
+    "slug": "osmo-bts",
+    "name": "OsmoBTS (Osmocom GSM stack)",
+    "vendor": "Osmocom",
+    "type": "software",
+    "protocols": ["GSM"],
+    "spec": "osmo-trx + osmo-bts + osmo-bsc + osmo-msc + osmo-hlr",
+    "repo": "https://github.com/osmocom/osmo-bts",
+    "note": "The Osmocom open GSM network stack: osmo-trx drives the SDR, osmo-bts is the base station, with osmo-bsc / osmo-msc / osmo-hlr forming the core. Together they stand up a full 2G cell on an SDR — the reference open platform for a test/rogue BTS and active IMSI-catcher research. Actively maintained."
+  },
+  {
+    "slug": "openbts",
+    "name": "OpenBTS",
+    "vendor": "Range Networks",
+    "type": "software",
+    "protocols": ["GSM"],
+    "repo": "https://github.com/RangeNetworks/openbts",
+    "note": "The original 'GSM in a box': a single application that presents a GSM air interface on a USRP and routes calls/SMS over SIP/Asterisk, replacing the traditional RAN+core. A self-contained alternative to the Osmocom stack for fake-BTS / IMSI-catcher work; build via the RangeNetworks 'dev' environment."
   },
   {
     "slug": "kraken-a51",
