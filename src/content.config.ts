@@ -74,6 +74,7 @@ const tools = defineCollection({
     type: z.enum(['hardware', 'software', 'project']).default('hardware'),
     protocols: z.array(z.string()).default([]),
     note: z.string(),
+    spec: z.string().optional(),   // e.g. instantaneous bandwidth / tuning range for SDRs
     repo: z.string().url().optional(),
     homepage: z.string().url().optional(),
     // Software/projects that pair with this hardware (slugs in this collection).

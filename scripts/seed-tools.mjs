@@ -9,9 +9,36 @@ const tools = [
   // ---- hardware ----
   {
     slug: 'hackrf-one', name: 'HackRF One', vendor: 'Great Scott Gadgets', type: 'hardware',
-    protocols: ['Wide-band SDR'], repo: 'https://github.com/greatscottgadgets/hackrf',
+    protocols: ['Wide-band SDR'], spec: '~20 MHz IBW · 1 MHz–6 GHz · half-duplex',
+    repo: 'https://github.com/greatscottgadgets/hackrf',
     software: ['universal-radio-hacker', 'ice9-bluetooth-sniffer'],
     note: "1 MHz–6 GHz half-duplex SDR — the discovery radio for 'Rapid Radio Reversing': find and characterise an unknown signal before working it with a narrowband tool.",
+  },
+  {
+    slug: 'bladerf-2-micro', name: 'bladeRF 2.0 micro xA9', vendor: 'Nuand', type: 'hardware',
+    protocols: ['Wide-band SDR'], spec: '~56 MHz IBW · 47 MHz–6 GHz · 2×2 MIMO',
+    homepage: 'https://www.nuand.com/product/bladerf-xa9/',
+    software: ['ice9-bluetooth-sniffer'],
+    note: 'Wideband full-duplex SDR (AD9361). ~56 MHz instantaneous bandwidth covers most of the 80 MHz BLE band in one pass — wider than a HackRF, so fewer retunes when running ice9.',
+  },
+  {
+    slug: 'usrp-b210', name: 'USRP B210', vendor: 'Ettus Research (NI)', type: 'hardware',
+    protocols: ['Wide-band SDR'], spec: '~56 MHz IBW (30.72 MHz in 2×2) · 70 MHz–6 GHz',
+    homepage: 'https://www.ettus.com/all-products/ub210-kit/',
+    software: ['ice9-bluetooth-sniffer'],
+    note: 'Lab-grade full-duplex SDR (AD9361) with a disciplined clock option. Up to ~56 MHz real-time bandwidth (halved to ~30.72 MHz in 2×2 MIMO). A common ice9 target for BLE/BT capture.',
+  },
+  {
+    slug: 'signalsdr-pro', name: 'SignalSDR Pro', vendor: 'Signalens', type: 'hardware',
+    protocols: ['Wide-band SDR'], spec: '61.44 MHz BW · 70 MHz–6 GHz · 2TX/2RX',
+    homepage: 'https://www.rtl-sdr.com/signalsdr-pro-an-upcoming-sdr-with-70-mhz-to-6-ghz-12-bit-adc-61-44-mhz-bandwidth-and-2tx-2rx-channels/',
+    note: 'AD9361-based SDR in a Raspberry-Pi form factor (Zynq 7020); the widest instantaneous bandwidth in this list at 61.44 MHz, and it can emulate a USRP B210 / ADALM-Pluto. Newer/emerging product — verify ice9 support and availability before relying on it.',
+  },
+  {
+    slug: 'rtl-sdr-v4', name: 'RTL-SDR Blog V4', vendor: 'RTL-SDR Blog', type: 'hardware',
+    protocols: ['RX-only SDR'], spec: '~2.4 MHz BW · 0.5 kHz–1.766 GHz · RX only',
+    homepage: 'https://www.rtl-sdr.com/v4/',
+    note: 'Budget RX-only dongle. Does NOT reach 2.4 GHz, so it cannot receive BLE, Wi-Fi or Zigbee — but it is a fine cheap receiver for sub-GHz, LoRa and ADS-B (1090 MHz).',
   },
   {
     slug: 'ubertooth-one', name: 'Ubertooth One', vendor: 'Great Scott Gadgets', type: 'hardware',

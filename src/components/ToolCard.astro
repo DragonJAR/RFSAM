@@ -15,6 +15,7 @@ const slugify = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-
     <span class="mono" style="font-size:10px;color:var(--mut2)">{tool.vendor}</span>
     {link && <a href={link} target="_blank" rel="noopener" class="mono" style="font-size:10.5px;color:var(--amber);margin-left:auto">{linkLabel}</a>}
   </div>
+  {tool.spec && <div class="mono" style="font-size:10.5px;color:var(--cyan);margin-top:6px">{tool.spec}</div>}
   {role && <div class="mono" style="font-size:11px;color:var(--orange);margin-top:8px;letter-spacing:.03em">{role}</div>}
   {why && <p style="font-size:13px;color:#CFD9E4;margin-top:4px;line-height:1.55">{why}</p>}
   {caveat && <p style="font-size:12px;color:var(--mut);margin-top:4px;line-height:1.5"><span style="color:var(--amber)">⚠ </span>{caveat}</p>}

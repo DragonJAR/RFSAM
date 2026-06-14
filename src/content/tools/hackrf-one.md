@@ -4,6 +4,7 @@ vendor: Great Scott Gadgets
 type: hardware
 protocols:
   - Wide-band SDR
+spec: ~20 MHz IBW · 1 MHz–6 GHz · half-duplex
 repo: 'https://github.com/greatscottgadgets/hackrf'
 software:
   - universal-radio-hacker
