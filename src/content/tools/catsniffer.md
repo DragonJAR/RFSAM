@@ -13,6 +13,7 @@ software:
   - sniffle
   - wireshark
   - catnip
+  - kismet
 note: >-
   CC1352 + RP2040 multiprotocol sniffer; runs Sniffle for modern BT5/4.x LE
   capture, plus Sub-GHz/Zigbee/LoRa workflows. On Linux it can also present as a
