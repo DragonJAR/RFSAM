@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RFSAM — Radio Frequency Security Assessment Methodology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A1119; --bg2:#0E1722; --panel:#131F2E; --panel2:#18283A;
+  --line:#22344A; --line2:#2C4258;
+  --ink:#E6EDF3; --mut:#8B9AAB; --mut2:#5E7088;
+  --orange:#FF7A1A; --cyan:#2FB8E0; --green:#3FD17C; --purple:#9B8CFF;
+  --amber:#FFC24B; --red:#FF5A5F;
+  --mono:'IBM Plex Mono',monospace; --disp:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+  --sb:300px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+::selection{background:rgba(255,122,26,.3)}
+
+/* ---- layout ---- */
+.wrap{display:grid;grid-template-columns:var(--sb) 1fr;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--line);padding:0 0 40px}
+.main{min-width:0}
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+
+/* ---- brand head ---- */
+.brand{padding:22px 22px 18px;border-bottom:1px solid var(--line);position:relative}
+.brand .bracket{position:absolute;top:14px;right:16px;width:18px;height:18px;border-top:2px solid var(--orange);border-right:2px solid var(--orange)}
+.brand h1{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:-.01em}
+.brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--mut);margin-top:4px;letter-spacing:.04em;line-height:1.5}
+.brand .ver{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--orange);border:1px solid var(--orange);border-radius:3px;padding:2px 7px;letter-spacing:.08em}
+
+/* ---- nav tree ---- */
+nav{padding:14px 0}
+.nav-sec{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--mut2);text-transform:uppercase;padding:16px 22px 7px}
+.proto-head{display:flex;align-items:center;gap:8px;padding:7px 22px;font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--ink)}
+.proto-head .band{font-family:var(--mono);font-size:9.5px;color:var(--mut2);font-weight:400}
+.nav-ctrl{display:flex;align-items:center;gap:9px;padding:5px 22px 5px 30px;font-size:12.5px;color:var(--mut);border-left:2px solid transparent;cursor:pointer;transition:all .12s}
+.nav-ctrl:hover{color:var(--ink);background:rgba(255,255,255,.02)}
+.nav-ctrl.active{color:var(--ink);background:rgba(255,122,26,.07);border-left-color:var(--orange)}
+.nav-ctrl .cid{font-family:var(--mono);font-size:10px;color:var(--mut2);flex-shrink:0;width:42px}
+.nav-ctrl.active .cid{color:var(--orange)}
+.lyr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ---- main content ---- */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(10,17,25,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:13px 40px;display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:11px;color:var(--mut)}
+.topbar .crumb{color:var(--mut2)}
+.topbar .crumb b{color:var(--cyan);font-weight:500}
+.content{padding:40px 56px 120px;max-width:920px}
+
+/* ---- hero (home) ---- */
+.hero{padding:64px 56px 50px;max-width:1000px;position:relative}
+.hero .ey{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--orange);text-transform:uppercase}
+.hero h2{font-family:var(--disp);font-weight:700;font-size:52px;line-height:1.04;letter-spacing:-.02em;margin:18px 0 8px;max-width:16ch}
+.hero h2 .em{color:var(--cyan)}
+.hero .lede{font-size:17px;color:var(--mut);max-width:62ch;margin-top:20px;line-height:1.65}
+.iqtrace{width:100%;height:54px;margin:34px 0 0;display:block}
+
+.layers-strip{display:flex;gap:0;margin:42px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.layers-strip .ly{flex:1;padding:16px 14px;border-right:1px solid var(--line);position:relative}
+.layers-strip .ly:last-child{border-right:0}
+.layers-strip .ly .lc{font-family:var(--mono);font-size:10px;letter-spacing:.1em;font-weight:600}
+.layers-strip .ly .ln{font-family:var(--disp);font-weight:600;font-size:13px;margin:5px 0 4px}
+.layers-strip .ly .ld{font-size:11px;color:var(--mut);line-height:1.45}
+.layers-strip .ly .bar{position:absolute;top:0;left:0;right:0;height:3px}
+
+.proto-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:30px 0 0}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;transition:border-color .15s,transform .15s;cursor:pointer}
+.pcard:hover{border-color:var(--cyan);transform:translateY(-2px)}
+.pcard .pn{font-family:var(--disp);font-weight:600;font-size:17px}
+.pcard .pb{font-family:var(--mono);font-size:10.5px;color:var(--mut2);margin-top:3px}
+.pcard .pp{font-family:var(--mono);font-size:11px;color:var(--orange);margin-top:14px;letter-spacing:.05em}
+.pcard .pc{font-size:12.5px;color:var(--mut);margin-top:10px}
+
+.home-sec-t{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--mut2);text-transform:uppercase;margin:54px 0 4px}
+
+/* ---- control page ---- */
+.ctrl-head{border-left:4px solid var(--orange);padding-left:20px;margin-bottom:8px}
+.ctrl-id{font-family:var(--mono);font-size:13px;color:var(--orange);letter-spacing:.04em;font-weight:500}
+.ctrl-title{font-family:var(--disp);font-weight:700;font-size:34px;line-height:1.1;letter-spacing:-.015em;margin:6px 0 0}
+.tagrow{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+.tag{font-family:var(--mono);font-size:10.5px;padding:3px 10px;border-radius:4px;letter-spacing:.05em;border:1px solid var(--line2)}
+.tag.app{background:var(--panel2);color:var(--cyan);border-color:transparent}
+.tag.crit{font-weight:600;border:0}
+.tag.layer{background:transparent}
+
+.intro{font-size:16px;color:var(--ink);line-height:1.66;margin:22px 0 8px;padding:18px 22px;background:var(--panel);border-radius:8px;border-left:3px solid var(--cyan)}
+
+h3.sec{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;color:var(--mut2);text-transform:uppercase;margin:38px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
+h3.sec::before{content:"";width:6px;height:6px;background:var(--orange);border-radius:50%}
+p.body{margin:0 0 14px;color:#CFD9E4;line-height:1.7}
+
+ol.proc{counter-reset:p;list-style:none;margin:6px 0}
+ol.proc li{position:relative;padding:11px 0 11px 46px;border-bottom:1px solid var(--line);color:#CFD9E4}
+ol.proc li:last-child{border-bottom:0}
+ol.proc li::before{counter-increment:p;content:counter(p,decimal-leading-zero);position:absolute;left:0;top:11px;font-family:var(--mono);font-size:12px;color:var(--orange);font-weight:600}
+
+.example{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:10px;padding:24px 26px;margin:8px 0;position:relative;overflow:hidden}
+.example::before{content:"FIELD CASE";position:absolute;top:14px;right:18px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--mut2)}
+.example p{color:#D6E0EA;line-height:1.72;margin:0}
+.example .mono{font-family:var(--mono);font-size:13px;color:var(--green);background:rgba(63,209,124,.08);padding:1px 6px;border-radius:3px}
+
+.reslist{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.resrow{display:flex;gap:14px;align-items:center;padding:13px 18px;background:var(--bg2);transition:background .12s;cursor:pointer}
+.resrow:hover{background:var(--panel)}
+.resrow .rid{font-family:var(--mono);font-size:11.5px;color:var(--cyan);flex-shrink:0;width:124px}
+.resrow .rt{font-size:13.5px;color:var(--ink)}
+
+.remed{background:rgba(63,209,124,.05);border:1px solid rgba(63,209,124,.2);border-radius:8px;padding:18px 22px;margin-top:6px}
+
+.attacks{display:flex;flex-direction:column;gap:10px;margin:6px 0}
+.atk{border:1px solid var(--line);border-left:3px solid var(--red);border-radius:8px;padding:14px 18px;background:var(--panel)}
+.atk-h{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.atk-n{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--ink)}
+.atk-r{font-family:var(--mono);font-size:10.5px;color:var(--amber);letter-spacing:.02em;flex-shrink:0}
+.atk-w{font-size:13.5px;color:#CFD9E4;line-height:1.6;margin:0}
+
+.tag.deferred{background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-weight:500}
+.bsam-note{font-size:13.5px;color:var(--mut);margin:0 0 12px;line-height:1.6;font-style:italic}
+.bsam-row{cursor:pointer}
+.bsam-row .bsam-id{color:var(--amber)}
+.bsam-row .ext{margin-left:auto;color:var(--mut2);font-size:13px}
+.bsam-box{border:1px solid var(--line);border-radius:12px;padding:24px 26px;background:linear-gradient(180deg,var(--panel),var(--bg2));margin-top:6px}
+.bsam-sum{font-size:14.5px;color:#CFD9E4;line-height:1.7;margin:0 0 18px}
+.own-grid{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.own-row{display:flex;gap:16px;padding:13px 16px;background:var(--bg2);align-items:baseline}
+.own-l{font-family:var(--mono);font-size:12px;color:var(--cyan);flex:0 0 220px;font-weight:500}
+.own-n{font-size:13px;color:var(--mut)}
+.bsam-link{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--amber);letter-spacing:.03em;border-bottom:1px solid transparent;transition:border-color .15s}
+.bsam-link:hover{border-bottom-color:var(--amber)}
+.bsam-prior{font-size:13px;color:var(--mut);line-height:1.65;margin:16px 0 0;padding-top:16px;border-top:1px solid var(--line)}
+.bsam-prior-l{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--mut2);text-transform:uppercase;margin-bottom:6px}
+
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+.tcard{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--panel)}
+.tcard.ec{border-color:var(--orange);background:linear-gradient(180deg,rgba(255,122,26,.06),var(--panel))}
+.tc-h{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.tc-n{font-family:var(--disp);font-weight:600;font-size:15px}
+.tc-ec{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--orange);border:1px solid var(--orange);border-radius:3px;padding:1px 5px}
+.tc-v{font-family:var(--mono);font-size:10px;color:var(--mut2);margin-top:2px}
+.tc-p{font-family:var(--mono);font-size:10.5px;color:var(--cyan);margin-top:10px}
+.tc-note{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.5}
+@media(max-width:880px){.tools-grid{grid-template-columns:1fr}}
+@media(max-width:880px){.own-row{flex-direction:column;gap:4px}.own-l{flex-basis:auto}}
+.remed .rl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--green);text-transform:uppercase;margin-bottom:8px}
+.remed p{color:#CFD9E4;margin:0;line-height:1.66}
+
+.pager{display:flex;justify-content:space-between;margin-top:60px;gap:14px}
+.pgbtn{flex:1;border:1px solid var(--line);border-radius:8px;padding:16px 20px;cursor:pointer;transition:border-color .15s}
+.pgbtn:hover{border-color:var(--orange)}
+.pgbtn .pl{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--mut2);text-transform:uppercase}
+.pgbtn .pt{font-family:var(--disp);font-weight:600;font-size:14px;margin-top:4px;color:var(--ink)}
+.pgbtn.next{text-align:right}
+.pgbtn.disabled{opacity:.3;pointer-events:none}
+
+/* resources index page */
+.res-page .resrow .rb{font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.55}
+.res-page .resrow{flex-direction:column;align-items:flex-start;gap:5px;cursor:default}
+.res-page .resrow:hover{background:var(--bg2)}
+
+.mobile-top{display:none}
+
+@media(max-width:880px){
+  :root{--sb:0px}
+  .wrap{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-320px;width:300px;z-index:60;transition:left .22s;box-shadow:0 0 40px rgba(0,0,0,.5)}
+  .sidebar.open{left:0}
+  .mobile-top{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--line);padding:12px 18px}
+  .burger{font-family:var(--mono);color:var(--orange);font-size:20px;cursor:pointer;background:none;border:0}
+  .mobile-top .mt{font-family:var(--disp);font-weight:700;font-size:17px}
+  .hero{padding:34px 22px 30px}
+  .hero h2{font-size:34px}
+  .content{padding:28px 22px 80px}
+  .topbar{padding:11px 22px}
+  .proto-cards{grid-template-columns:1fr}
+  .layers-strip{flex-direction:column}
+  .ctrl-title{font-size:26px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="bracket"></div>
+      <h1>RFSAM</h1>
+      <div class="sub">RADIO FREQUENCY SECURITY<br>ASSESSMENT METHODOLOGY</div>
+      <div class="ver" id="verTag"></div>
+    </div>
+    <nav id="nav"></nav>
+  </aside>
+
+  <div class="main">
+    <div class="mobile-top">
+      <button class="burger" id="burger">≡</button>
+      <span class="mt">RFSAM</span>
+    </div>
+    <div id="view"></div>
+  </div>
+</div>
+
+<script src="rfsam-data.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const layerOf=id=>RFSAM.layers.find(l=>l.id===id);
+const critOf=id=>RFSAM.criticality[id];
+const protoOf=id=>RFSAM.protocols.find(p=>p.id===id);
+const ctrlsFor=pid=>RFSAM.controls.filter(c=>c.protocol===pid);
+
+/* ---------- sidebar ---------- */
+function buildNav(){
+  $('#verTag').textContent=RFSAM.meta.version;
+  const nav=$('#nav');
+  const home=el('div','nav-ctrl','<span class="cid">·</span><span>Overview</span>');
+  home.onclick=()=>route('home');home.dataset.route='home';nav.appendChild(home);
+
+  nav.appendChild(el('div','nav-sec','Controls'));
+  RFSAM.protocols.forEach(p=>{
+    nav.appendChild(el('div','proto-head',`${p.name} <span class="band">${p.band}</span>`));
+    ctrlsFor(p.id).forEach(c=>{
+      const ly=layerOf(c.layer);
+      const n=el('div','nav-ctrl',
+        `<span class="cid">${c.id.split('-').slice(2).join('-')}</span>
+         <span class="lyr-dot" style="background:${ly.color}"></span>
+         <span>${c.title}</span>`);
+      n.dataset.route='ctrl:'+c.id;
+      n.onclick=()=>route('ctrl:'+c.id);
+      nav.appendChild(n);
+    });
+  });
+  nav.appendChild(el('div','nav-sec','Reference'));
+  const res=el('div','nav-ctrl','<span class="cid">RES</span><span>Resources</span>');
+  res.dataset.route='res';res.onclick=()=>route('res');nav.appendChild(res);
+}
+function setActive(r){document.querySelectorAll('.nav-ctrl').forEach(n=>n.classList.toggle('active',n.dataset.route===r));}
+
+/* ---------- home ---------- */
+function viewHome(){
+  const v=$('#view');v.innerHTML='';
+  const h=el('div','hero');
+  h.appendChild(el('div','ey','Open methodology · '+RFSAM.meta.org));
+  h.appendChild(el('h2',null,'A <span class="em">north</span> for RF research and auditing.'));
+  h.appendChild(el('div','lede',RFSAM.meta.blurb));
+
+  // I/Q trace signature
+  h.insertAdjacentHTML('beforeend', iqSVG());
+
+  // layers strip
+  const strip=el('div','layers-strip');
+  RFSAM.layers.filter(l=>l.id!=='IG').forEach(l=>{
+    const d=el('div','ly');
+    d.innerHTML=`<span class="bar" style="background:${l.color}"></span>
+      <div class="lc" style="color:${l.color}">${l.id}</div>
+      <div class="ln">${l.name}</div><div class="ld">${l.note}</div>`;
+    strip.appendChild(d);
+  });
+  h.appendChild(el('div','home-sec-t','The descent — the path RFSAM walks you through. Start at Information Gathering, then work down: what is transmitting (Spectrum), how to get bits from it (Signal/PHY), the frame (Link), the keys (Crypto), the active attacks (Attack), and what the device trusts above the link (Application).'));
+  h.appendChild(strip);
+
+  // protocol cards
+  h.appendChild(el('div','home-sec-t','Protocol trees'));
+  const grid=el('div','proto-cards');
+  RFSAM.protocols.forEach(p=>{
+    const n=ctrlsFor(p.id).length;
+    const c=el('div','pcard');
+    c.innerHTML=`<div class="pn">${p.name}</div><div class="pb">${p.band}</div>
+      <div class="pp">${p.prefix}-··</div>
+      <div class="pc">${n} controls · spectrum → signal → link → crypto → attack</div>`;
+    c.onclick=()=>route('ctrl:'+ctrlsFor(p.id)[0].id);
+    grid.appendChild(c);
+  });
+  h.appendChild(grid);
+
+  // Relationship to BSAM
+  const br=RFSAM.bsamRelation;
+  h.appendChild(el('div','home-sec-t','Relationship to BSAM'));
+  const bbox=el('div','bsam-box');
+  let own='';
+  br.ownership.forEach(o=>{own+=`<div class="own-row"><span class="own-l">${o.rfsam}</span><span class="own-n">${o.note}</span></div>`;});
+  bbox.innerHTML=`<p class="bsam-sum">${br.summary}</p>
+    <div class="own-grid">${own}</div>
+    ${br.priorArt?`<p class="bsam-prior"><span class="bsam-prior-l">Why RFSAM &amp; what it builds on</span>${br.priorArt}</p>`:''}
+    <a class="bsam-link" href="${br.url}" target="_blank" rel="noopener">View BSAM at tarlogic.com/bsam ↗</a>`;
+  h.appendChild(bbox);
+
+  // Tools
+  if(RFSAM.tools&&RFSAM.tools.length){
+    h.appendChild(el('div','home-sec-t','Standard tooling'));
+    const tg=el('div','tools-grid');
+    RFSAM.tools.forEach(t=>{
+      const card=el('div','tcard'+(t.ec?' ec':''));
+      card.innerHTML=`<div class="tc-h"><span class="tc-n">${t.name}</span>${t.ec?'<span class="tc-ec">EC</span>':''}</div>
+        <div class="tc-v">${t.vendor}</div>
+        <div class="tc-p">${t.protocols.join(' · ')}</div>
+        <div class="tc-note">${t.note}</div>`;
+      tg.appendChild(card);
+    });
+    h.appendChild(tg);
+  }
+
+  v.appendChild(h);
+  setActive('home');window.scrollTo(0,0);
+}
+function iqSVG(){
+  // a hairline I/Q-style dual sine, the signature motif
+  let pI='',pQ='';const W=1000,H=54,mid=H/2;
+  for(let x=0;x<=W;x+=4){
+    const t=x/W*Math.PI*8;
+    const yi=mid+Math.sin(t)*15*Math.exp(-x/W*0.3);
+    const yq=mid+Math.cos(t)*15*Math.exp(-x/W*0.3);
+    pI+=(x===0?'M':'L')+x+' '+yi.toFixed(1)+' ';
+    pQ+=(x===0?'M':'L')+x+' '+yq.toFixed(1)+' ';
+  }
+  return `<svg class="iqtrace" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${pI}" fill="none" stroke="#2FB8E0" stroke-width="1.2" opacity="0.85"/>
+    <path d="${pQ}" fill="none" stroke="#FF7A1A" stroke-width="1.2" opacity="0.7"/>
+  </svg>`;
+}
+
+/* ---------- control ---------- */
+function viewCtrl(id){
+  const c=RFSAM.controls.find(x=>x.id===id);if(!c)return route('home');
+  const ly=layerOf(c.layer),cr=critOf(c.criticality),p=protoOf(c.protocol);
+  const list=ctrlsFor(c.protocol);const idx=list.indexOf(c);
+  const v=$('#view');v.innerHTML='';
+
+  // topbar breadcrumb
+  const tb=el('div','topbar');
+  tb.innerHTML=`<span class="crumb">Controls</span><span class="crumb">/</span>
+    <span class="crumb"><b>${p.name}</b></span><span class="crumb">/</span>
+    <span style="color:var(--ink)">${c.id}</span>`;
+  v.appendChild(tb);
+
+  const ct=el('div','content');
+  // head
+  const head=el('div','ctrl-head');head.style.borderLeftColor=ly.color;
+  head.innerHTML=`<div class="ctrl-id">${c.id}</div><h1 class="ctrl-title">${c.title}</h1>`;
+  ct.appendChild(head);
+
+  // tags
+  const tr=el('div','tagrow');
+  c.applicability.forEach(a=>tr.appendChild(el('span','tag app',a)));
+  const lt=el('span','tag layer',`${ly.id} · ${ly.name}`);lt.style.color=ly.color;lt.style.borderColor=ly.color;tr.appendChild(lt);
+  const crt=el('span','tag crit',cr.label.toUpperCase());crt.style.background=cr.color;crt.style.color=c.criticality==='medium'||c.criticality==='low'?'#0A1119':'#fff';tr.appendChild(crt);
+  if(c.deferred){const df=el('span','tag deferred','↗ DEFERS TO BSAM');tr.appendChild(df);}
+  ct.appendChild(tr);
+
+  ct.appendChild(el('div','intro',c.intro));
+
+  ct.appendChild(el('h3','sec','Description'));
+  ct.appendChild(el('p','body',c.description));
+
+  ct.appendChild(el('h3','sec','Verification procedure'));
+  const ol=el('ol','proc');c.procedure.forEach(s=>ol.appendChild(el('li',null,s)));ct.appendChild(ol);
+
+  ct.appendChild(el('h3','sec','Field case'));
+  ct.appendChild(el('div','example',`<p>${highlightMono(c.example)}</p>`));
+
+  if(c.attacks&&c.attacks.length){
+    ct.appendChild(el('h3','sec','Known attacks &amp; references'));
+    const aw=el('div','attacks');
+    c.attacks.forEach(a=>{
+      const card=el('div','atk');
+      card.innerHTML=`<div class="atk-h"><span class="atk-n">${a.name}</span><span class="atk-r">${a.ref}</span></div><p class="atk-w">${a.what}</p>`;
+      aw.appendChild(card);
+    });
+    ct.appendChild(aw);
+  }
+
+  if(c.resources&&c.resources.length){
+    ct.appendChild(el('h3','sec','Related resources'));
+    const rl=el('div','reslist');
+    c.resources.forEach(rid=>{
+      const r=RFSAM.resources.find(x=>x.id===rid);
+      const row=el('div','resrow',`<span class="rid">${rid}</span><span class="rt">${r?r.title:rid}</span>`);
+      row.onclick=()=>route('res');rl.appendChild(row);
+    });
+    ct.appendChild(rl);
+  }
+
+  if(c.bsam&&c.bsam.length){
+    ct.appendChild(el('h3','sec','Defers to BSAM'));
+    const note=el('p','bsam-note',c.deferred
+      ? 'This layer is covered by BSAM. RFSAM does not duplicate it — run these BSAM controls and carry the result into the RF assessment flow.'
+      : 'For the link-layer judgement, RFSAM defers to these BSAM controls. RFSAM\u2019s role here is the RF capture that gets you to the point where they apply.');
+    ct.appendChild(note);
+    const bl=el('div','reslist');
+    c.bsam.forEach(bid=>{
+      const b=RFSAM.bsam[bid];
+      const row=el('a','resrow bsam-row');
+      row.href=b?b.url:'https://www.tarlogic.com/bsam/';row.target='_blank';row.rel='noopener';
+      row.innerHTML=`<span class="rid bsam-id">${bid}</span><span class="rt">${b?b.title:bid}</span><span class="ext">↗</span>`;
+      bl.appendChild(row);
+    });
+    ct.appendChild(bl);
+  }
+
+  ct.appendChild(el('h3','sec','Remediation'));
+  const rm=el('div','remed');rm.innerHTML=`<div class="rl">Recommended fix</div><p>${c.remediation}</p>`;
+  ct.appendChild(rm);
+
+  // pager within protocol
+  const pg=el('div','pager');
+  const prev=list[idx-1],next=list[idx+1];
+  const pb=el('div','pgbtn'+(prev?'':' disabled'));
+  pb.innerHTML=`<div class="pl">← Previous</div><div class="pt">${prev?prev.title:'—'}</div>`;
+  if(prev)pb.onclick=()=>route('ctrl:'+prev.id);
+  const nb=el('div','pgbtn next'+(next?'':' disabled'));
+  nb.innerHTML=`<div class="pl">Next →</div><div class="pt">${next?next.title:'—'}</div>`;
+  if(next)nb.onclick=()=>route('ctrl:'+next.id);
+  pg.appendChild(pb);pg.appendChild(nb);ct.appendChild(pg);
+
+  v.appendChild(ct);
+  setActive('ctrl:'+id);window.scrollTo(0,0);
+}
+function highlightMono(t){
+  // wrap backtick spans and obvious hex/command bits
+  return t.replace(/`([^`]+)`/g,'<span class="mono">$1</span>');
+}
+
+/* ---------- resources ---------- */
+function viewRes(){
+  const v=$('#view');v.innerHTML='';
+  const tb=el('div','topbar');tb.innerHTML=`<span class="crumb">Reference</span><span class="crumb">/</span><span style="color:var(--ink)">Resources</span>`;v.appendChild(tb);
+  const ct=el('div','content res-page');
+  ct.appendChild(el('div','ctrl-head','<div class="ctrl-id">RFSAM-RES</div><h1 class="ctrl-title">Resources</h1>'));
+  ct.appendChild(el('div','intro','Reusable procedures referenced by the controls. Each describes a concrete technique — capture, channelise, sniff, decode, hijack — independent of any single protocol, so controls can cite them without repeating the how-to.'));
+  const rl=el('div','reslist');
+  RFSAM.resources.forEach(r=>{
+    rl.appendChild(el('div','resrow',`<span class="rid">${r.id}</span><span class="rt">${r.title}</span><span class="rb">${r.body}</span>`));
+  });
+  ct.appendChild(rl);v.appendChild(ct);
+  setActive('res');window.scrollTo(0,0);
+}
+
+/* ---------- router ---------- */
+function route(r){
+  if($('#sidebar').classList.contains('open'))$('#sidebar').classList.remove('open');
+  if(r==='home')viewHome();
+  else if(r==='res')viewRes();
+  else if(r.startsWith('ctrl:'))viewCtrl(r.slice(5));
+  else viewHome();
+  history.replaceState(null,'',r==='home'?'#':'#'+r);
+}
+buildNav();
+$('#burger').onclick=()=>$('#sidebar').classList.toggle('open');
+const init=location.hash.slice(1);
+route(init||'home');
+</script>
+</body>
+</html>

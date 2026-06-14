@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+*.log
+.DS_Store
+.env
+.env.*
+
+# Local working/tooling docs — never published
+CLAUDE.md
+CLAUDE-CODE-PROMPT.md
