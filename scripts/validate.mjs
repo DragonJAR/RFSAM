@@ -69,14 +69,11 @@ export async function runValidation() {
   const { toolchains } = await import('../src/data/toolchains.js');
   for (const [proto, tc] of Object.entries(toolchains)) {
     for (const [layer, def] of Object.entries(tc.layers ?? {})) {
-      for (const h of def.hardware ?? []) {
-        if (!reg.toolSlugs.has(h.tool)) all.push(`toolchains.${proto}.${layer}: unknown hardware slug '${h.tool}'`);
-        for (const s of h.software ?? []) {
-          if (!reg.toolSlugs.has(s)) all.push(`toolchains.${proto}.${layer}: unknown software slug '${s}' under '${h.tool}'`);
+      for (const t of def.tools ?? []) {
+        if (!reg.toolSlugs.has(t.tool)) all.push(`toolchains.${proto}.${layer}: unknown tool slug '${t.tool}'`);
+        for (const d of t.deps ?? []) {
+          if (!reg.toolSlugs.has(d)) all.push(`toolchains.${proto}.${layer}: unknown dep slug '${d}' under '${t.tool}'`);
         }
-      }
-      for (const h of def.host ?? []) {
-        if (!reg.toolSlugs.has(h.tool)) all.push(`toolchains.${proto}.${layer}: unknown host-software slug '${h.tool}'`);
       }
     }
   }
