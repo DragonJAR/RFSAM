@@ -1,0 +1,137 @@
+// Authored source for the tools collection. Run with: node scripts/seed-tools.mjs
+// Tools are no longer migration-generated; this file is their source of truth.
+// Every `repo` URL here was verified to exist before being added.
+import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import matter from 'gray-matter';
+
+const tools = [
+  // ---- hardware ----
+  {
+    slug: 'hackrf-one', name: 'HackRF One', vendor: 'Great Scott Gadgets', type: 'hardware',
+    protocols: ['Wide-band SDR'], repo: 'https://github.com/greatscottgadgets/hackrf',
+    software: ['universal-radio-hacker', 'ice9-bluetooth-sniffer'],
+    note: "1 MHz–6 GHz half-duplex SDR — the discovery radio for 'Rapid Radio Reversing': find and characterise an unknown signal before working it with a narrowband tool.",
+  },
+  {
+    slug: 'ubertooth-one', name: 'Ubertooth One', vendor: 'Great Scott Gadgets', type: 'hardware',
+    protocols: ['BLE', 'Bluetooth'], repo: 'https://github.com/greatscottgadgets/ubertooth',
+    software: ['crackle', 'wireshark'],
+    note: 'Open BLE/Bluetooth sniffer that follows connections by default (target a BD_ADDR with -t) and captures some Basic Rate Classic. Affordable and battle-tested, but pre-BT5 and weaker on long-lived connections than modern CC1352 sniffers.',
+  },
+  {
+    slug: 'catsniffer', name: 'CatSniffer', vendor: 'Electronic Cats', type: 'hardware', ec: true,
+    protocols: ['BLE', 'Sub-GHz', 'Zigbee', 'LoRa'], repo: 'https://github.com/ElectronicCats/CatSniffer',
+    software: ['sniffle'],
+    note: 'CC1352 + RP2040 multiprotocol sniffer; runs Sniffle for modern BT5/4.x LE capture, plus Sub-GHz/Zigbee/LoRa workflows.',
+  },
+  {
+    slug: 'yard-stick-one', name: 'YARD Stick One', vendor: 'Great Scott Gadgets', type: 'hardware',
+    protocols: ['Sub-GHz'], homepage: 'https://greatscottgadgets.com/yardstickone/',
+    software: ['rfcat', 'universal-radio-hacker'],
+    note: 'CC1111 sub-GHz transceiver (300–928 MHz) driven by rfcat — receive, replay and transmit OOK/ASK/FSK from a Python shell. The reference cheap Sub-GHz work tool, paired with a HackRF for discovery.',
+  },
+  {
+    slug: 'proxmark3', name: 'Proxmark3', vendor: 'RFID Research Group (Iceman fork)', type: 'hardware',
+    protocols: ['RFID', 'NFC'], repo: 'https://github.com/RfidResearchGroup/proxmark3',
+    note: 'The reference RFID/NFC tool: LF+HF, full MIFARE Crypto1 attack suite (darkside/nested/hardnested), read/write/emulate. The Iceman fork is the actively maintained client/firmware.',
+  },
+  {
+    slug: 'chameleon-ultra', name: 'ChameleonUltra', vendor: 'RFID Research Group (RRG)', type: 'hardware',
+    protocols: ['RFID', 'NFC'], repo: 'https://github.com/RfidResearchGroup/ChameleonUltra',
+    note: 'HF/LF card emulator (nRF52840) for reader-side testing and credential impersonation; emulates full MIFARE Classic with Crypto1.',
+  },
+  {
+    slug: 'alfa-awus036ach', name: 'ALFA AWUS036ACH', vendor: 'Alfa Network', type: 'hardware',
+    protocols: ['Wi-Fi'], software: ['aircrack-ng', 'bettercap', 'wireshark'],
+    note: 'RTL8812AU dual-band Wi-Fi adapter with monitor mode and injection — the workhorse 802.11 capture/injection radio for surveys and handshake capture.',
+  },
+  {
+    slug: 'wifi-pineapple', name: 'WiFi Pineapple', vendor: 'Hak5', type: 'hardware',
+    protocols: ['Wi-Fi'], homepage: 'https://hak5.org',
+    note: 'Purpose-built Wi-Fi auditing platform that automates evil-twin, capture and recon workflows.',
+  },
+  {
+    slug: 'bombercat', name: 'BomberCat', vendor: 'Electronic Cats', type: 'hardware', ec: true,
+    protocols: ['NFC', 'MagStripe'], repo: 'https://github.com/ElectronicCats/BomberCat',
+    note: 'PN7150-based NFC tool for read/emulate and NFC relay (RelayNFC), plus magnetic-stripe emulation (MagSpoof) to legacy readers.',
+  },
+  {
+    slug: 'minino', name: 'Minino', vendor: 'Electronic Cats', type: 'hardware', ec: true,
+    protocols: ['Wi-Fi', 'BLE', 'Zigbee', 'Thread'], repo: 'https://github.com/ElectronicCats/Minino',
+    note: 'ESP32-C6 pocket multitool with monitor-mode Wi-Fi, BLE and 802.15.4 (Zigbee/Thread) features for field recon.',
+  },
+
+  // ---- software / projects ----
+  {
+    slug: 'sniffle', name: 'Sniffle', vendor: 'NCC Group', type: 'software',
+    protocols: ['BLE'], repo: 'https://github.com/nccgroup/Sniffle',
+    note: 'The reference modern open-source sniffer for Bluetooth 5 and 4.x LE on TI CC1352/CC26x2 (and CatSniffer). Python host, all BT5 PHYs, extended advertising, follows connections — the default LL-layer capture choice today.',
+  },
+  {
+    slug: 'ice9-bluetooth-sniffer', name: 'ice9-bluetooth-sniffer', vendor: 'ICE9 Consulting (Mike Ryan)', type: 'software',
+    protocols: ['BLE', 'Bluetooth'], repo: 'https://github.com/mikeryan/ice9-bluetooth-sniffer',
+    note: 'SDR-based, Wireshark-compatible all-channel sniffer (HackRF / bladeRF / USRP). Unlike most sniffers it can sniff connections that are already established — invaluable when you cannot catch the connection request. Needs an SDR and GPU/CPU for channelisation.',
+  },
+  {
+    slug: 'crackle', name: 'crackle', vendor: 'Mike Ryan', type: 'software',
+    protocols: ['BLE'], repo: 'https://github.com/mikeryan/crackle',
+    note: 'Cracks BLE LE Legacy pairing: brute-forces the TK (Just Works / 6-digit PIN), derives the session keys and decrypts the capture. Feed it a PCAP containing the pairing event (e.g. from Ubertooth). Does not apply to LE Secure Connections.',
+  },
+  {
+    slug: 'btlejack', name: 'Btlejack', vendor: 'Damien Cauquil (virtualabs)', type: 'software',
+    protocols: ['BLE'], repo: 'https://github.com/virtualabs/btlejack',
+    note: 'Sniff, jam and hijack BLE connections from low-cost hardware (BBC micro:bit / nRF51822). Established the practical jam-and-hijack technique for taking over a live connection.',
+  },
+  {
+    slug: 'injectable-firmware', name: 'InjectaBLE firmware', vendor: 'Romain Cayre', type: 'project',
+    protocols: ['BLE'], repo: 'https://github.com/RCayre/injectable-firmware',
+    note: 'nRF52840-dongle firmware implementing the InjectaBLE strategy: eavesdrop a connection and inject link-layer frames to hijack a role or run a man-in-the-middle.',
+  },
+  {
+    slug: 'bleak', name: 'Bleak', vendor: 'open source (Henrik Blidh)', type: 'software',
+    protocols: ['BLE'], repo: 'https://github.com/hbldh/bleak',
+    note: 'Cross-platform async Python BLE GATT client (Windows/Linux/macOS): discover, connect, read/write/subscribe characteristics. The fastest way to script application-layer interaction and replay learned commands.',
+  },
+  {
+    slug: 'bettercap', name: 'bettercap', vendor: 'bettercap', type: 'software',
+    protocols: ['Wi-Fi', 'BLE'], repo: 'https://github.com/bettercap/bettercap',
+    note: 'Network attack/recon framework with a BLE module for device discovery and GATT enumeration, plus Wi-Fi recon and handshake capture.',
+  },
+  {
+    slug: 'nrf-sniffer', name: 'nRF Sniffer for Bluetooth LE', vendor: 'Nordic Semiconductor', type: 'software',
+    protocols: ['BLE'], homepage: 'https://www.nordicsemi.com',
+    note: 'Vendor BLE sniffer firmware (nRF52 DK / dongle) with a Wireshark plugin. Easy and well-documented, but follows a single connection and is less capable than Sniffle for adversarial work.',
+  },
+  {
+    slug: 'rfcat', name: 'rfcat', vendor: 'atlas0fd00m', type: 'software',
+    protocols: ['Sub-GHz'], repo: 'https://github.com/atlas0fd00m/rfcat',
+    note: 'Python shell for CC1111-class transceivers (YARD Stick One): set layer-1 parameters and receive, replay or forge OOK/ASK/FSK.',
+  },
+  {
+    slug: 'universal-radio-hacker', name: 'Universal Radio Hacker', vendor: 'open source', type: 'software',
+    protocols: ['any SDR'], repo: 'https://github.com/jopohl/urh',
+    note: 'Integrated reversing workbench: auto-detect modulation/bitrate, extract bitstreams, diff captures and replay — the fastest path from raw I/Q to a labelled frame format.',
+  },
+  {
+    slug: 'wireshark', name: 'Wireshark', vendor: 'open source', type: 'software',
+    protocols: ['any'], homepage: 'https://www.wireshark.org',
+    note: 'The universal packet dissector. BLE/Bluetooth and many capture tools export to PCAP for decoding and filtering here.',
+  },
+  {
+    slug: 'aircrack-ng', name: 'aircrack-ng', vendor: 'open source', type: 'software',
+    protocols: ['Wi-Fi'], homepage: 'https://www.aircrack-ng.org',
+    note: 'The classic 802.11 suite: monitor-mode capture, deauth, handshake capture and offline cracking (with hashcat for modern WPA).',
+  },
+];
+
+const dir = 'src/content/tools';
+if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+mkdirSync(dir, { recursive: true });
+
+for (const t of tools) {
+  const { slug, note, ...rest } = t;
+  const data = { ...rest, ...(t.ec ? { ec: true } : {}), note };
+  writeFileSync(join(dir, `${slug}.md`), matter.stringify(`${note}\n`, data));
+}
+console.log(`Seeded ${tools.length} tools.`);

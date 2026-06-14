@@ -1,11 +1,12 @@
 ---
 name: WiFi Pineapple
 vendor: Hak5
-ec: false
+type: hardware
 protocols:
   - Wi-Fi
+homepage: 'https://hak5.org'
 note: >-
-  Standard rogue-AP / evil-twin platform automating capture and client-luring
-  workflows.
+  Purpose-built Wi-Fi auditing platform that automates evil-twin, capture and
+  recon workflows.
 ---
-Standard rogue-AP / evil-twin platform automating capture and client-luring workflows.
+Purpose-built Wi-Fi auditing platform that automates evil-twin, capture and recon workflows.

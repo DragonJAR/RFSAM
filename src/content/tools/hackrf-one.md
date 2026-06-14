@@ -1,9 +1,13 @@
 ---
 name: HackRF One
 vendor: Great Scott Gadgets
-ec: false
+type: hardware
 protocols:
   - Wide-band SDR
+repo: 'https://github.com/greatscottgadgets/hackrf'
+software:
+  - universal-radio-hacker
+  - ice9-bluetooth-sniffer
 note: >-
   1 MHz–6 GHz half-duplex SDR — the discovery radio for 'Rapid Radio Reversing':
   find and characterise an unknown signal before working it with a narrowband

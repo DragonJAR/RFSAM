@@ -1,13 +1,14 @@
 ---
 name: BomberCat
 vendor: Electronic Cats
+type: hardware
 ec: true
 protocols:
   - NFC
-  - RFID
   - MagStripe
+repo: 'https://github.com/ElectronicCats/BomberCat'
 note: >-
-  RP2040 + PN7150 + ESP32. NFC read/write/emulate (ISO 14443A/B), MagSpoof
-  magstripe, and RelayNFC relay attacks against bank terminals (DEF CON 30).
+  PN7150-based NFC tool for read/emulate and NFC relay (RelayNFC), plus
+  magnetic-stripe emulation (MagSpoof) to legacy readers.
 ---
-RP2040 + PN7150 + ESP32. NFC read/write/emulate (ISO 14443A/B), MagSpoof magstripe, and RelayNFC relay attacks against bank terminals (DEF CON 30).
+PN7150-based NFC tool for read/emulate and NFC relay (RelayNFC), plus magnetic-stripe emulation (MagSpoof) to legacy readers.

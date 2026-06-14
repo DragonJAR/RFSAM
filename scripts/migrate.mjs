@@ -59,12 +59,12 @@ export function runMigration() {
   const R = loadLegacy();
   const cDir = 'src/content/controls';
   const rDir = 'src/content/resources';
-  const tDir = 'src/content/tools';
   const dDir = 'src/data';
 
   // Wipe only the generated content dirs; never delete src/data (authored
-  // protocols.js / coverage-map.js live there).
-  for (const d of [cDir, rDir, tDir]) {
+  // protocols.js / coverage-map.js live there) or src/content/tools (authored
+  // by scripts/seed-tools.mjs).
+  for (const d of [cDir, rDir]) {
     if (existsSync(d)) rmSync(d, { recursive: true, force: true });
     mkdirSync(d, { recursive: true });
   }
@@ -78,11 +78,7 @@ export function runMigration() {
     writeFileSync(join(rDir, `${r.id.toLowerCase()}.md`),
       matter.stringify(`${r.body}\n`, { id: r.id, title: r.title }));
   }
-  for (const t of R.tools) {
-    writeFileSync(join(tDir, `${toolSlug(t.name)}.md`),
-      matter.stringify(`${t.note}\n`,
-        { name: t.name, vendor: t.vendor, ec: !!t.ec, protocols: t.protocols ?? [], note: t.note }));
-  }
+  // Tools are authored separately (scripts/seed-tools.mjs), not migrated.
 
   // singletons (protocols.js and coverage-map.js are authored, not generated)
   writeData(dDir, 'meta.js', 'meta', R.meta);
@@ -92,11 +88,11 @@ export function runMigration() {
   writeData(dDir, 'bsamRelation.js', 'bsamRelation', R.bsamRelation);
 
   return {
-    controls: R.controls.length, resources: R.resources.length, tools: R.tools.length,
+    controls: R.controls.length, resources: R.resources.length,
   };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const counts = runMigration();
-  console.log(`Migrated ${counts.controls} controls, ${counts.resources} resources, ${counts.tools} tools.`);
+  console.log(`Migrated ${counts.controls} controls, ${counts.resources} resources. (Tools are seeded separately.)`);
 }

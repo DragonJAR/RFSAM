@@ -71,9 +71,14 @@ const tools = defineCollection({
   schema: z.object({
     name: z.string(),
     vendor: z.string(),
-    ec: z.boolean().default(false),
+    type: z.enum(['hardware', 'software', 'project']).default('hardware'),
     protocols: z.array(z.string()).default([]),
     note: z.string(),
+    repo: z.string().url().optional(),
+    homepage: z.string().url().optional(),
+    // Software/projects that pair with this hardware (slugs in this collection).
+    software: z.array(z.string()).default([]),
+    ec: z.boolean().default(false),
   }),
 });
 

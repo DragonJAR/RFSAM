@@ -1,15 +1,16 @@
 ---
 name: Minino
 vendor: Electronic Cats
+type: hardware
 ec: true
 protocols:
   - Wi-Fi
   - BLE
   - Zigbee
   - Thread
-  - 802.15.4
+repo: 'https://github.com/ElectronicCats/Minino'
 note: >-
-  ESP32-C6 multiprotocol/multiband board with GPS, microSD, OLED — sniffing,
-  wardriving, IoT attack. A pocket survey knife.
+  ESP32-C6 pocket multitool with monitor-mode Wi-Fi, BLE and 802.15.4
+  (Zigbee/Thread) features for field recon.
 ---
-ESP32-C6 multiprotocol/multiband board with GPS, microSD, OLED — sniffing, wardriving, IoT attack. A pocket survey knife.
+ESP32-C6 pocket multitool with monitor-mode Wi-Fi, BLE and 802.15.4 (Zigbee/Thread) features for field recon.
