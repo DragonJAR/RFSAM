@@ -11,6 +11,7 @@ protocols:
 repo: 'https://github.com/ElectronicCats/CatSniffer'
 software:
   - sniffle
+  - wireshark
 note: >-
   CC1352 + RP2040 multiprotocol sniffer; runs Sniffle for modern BT5/4.x LE
   capture, plus Sub-GHz/Zigbee/LoRa workflows.

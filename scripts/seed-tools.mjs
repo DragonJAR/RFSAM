@@ -22,7 +22,7 @@ const tools = [
   {
     slug: 'catsniffer', name: 'CatSniffer', vendor: 'Electronic Cats', type: 'hardware', ec: true,
     protocols: ['BLE', 'Sub-GHz', 'Zigbee', 'LoRa'], repo: 'https://github.com/ElectronicCats/CatSniffer',
-    software: ['sniffle'],
+    software: ['sniffle', 'wireshark'],
     note: 'CC1352 + RP2040 multiprotocol sniffer; runs Sniffle for modern BT5/4.x LE capture, plus Sub-GHz/Zigbee/LoRa workflows.',
   },
   {
@@ -60,6 +60,16 @@ const tools = [
     slug: 'minino', name: 'Minino', vendor: 'Electronic Cats', type: 'hardware', ec: true,
     protocols: ['Wi-Fi', 'BLE', 'Zigbee', 'Thread'], repo: 'https://github.com/ElectronicCats/Minino',
     note: 'ESP32-C6 pocket multitool with monitor-mode Wi-Fi, BLE and 802.15.4 (Zigbee/Thread) features for field recon.',
+  },
+  {
+    slug: 'nrf52840-dongle', name: 'nRF52840 Dongle', vendor: 'Nordic Semiconductor', type: 'hardware',
+    protocols: ['BLE'], homepage: 'https://www.nordicsemi.com', software: ['nrf-sniffer', 'injectable-firmware'],
+    note: 'Low-cost Nordic nRF52840 USB dongle; hosts the nRF Sniffer firmware (with the Wireshark plugin) and the InjectaBLE injection firmware.',
+  },
+  {
+    slug: 'bbc-microbit', name: 'BBC micro:bit', vendor: 'Micro:bit Educational Foundation', type: 'hardware',
+    protocols: ['BLE'], homepage: 'https://microbit.org', software: ['btlejack'],
+    note: 'A ~$15 nRF51822 board — the reference cheap radio for running Btlejack to sniff, jam and hijack BLE connections.',
   },
 
   // ---- software / projects ----

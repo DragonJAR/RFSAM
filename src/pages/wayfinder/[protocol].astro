@@ -51,7 +51,8 @@ const descent = layers;
     <div style="margin-top:28px">
       {descent.map((l) => {
         const def = tc.layers?.[l.id];
-        const tools = def?.tools ?? [];
+        const hardware = def?.hardware ?? [];
+        const host = def?.host ?? [];
         const ctrls = controlsAt(l.id);
         if (!def && ctrls.length === 0 && tc.status === 'complete') return null;
         return (
@@ -62,16 +63,31 @@ const descent = layers;
               <span style="font-family:var(--disp);font-weight:600;font-size:16px">{l.name}</span>
             </div>
             {def?.note && <p style="font-size:13.5px;color:var(--mut);margin:8px 0 0;line-height:1.6">{def.note}</p>}
-            {tools.length > 0 && (
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:12px">
-                {tools.map((t) => {
-                  const data = toolBySlug(t.tool);
-                  return data ? <ToolCard tool={data} role={t.role} why={t.why} caveat={t.caveat} /> : null;
+
+            {hardware.length > 0 && (
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:12px">
+                {hardware.map((h) => {
+                  const data = toolBySlug(h.tool);
+                  const sw = (h.software ?? []).map(toolBySlug).filter(Boolean);
+                  return data ? <ToolCard tool={data} role={h.role} why={h.why} caveat={h.caveat} software={sw} /> : null;
                 })}
               </div>
             )}
+
+            {host.length > 0 && (
+              <>
+                <div class="mono" style="font-size:10px;letter-spacing:.1em;color:var(--mut2);margin-top:14px">HOST SOFTWARE — no extra radio</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:8px">
+                  {host.map((h) => {
+                    const data = toolBySlug(h.tool);
+                    return data ? <ToolCard tool={data} role={h.role} why={h.why} caveat={h.caveat} /> : null;
+                  })}
+                </div>
+              </>
+            )}
+
             {ctrls.length > 0 && (
-              <div class="mono" style="font-size:11px;margin-top:10px;color:var(--mut2)">
+              <div class="mono" style="font-size:11px;margin-top:12px;color:var(--mut2)">
                 Controls: {ctrls.map((c, i) => (
                   <>{i > 0 ? ' · ' : ''}<a style="color:var(--cyan)" href={`/controls/${c.data.id.toLowerCase()}`}>{c.data.id}</a></>
                 ))}
