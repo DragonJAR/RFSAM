@@ -41,36 +41,36 @@ export const coverageMap = [
   ]},
   // ---- proposed new protocols (author to trim) ----
   { protocol: 'ZIGBEE', controls: [
-    { id: 'RFSAM-ZIGBEE-SP-01', title: 'Channel survey and capture feasibility', layer: 'SP', status: 'planned', objective: 'Assess which 802.15.4 channels carry the target PAN and whether they can be observed.' },
-    { id: 'RFSAM-ZIGBEE-LL-01', title: 'PAN, addressing and device discovery',   layer: 'LL', status: 'planned', objective: 'Assess what network topology and identifiers are exposed passively.' },
-    { id: 'RFSAM-ZIGBEE-CR-01', title: 'Network-key provisioning and rotation',  layer: 'CR', status: 'planned', objective: 'Assess how the network key is established, transported, and rotated.' },
+    { id: 'RFSAM-ZIGBEE-SP-01', title: 'Channel survey and capture feasibility', layer: 'SP', status: 'existing', objective: 'Assess which 802.15.4 channels carry the target PAN and whether they can be observed.' },
+    { id: 'RFSAM-ZIGBEE-LL-01', title: 'PAN, addressing and device discovery',   layer: 'LL', status: 'existing', objective: 'Assess what network topology and identifiers are exposed passively.' },
+    { id: 'RFSAM-ZIGBEE-CR-01', title: 'Network-key provisioning and rotation',  layer: 'CR', status: 'existing', objective: 'Assess how the network key is established, transported, and rotated.' },
   ]},
   { protocol: 'ZWAVE',  controls: [
-    { id: 'RFSAM-ZWAVE-SP-01', title: 'Region/frequency identification', layer: 'SP', status: 'planned', objective: 'Assess the regional frequency in use and capture feasibility.' },
-    { id: 'RFSAM-ZWAVE-CR-01', title: 'Key establishment assessment',    layer: 'CR', status: 'planned', objective: 'Assess the security class and key-establishment scheme in use.' },
+    { id: 'RFSAM-ZWAVE-SP-01', title: 'Region/frequency identification', layer: 'SP', status: 'existing', objective: 'Assess the regional frequency in use and capture feasibility.' },
+    { id: 'RFSAM-ZWAVE-CR-01', title: 'Key establishment assessment',    layer: 'CR', status: 'existing', objective: 'Assess the security class and key-establishment scheme in use.' },
   ]},
   { protocol: 'THREAD', controls: [
-    { id: 'RFSAM-THREAD-LL-01', title: 'Mesh discovery and commissioning exposure', layer: 'LL', status: 'planned', objective: 'Assess what commissioning and mesh-topology data is exposed.' },
-    { id: 'RFSAM-THREAD-CR-01', title: 'Network credential assessment',            layer: 'CR', status: 'planned', objective: 'Assess how mesh credentials are provisioned and protected.' },
+    { id: 'RFSAM-THREAD-LL-01', title: 'Mesh discovery and commissioning exposure', layer: 'LL', status: 'existing', objective: 'Assess what commissioning and mesh-topology data is exposed.' },
+    { id: 'RFSAM-THREAD-CR-01', title: 'Network credential assessment',            layer: 'CR', status: 'existing', objective: 'Assess how mesh credentials are provisioned and protected.' },
   ]},
   { protocol: 'GNSS',   controls: [
-    { id: 'RFSAM-GNSS-SP-01', title: 'Signal presence and interference survey', layer: 'SP', status: 'planned', objective: 'Assess received GNSS signal conditions and presence of interference.' },
-    { id: 'RFSAM-GNSS-AT-01', title: 'Spoofing and jamming resilience',         layer: 'AT', status: 'planned', objective: 'Assess receiver resilience to spoofed or jammed GNSS signals (authorised testing only).' },
+    { id: 'RFSAM-GNSS-SP-01', title: 'Signal presence and interference survey', layer: 'SP', status: 'existing', objective: 'Assess received GNSS signal conditions and presence of interference.' },
+    { id: 'RFSAM-GNSS-AT-01', title: 'Spoofing and jamming resilience',         layer: 'AT', status: 'existing', objective: 'Assess receiver resilience to spoofed or jammed GNSS signals (authorised testing only).' },
   ]},
   { protocol: 'ADSB',   controls: [
-    { id: 'RFSAM-ADSB-PHY-01', title: 'Message capture and decode',     layer: 'PHY', status: 'planned', objective: 'Assess capture and decoding of ADS-B messages.' },
-    { id: 'RFSAM-ADSB-LL-01',  title: 'Message authenticity assessment', layer: 'LL', status: 'planned', objective: 'Assess what authenticity guarantees, if any, the link provides.' },
+    { id: 'RFSAM-ADSB-PHY-01', title: 'Message capture and decode',     layer: 'PHY', status: 'existing', objective: 'Assess capture and decoding of ADS-B messages.' },
+    { id: 'RFSAM-ADSB-LL-01',  title: 'Message authenticity assessment', layer: 'LL', status: 'existing', objective: 'Assess what authenticity guarantees, if any, the link provides.' },
   ]},
   { protocol: 'NR5G',   controls: [
-    { id: 'RFSAM-NR5G-SP-01', title: 'Cell identification and capture', layer: 'SP', status: 'planned', objective: 'Assess identification and capture of the target 5G NR cell.' },
-    { id: 'RFSAM-NR5G-LL-01', title: 'Broadcast / identity exposure',   layer: 'LL', status: 'planned', objective: 'Assess identity and configuration data exposed on broadcast channels.' },
+    { id: 'RFSAM-NR5G-SP-01', title: 'Cell identification and capture', layer: 'SP', status: 'existing', objective: 'Assess identification and capture of the target 5G NR cell.' },
+    { id: 'RFSAM-NR5G-LL-01', title: 'Broadcast / identity exposure',   layer: 'LL', status: 'existing', objective: 'Assess identity and configuration data exposed on broadcast channels.' },
   ]},
   { protocol: 'GSM',    controls: [
-    { id: 'RFSAM-GSM-SP-01', title: 'ARFCN survey and capture',     layer: 'SP', status: 'planned', objective: 'Assess identification and capture of GSM carriers.' },
-    { id: 'RFSAM-GSM-CR-01', title: 'Cipher and identity exposure', layer: 'CR', status: 'planned', objective: 'Assess ciphering negotiation and identity exposure.' },
+    { id: 'RFSAM-GSM-SP-01', title: 'ARFCN survey and capture',     layer: 'SP', status: 'existing', objective: 'Assess identification and capture of GSM carriers.' },
+    { id: 'RFSAM-GSM-CR-01', title: 'Cipher and identity exposure', layer: 'CR', status: 'existing', objective: 'Assess ciphering negotiation and identity exposure.' },
   ]},
   { protocol: 'UWB',    controls: [
-    { id: 'RFSAM-UWB-PHY-01', title: 'Ranging signal capture',         layer: 'PHY', status: 'planned', objective: 'Assess capture and characterisation of UWB ranging exchanges.' },
-    { id: 'RFSAM-UWB-AT-01',  title: 'Distance-manipulation resilience', layer: 'AT', status: 'planned', objective: 'Assess resilience to relay/distance-manipulation against the ranging scheme (authorised testing only).' },
+    { id: 'RFSAM-UWB-PHY-01', title: 'Ranging signal capture',         layer: 'PHY', status: 'existing', objective: 'Assess capture and characterisation of UWB ranging exchanges.' },
+    { id: 'RFSAM-UWB-AT-01',  title: 'Distance-manipulation resilience', layer: 'AT', status: 'existing', objective: 'Assess resilience to relay/distance-manipulation against the ranging scheme (authorised testing only).' },
   ]},
 ];
