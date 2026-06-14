@@ -49,8 +49,8 @@ const tools = [
   {
     slug: 'catsniffer', name: 'CatSniffer', vendor: 'Electronic Cats', type: 'hardware', ec: true,
     protocols: ['BLE', 'Sub-GHz', 'Zigbee', 'LoRa'], repo: 'https://github.com/ElectronicCats/CatSniffer',
-    software: ['sniffle', 'wireshark'],
-    note: 'CC1352 + RP2040 multiprotocol sniffer; runs Sniffle for modern BT5/4.x LE capture, plus Sub-GHz/Zigbee/LoRa workflows.',
+    software: ['sniffle', 'wireshark', 'catnip'],
+    note: 'CC1352 + RP2040 multiprotocol sniffer; runs Sniffle for modern BT5/4.x LE capture, plus Sub-GHz/Zigbee/LoRa workflows. On Linux it can also present as a virtual HCI host BLE adapter via the catnip tool.',
   },
   {
     slug: 'yard-stick-one', name: 'YARD Stick One', vendor: 'Great Scott Gadgets', type: 'hardware',
@@ -159,6 +159,26 @@ const tools = [
     slug: 'aircrack-ng', name: 'aircrack-ng', vendor: 'open source', type: 'software',
     protocols: ['Wi-Fi'], homepage: 'https://www.aircrack-ng.org',
     note: 'The classic 802.11 suite: monitor-mode capture, deauth, handshake capture and offline cracking (with hashcat for modern WPA).',
+  },
+  {
+    slug: 'usb-bt-dongle', name: 'USB Bluetooth adapter', vendor: 'generic', type: 'hardware',
+    protocols: ['BLE'],
+    note: 'Any standard USB Bluetooth LE adapter (e.g. a CSR8510-class dongle) provides the host HCI controller that GATT tools like Bleak and bettercap drive.',
+  },
+  {
+    slug: 'catnip', name: 'catnip', vendor: 'Electronic Cats', type: 'software',
+    protocols: ['BLE'], repo: 'https://github.com/ElectronicCats/CatSniffer-Tools',
+    note: 'Presents a CatSniffer as a virtual HCI (vHCI) Bluetooth adapter on Linux, so host BLE tools like Bleak and bettercap can drive it.',
+  },
+  {
+    slug: 'gqrx', name: 'Gqrx SDR', vendor: 'open source', type: 'software',
+    protocols: ['any SDR'], repo: 'https://github.com/gqrx-sdr/gqrx',
+    note: 'Live spectrum + waterfall SDR receiver (HackRF, bladeRF, USRP…) — the quickest way to see what is transmitting and where, and to judge how much of the band a given radio covers.',
+  },
+  {
+    slug: 'ubertooth-tools', name: 'Ubertooth host tools', vendor: 'Great Scott Gadgets', type: 'software',
+    protocols: ['BLE'], repo: 'https://github.com/greatscottgadgets/ubertooth',
+    note: 'The host-side tools (ubertooth-btle and friends) that drive an Ubertooth One to sniff and follow BLE connections, exporting to PCAP.',
   },
 ];
 

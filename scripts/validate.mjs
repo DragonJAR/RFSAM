@@ -69,6 +69,7 @@ export async function runValidation() {
   const { toolchains } = await import('../src/data/toolchains.js');
   for (const [proto, tc] of Object.entries(toolchains)) {
     for (const [layer, def] of Object.entries(tc.layers ?? {})) {
+      if (def.decoder && !reg.toolSlugs.has(def.decoder)) all.push(`toolchains.${proto}.${layer}: unknown decoder slug '${def.decoder}'`);
       for (const t of def.tools ?? []) {
         if (!reg.toolSlugs.has(t.tool)) all.push(`toolchains.${proto}.${layer}: unknown tool slug '${t.tool}'`);
         for (const d of t.deps ?? []) {

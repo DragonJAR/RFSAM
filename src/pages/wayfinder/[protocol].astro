@@ -11,7 +11,7 @@ export function getStaticPaths() {
 
 const { protocolId } = Astro.props;
 const proto = protocols.find((p) => p.id === protocolId);
-const tc = toolchains[protocolId] ?? { status: 'planned', reference: null, layers: {} };
+const tc = toolchains[protocolId] ?? { status: 'planned', reference: null, layers: {}, facts: null };
 
 const toolEntries = await getCollection('tools');
 const toolBySlug = Object.fromEntries(toolEntries.map((t) => [t.id, t.data]));
@@ -42,11 +42,15 @@ const toolFull = (slug) => {
 
 const steps = STEP_DEFS.map((sd) => {
   const notes = [];
+  let lookFor = [];
   const entries = [];
   const ctrls = new Set();
+  let decoder = null;
   for (const lid of sd.layers) {
     const def = tc.layers?.[lid];
     if (def?.note) notes.push(def.note);
+    if (def?.lookFor) lookFor = lookFor.concat(def.lookFor);
+    if (def?.decoder) decoder = toolFull(def.decoder);
     for (const t of def?.tools ?? []) {
       const primary = toolFull(t.tool);
       if (!primary) continue;
@@ -54,11 +58,11 @@ const steps = STEP_DEFS.map((sd) => {
     }
     controls.filter((c) => c.data.protocol === protocolId && c.data.layer === lid).forEach((c) => ctrls.add(c.data.id));
   }
-  return { key: sd.key, name: sd.name, layers: sd.layers.map((l) => `${l} · ${layerName[l]}`), note: notes.join(' '), controls: [...ctrls], tools: entries };
+  return { key: sd.key, name: sd.name, layers: sd.layers.map((l) => `${l} · ${layerName[l]}`), note: notes.join(' '), lookFor, controls: [...ctrls], tools: entries, decoder };
 });
 
 const payload = JSON.stringify({
-  protocol: { id: proto.id, name: proto.name, band: proto.band, status: tc.status, reference: tc.reference ?? null },
+  protocol: { id: proto.id, name: proto.name, band: proto.band, status: tc.status, reference: tc.reference ?? null, facts: tc.facts ?? null },
   steps, intents: INTENTS,
 });
 ---
@@ -86,29 +90,44 @@ const payload = JSON.stringify({
     const slugify = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const TYPE_COLOR = { hardware: '#2FB8E0', software: '#3FD17C', project: '#9B8CFF' };
 
-    // ---------- pinned, ordered layout (descent down the left, tools fanned right) ----------
-    const STEP_GAP = 120, TOOL_X = 66, COL_W = 188, TOOL_VGAP = 30;
+    // ---- pinned pipeline layout: step (spine) → software → hardware, plus a shared decoder ----
+    const X1 = 86, X2 = 350, X3 = 560, NODE_VG = 28, MIN_SLOT = 92, STEP_PAD = 32;
     const nodes = [], links = [];
     nodes.push({ id: 'tech', name: P.protocol.name, kind: 'tech', stepKey: '*', x: 0, y: 0, fx: 0, fy: 0, detail: { kind: 'tech' } });
-    let prev = 'tech';
+    let prev = 'tech', cursor = MIN_SLOT;
     P.steps.forEach((s, i) => {
-      const sy = (i + 1) * STEP_GAP;
+      const primary = new Set(s.tools.map((t) => t.slug));
+      const depMap = new Map();
+      s.tools.forEach((t) => (t.deps || []).forEach((d) => { if (!primary.has(d.slug) && !depMap.has(d.slug)) depMap.set(d.slug, d); }));
+      const deps = [...depMap.values()];
+      const n1 = s.tools.length, n2 = deps.length;
+      const slot = Math.max(MIN_SLOT, Math.max(n1, n2, 1) * NODE_VG);
+      const cy = cursor + slot / 2;
+      cursor = cy + slot / 2 + STEP_PAD;
       const sid = 'step:' + s.key;
-      nodes.push({ id: sid, name: `${i + 1}. ${s.name}`, kind: 'step', stepKey: s.key, x: 0, y: sy, fx: 0, fy: sy, detail: { kind: 'step', step: s } });
-      links.push({ source: prev, target: sid, spine: true });
-      prev = sid;
-      const n = s.tools.length;
-      const cols = n > 3 ? 2 : 1;
-      const maxRows = Math.ceil(n / cols);
+      nodes.push({ id: sid, name: `${i + 1}. ${s.name}`, kind: 'step', stepKey: s.key, x: 0, y: cy, fx: 0, fy: cy, detail: { kind: 'step', step: s } });
+      links.push({ source: prev, target: sid, spine: true }); prev = sid;
       s.tools.forEach((t, j) => {
-        const col = cols === 2 ? j % 2 : 0;
-        const row = cols === 2 ? Math.floor(j / 2) : j;
-        const x = TOOL_X + col * COL_W;
-        const y = sy + (row - (maxRows - 1) / 2) * TOOL_VGAP;
-        const tid = sid + ':' + t.slug;
-        nodes.push({ id: tid, name: t.name, kind: t.type, stepKey: s.key, x, y, fx: x, fy: y, detail: { kind: 'tool', tool: t } });
+        const ty = cy + (j - (n1 - 1) / 2) * NODE_VG;
+        const tid = sid + ':t:' + t.slug;
+        nodes.push({ id: tid, name: t.name, kind: t.type, stepKey: s.key, x: X1, y: ty, fx: X1, fy: ty, detail: { kind: 'tool', tool: t } });
         links.push({ source: sid, target: tid });
       });
+      // Decoder (if any) sits right after the software; hardware deps are the outer column.
+      const depX = s.decoder ? X3 : X2;
+      deps.forEach((d, k) => {
+        const dy = cy + (k - (n2 - 1) / 2) * NODE_VG;
+        nodes.push({ id: sid + ':d:' + d.slug, name: d.name, kind: d.type, stepKey: s.key, x: depX, y: dy, fx: depX, fy: dy, detail: { kind: 'tool', tool: { ...d, role: null, why: null, caveat: null, needs: null, deps: [] } } });
+      });
+      s.tools.forEach((t) => {
+        const tid = sid + ':t:' + t.slug;
+        (t.deps || []).forEach((d) => links.push({ source: tid, target: primary.has(d.slug) ? sid + ':t:' + d.slug : sid + ':d:' + d.slug, dep: true }));
+      });
+      if (s.decoder) {
+        const decId = sid + ':dec';
+        nodes.push({ id: decId, name: s.decoder.name, kind: s.decoder.type, stepKey: s.key, x: X2, y: cy, fx: X2, fy: cy, detail: { kind: 'tool', tool: { ...s.decoder, role: 'Decode', why: s.decoder.note, caveat: null, needs: null, deps: [] } } });
+        s.tools.forEach((t) => links.push({ source: sid + ':t:' + t.slug, target: decId, dec: true }));
+      }
     });
 
     let intent = P.intents[0];
@@ -120,8 +139,8 @@ const payload = JSON.stringify({
     const graph = new ForceGraph(el)
       .backgroundColor('#0A1119')
       .cooldownTicks(0)
-      .linkColor((l) => stepActive(targetStep(l)) ? (l.spine ? 'rgba(255,122,26,0.55)' : 'rgba(136,154,171,0.28)') : 'rgba(136,154,171,0.06)')
-      .linkWidth((l) => l.spine ? 1.5 : 0.6)
+      .linkColor((l) => stepActive(targetStep(l)) ? (l.spine ? 'rgba(255,122,26,0.55)' : (l.dep || l.dec) ? 'rgba(47,184,224,0.30)' : 'rgba(136,154,171,0.30)') : 'rgba(136,154,171,0.05)')
+      .linkWidth((l) => l.spine ? 1.5 : (l.dep || l.dec) ? 0.5 : 0.7)
       .linkDirectionalArrowLength((l) => l.spine ? 4 : 0)
       .linkDirectionalArrowRelPos(1)
       .nodeCanvasObject((node, ctx, scale) => {
@@ -130,12 +149,12 @@ const payload = JSON.stringify({
         const r = radius(node.kind);
         ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
         ctx.fillStyle = colorFor(node); ctx.fill();
-        const left = node.kind === 'step' || node.kind === 'tech';
-        const fontSize = Math.max(4, (node.kind === 'step' ? 13 : node.kind === 'tech' ? 13 : 10.5) / scale);
+        const leftSide = node.kind === 'step' || node.kind === 'tech';
+        const fontSize = Math.max(4, (node.kind === 'step' || node.kind === 'tech' ? 13 : 10.5) / scale);
         ctx.font = `${node.kind === 'tech' || node.kind === 'step' ? 600 : 400} ${fontSize}px Inter, system-ui, sans-serif`;
         ctx.textBaseline = 'middle';
-        ctx.textAlign = left ? 'right' : 'left';
-        const tx = left ? node.x - r - 5 : node.x + r + 5;
+        ctx.textAlign = leftSide ? 'right' : 'left';
+        const tx = leftSide ? node.x - r - 5 : node.x + r + 5;
         ctx.lineWidth = 3 / scale; ctx.strokeStyle = 'rgba(10,17,25,0.92)';
         ctx.strokeText(node.name, tx, node.y);
         ctx.fillStyle = node.kind === 'tech' ? '#FF7A1A' : node.kind === 'step' ? '#E6EDF3' : '#C4D0DD';
@@ -146,10 +165,11 @@ const payload = JSON.stringify({
       .onNodeClick((n) => showDetail(n))
       .onBackgroundClick(() => renderKit());
 
-    function targetStep(l) { const t = typeof l.target === 'object' ? l.target : nodes.find((n) => n.id === l.target); return t ? t.stepKey : '*'; }
+    const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]));
+    function targetStep(l) { const t = typeof l.target === 'object' ? l.target : nodeById[l.target]; return t ? t.stepKey : '*'; }
     graph.graphData({ nodes, links });
     graph.width(el.clientWidth).height(el.clientHeight);
-    setTimeout(() => graph.zoomToFit(400, 70), 250);
+    setTimeout(() => graph.zoomToFit(400, 80), 250);
     window.addEventListener('resize', () => graph.width(el.clientWidth).height(el.clientHeight));
 
     // ---------- intent chips ----------
@@ -162,24 +182,30 @@ const payload = JSON.stringify({
       chips.appendChild(b);
     });
 
-    // ---------- kit (the deliverable) ----------
+    // ---------- kit ----------
     const side = document.getElementById('wf-side-body');
     const dedupe = (arr) => { const m = new Map(); arr.forEach((t) => m.set(t.slug, t)); return [...m.values()]; };
     function kitFor() {
       const hw = [], sw = [];
-      P.steps.filter((s) => stepActive(s.key)).forEach((s) => s.tools.forEach((t) => {
-        [t, ...(t.deps || [])].forEach((x) => (x.type === 'hardware' ? hw : sw).push(x));
-      }));
+      P.steps.filter((s) => stepActive(s.key)).forEach((s) => {
+        s.tools.forEach((t) => [t, ...(t.deps || [])].forEach((x) => (x.type === 'hardware' ? hw : sw).push(x)));
+        if (s.decoder) (s.decoder.type === 'hardware' ? hw : sw).push(s.decoder);
+      });
       return { hw: dedupe(hw), sw: dedupe(sw) };
     }
     function kitRow(t) {
       const link = t.repo || t.homepage;
       return `<a class="kit-row" href="/tools/${esc(slugify(t.name))}"><span class="dot" style="background:${TYPE_COLOR[t.type] || '#8B9AAB'}"></span><span class="nm">${esc(t.name)}</span>${t.spec ? `<span class="sp">${esc(t.spec)}</span>` : ''}${link ? `<span class="rp">↗</span>` : ''}</a>`;
     }
+    function factsBlock() {
+      if (!P.protocol.facts?.length) return '';
+      return `<div class="kicker">FUNDAMENTALS</div><div class="facts">${P.protocol.facts.map((f) => `<div class="fact"><span class="fk">${esc(f.k)}</span><span class="fv">${esc(f.v)}</span></div>`).join('')}</div>`;
+    }
     function renderKit() {
       const { hw, sw } = kitFor();
       const planned = P.protocol.status !== 'complete';
       side.innerHTML = `
+        ${factsBlock()}
         <div class="kicker">YOUR KIT · ${esc(intent.label)}</div>
         ${planned ? `<p class="muted">${esc(P.protocol.name)}'s toolchain is still being filled in. The descent and controls are here; the kit lands when the tools are curated.</p>` : ''}
         ${P.protocol.reference ? `<div class="ref">${linkA(P.protocol.reference.url, 'Reference: ' + esc(P.protocol.reference.name) + ' ↗')}</div>` : ''}
@@ -187,12 +213,13 @@ const payload = JSON.stringify({
         <div class="kit-list">${hw.map(kitRow).join('') || '<span class="muted">—</span>'}</div>
         <div class="kit-h">Software tools<span>${sw.length}</span></div>
         <div class="kit-list">${sw.map(kitRow).join('') || '<span class="muted">—</span>'}</div>
-        <p class="hint mono">Click a step or tool in the graph for the reasons and the detail.</p>`;
+        <p class="hint mono">Click a step, software or hardware node for the reasons and the detail.</p>`;
     }
 
     function depBlock(t) {
       if (!t.deps?.length) return '';
-      const label = t.type === 'hardware' ? 'RUNS' : 'RUNS ON';
+      const allHw = t.deps.every((d) => d.type === 'hardware');
+      const label = allHw ? 'COMPATIBLE HARDWARE' : 'WORKS WITH';
       return `<div class="kicker">${label}</div><div class="deps">${t.deps.map((d) => `<a class="dep" href="/tools/${esc(d.slug)}"><span class="dot" style="background:${TYPE_COLOR[d.type] || '#8B9AAB'}"></span>${esc(d.name)}${d.spec ? `<span class="sp">${esc(d.spec)}</span>` : ''}</a>`).join('')}</div>`;
     }
     function showDetail(node) {
@@ -203,6 +230,7 @@ const payload = JSON.stringify({
         const s = d.step;
         h += `<div class="kicker">${s.layers.map(esc).join(' · ')}</div><h2>${esc(s.name)}</h2>
           ${s.note ? `<p>${esc(s.note)}</p>` : ''}
+          ${s.lookFor?.length ? `<div class="kicker">WHAT TO LOOK FOR</div><ul class="lookfor">${s.lookFor.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
           ${s.controls.length ? `<div class="kicker">CONTROLS</div><div class="chips">${s.controls.map((c) => `<a class="chip" href="/controls/${c.toLowerCase()}">${esc(c)}</a>`).join('')}</div>` : ''}`;
       } else if (d.kind === 'tool') {
         const t = d.tool, col = TYPE_COLOR[t.type] || '#8B9AAB';
@@ -222,7 +250,7 @@ const payload = JSON.stringify({
     renderKit();
   </script>
 
-  <style>
+  <style is:global>
     #wf { height: calc(100vh - 53px); display: flex; flex-direction: column; }
     #wf-top { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
     #wf-top .back { font-size: 11px; color: var(--mut); }
@@ -235,7 +263,7 @@ const payload = JSON.stringify({
     #wf-intents button.on { color: #0A1119; background: var(--orange); border-color: var(--orange); font-weight: 600; }
     #wf-stage { flex: 1; display: flex; min-height: 0; }
     #wf-graph { flex: 1; min-width: 0; }
-    #wf-side { width: 350px; flex: 0 0 350px; border-left: 1px solid var(--line); background: var(--bg2); overflow-y: auto; padding: 20px 20px 48px; }
+    #wf-side { width: 358px; flex: 0 0 358px; border-left: 1px solid var(--line); background: var(--bg2); overflow-y: auto; padding: 20px 20px 48px; }
     #wf-side .kicker { font-family: var(--mono); font-size: 10px; letter-spacing: .15em; color: var(--mut2); margin: 18px 0 6px; }
     #wf-side h2 { font-family: var(--disp); font-size: 21px; margin: 8px 0 4px; line-height: 1.15; }
     #wf-side .spec { font-family: var(--mono); font-size: 12px; color: var(--mut2); margin-bottom: 10px; }
@@ -246,6 +274,12 @@ const payload = JSON.stringify({
     #wf-side .role { font-family: var(--mono); font-size: 12px; color: var(--orange); margin-top: 12px; letter-spacing: .03em; }
     #wf-side a { color: var(--cyan); }
     #wf-side .ref { font-family: var(--mono); font-size: 11px; margin: 10px 0; }
+    #wf-side .facts { display: flex; flex-direction: column; gap: 6px; }
+    #wf-side .fact { display: flex; gap: 10px; font-size: 12.5px; line-height: 1.4; }
+    #wf-side .fact .fk { font-family: var(--mono); color: var(--cyan); flex: 0 0 76px; }
+    #wf-side .fact .fv { color: #CFD9E4; }
+    #wf-side ul.lookfor { margin: 4px 0 0; padding-left: 16px; }
+    #wf-side ul.lookfor li { color: #CFD9E4; font-size: 13px; line-height: 1.55; margin: 6px 0; }
     #wf-side .kit-h { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--disp); font-weight: 600; font-size: 14px; margin: 22px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     #wf-side .kit-h span { font-family: var(--mono); font-size: 12px; color: var(--mut2); }
     #wf-side .kit-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid rgba(34,52,74,.45); }
@@ -261,7 +295,7 @@ const payload = JSON.stringify({
     #wf-side .badge { display: inline-block; font-family: var(--mono); font-size: 10px; border: 1px solid; border-radius: 3px; padding: 2px 8px; }
     #wf-side .cta, #wf-side .back2 { display: inline-block; margin-top: 18px; font-family: var(--mono); font-size: 12px; color: var(--orange); background: none; border: 0; cursor: pointer; padding: 0; }
     #wf-side .hint { font-size: 10px; color: var(--mut2); margin-top: 22px; }
-    :global(body:has(#wf)) footer { display: none; }
+    body:has(#wf) footer { display: none; }
     @media (max-width: 760px) { #wf-side { display: none; } }
   </style>
 </BaseLayout>
