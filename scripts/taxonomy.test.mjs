@@ -5,8 +5,9 @@ import { LAYER_IDS, PROTOCOL_IDS, parseControlId } from '../src/lib/taxonomy.js'
 test('layer and protocol id sets', () => {
   assert.deepEqual(LAYER_IDS, ['IG', 'SP', 'PHY', 'LL', 'CR', 'AT', 'AP']);
   assert.ok(PROTOCOL_IDS.includes('BLE'));
+  assert.ok(PROTOCOL_IDS.includes('BTC'));
   assert.ok(PROTOCOL_IDS.includes('ZIGBEE'));
-  assert.equal(PROTOCOL_IDS.length, 14);
+  assert.equal(PROTOCOL_IDS.length, 15);
 });
 
 test('parseControlId splits a valid id', () => {
