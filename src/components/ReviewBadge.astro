@@ -1,0 +1,5 @@
+---
+const { status = 'stub', confidence } = Astro.props;
+const label = status.toUpperCase() + (confidence ? ` · ${confidence}` : '');
+---
+<span class={`review ${status}`}>{label}</span>
