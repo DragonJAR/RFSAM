@@ -1,24 +1,28 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-const tools = (await getCollection('tools')).sort((a, b) => Number(b.data.ec) - Number(a.data.ec));
+import ToolCard from '../components/ToolCard.astro';
+
+const tools = await getCollection('tools');
+const hardware = tools.filter((t) => t.data.type === 'hardware').sort((a, b) => a.data.name.localeCompare(b.data.name));
+const software = tools.filter((t) => t.data.type !== 'hardware').sort((a, b) => a.data.name.localeCompare(b.data.name));
 ---
 <BaseLayout title="Tools">
   <div class="container">
-    <h1 style="font-size:34px">Standard tooling</h1>
-    <p style="color:var(--mut);margin-top:8px">Representative tools — Electronic Cats tooling is badged; community tools sit alongside it. Check current advisories; this is not exhaustive.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px">
-      {tools.map((t) => (
-        <div style={`border:1px solid ${t.data.ec ? 'var(--orange)' : 'var(--line)'};border-radius:10px;padding:18px;background:var(--panel)`}>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-            <span style="font-family:var(--disp);font-weight:600;font-size:15px">{t.data.name}</span>
-            {t.data.ec && <span class="mono" style="font-size:9px;color:var(--orange);border:1px solid var(--orange);border-radius:3px;padding:1px 5px">EC</span>}
-          </div>
-          <div class="mono" style="font-size:10px;color:var(--mut2);margin-top:2px">{t.data.vendor}</div>
-          <div class="mono" style="font-size:10.5px;color:var(--cyan);margin-top:10px">{t.data.protocols.join(' · ')}</div>
-          <div style="font-size:12px;color:var(--mut);margin-top:8px;line-height:1.5">{t.data.note}</div>
-        </div>
-      ))}
+    <h1 style="font-size:34px">Tools</h1>
+    <p style="color:var(--mut);margin-top:8px;max-width:64ch">
+      Hardware first — open a device to see the software and projects that pair with it. Representative,
+      not exhaustive; check current advisories. Repo links go to each project's source.
+    </p>
+
+    <h2 class="mono" style="font-size:13px;letter-spacing:.16em;color:var(--mut2);margin-top:32px">HARDWARE</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:14px">
+      {hardware.map((t) => <ToolCard tool={t.data} />)}
+    </div>
+
+    <h2 class="mono" style="font-size:13px;letter-spacing:.16em;color:var(--mut2);margin-top:40px">SOFTWARE &amp; PROJECTS</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:14px">
+      {software.map((t) => <ToolCard tool={t.data} />)}
     </div>
   </div>
 </BaseLayout>

@@ -20,17 +20,10 @@ import { bsamRelation } from '../data/bsamRelation.js';
 
     <h2 class="mono" style="font-size:13px;letter-spacing:.16em;margin-top:40px;color:var(--mut2)">WHY RFSAM &amp; WHAT IT BUILDS ON</h2>
     <p style="color:#CFD9E4;line-height:1.7;margin-top:10px">{bsamRelation.priorArt}</p>
-
-    <h2 class="mono" style="font-size:13px;letter-spacing:.16em;margin-top:40px;color:var(--mut2)">RELATIONSHIP TO BSAM</h2>
-    <p style="color:#CFD9E4;line-height:1.7;margin:10px 0">{bsamRelation.summary}</p>
-    <div style="border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:12px">
-      {bsamRelation.ownership.map((o) => (
-        <div style="display:flex;gap:16px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--line)">
-          <div class="mono" style="flex:0 0 230px;color:var(--cyan);font-size:12px">{o.rfsam}</div>
-          <div style="color:var(--mut);font-size:13px">{o.note}</div>
-        </div>
-      ))}
-    </div>
-    <a class="mono" style="display:inline-block;margin-top:16px;color:var(--amber);font-size:12px" href={bsamRelation.url} target="_blank" rel="noopener">View BSAM at tarlogic.com/bsam ↗</a>
+    <p style="color:var(--mut);font-size:13.5px;line-height:1.7;margin-top:14px">
+      Where an established methodology already owns a layer, RFSAM defers to it rather than duplicating —
+      most notably <a style="color:var(--cyan)" href="/wayfinder/ble">Bluetooth, where it builds on Tarlogic's BSAM</a>.
+      Each technology's reference methodology and the reasons to use it live on that technology's wayfinder.
+    </p>
   </div>
 </BaseLayout>

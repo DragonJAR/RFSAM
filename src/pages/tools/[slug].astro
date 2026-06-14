@@ -1,0 +1,68 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { toolchains } from '../../data/toolchains.js';
+import { protocols } from '../../data/protocols.js';
+
+export async function getStaticPaths() {
+  const tools = await getCollection('tools');
+  return tools.map((t) => ({ params: { slug: t.id }, props: { slug: t.id } }));
+}
+
+const { slug } = Astro.props;
+const allTools = await getCollection('tools');
+const entry = allTools.find((t) => t.id === slug);
+const tool = entry.data;
+const bySlug = (s) => allTools.find((t) => t.id === s)?.data;
+
+const typeColor = { hardware: 'var(--cyan)', software: 'var(--green)', project: 'var(--purple)' }[tool.type] ?? 'var(--mut)';
+const link = tool.repo ?? tool.homepage;
+
+// Compatible software declared on this hardware tool.
+const compatible = (tool.software ?? []).map(bySlug).filter(Boolean);
+
+// Where this tool appears in a technology's toolchain.
+const usedIn = [];
+for (const [proto, tc] of Object.entries(toolchains)) {
+  for (const [layer, def] of Object.entries(tc.layers ?? {})) {
+    if ((def.tools ?? []).some((t) => t.tool === slug)) {
+      usedIn.push({ proto, layer });
+    }
+  }
+}
+const protoName = (pid) => protocols.find((p) => p.id === pid)?.name ?? pid;
+---
+<BaseLayout title={tool.name}>
+  <div class="container" style="max-width:760px">
+    <div class="mono" style="font-size:11px;color:var(--mut2)"><a href="/tools">Tools</a> / {tool.name}</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
+      <h1 style="font-size:32px">{tool.name}</h1>
+      <span class="mono" style={`font-size:10px;letter-spacing:.08em;color:${typeColor};border:1px solid ${typeColor};border-radius:3px;padding:2px 7px`}>{tool.type.toUpperCase()}</span>
+    </div>
+    <div class="mono" style="font-size:12px;color:var(--mut2);margin-top:4px">{tool.vendor} · {tool.protocols.join(' · ')}</div>
+    {link && <a href={link} target="_blank" rel="noopener" class="mono" style="display:inline-block;margin-top:10px;font-size:12px;color:var(--amber)">{tool.repo ? 'GitHub repository ↗' : 'Project site ↗'}</a>}
+
+    <p style="font-size:15px;color:#CFD9E4;line-height:1.7;margin-top:18px">{tool.note}</p>
+
+    {compatible.length > 0 && (
+      <>
+        <h2 class="mono" style="font-size:12px;letter-spacing:.14em;color:var(--mut2);margin-top:32px">COMPATIBLE SOFTWARE &amp; PROJECTS</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:12px">
+          {compatible.map((s) => <ToolCard tool={s} />)}
+        </div>
+      </>
+    )}
+
+    {usedIn.length > 0 && (
+      <>
+        <h2 class="mono" style="font-size:12px;letter-spacing:.14em;color:var(--mut2);margin-top:32px">USED IN THE WAYFINDER</h2>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+          {usedIn.map(({ proto, layer }) => (
+            <a href={`/wayfinder/${proto.toLowerCase()}`} class="mono" style="font-size:11px;color:var(--cyan);border:1px solid var(--line);border-radius:4px;padding:3px 9px">{protoName(proto)} · {layer}</a>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+</BaseLayout>
