@@ -81,6 +81,7 @@ const graphJson = JSON.stringify({ nodes, links });
 
   <script>
     import ForceGraph from 'force-graph';
+    import { forceCollide } from 'd3-force';
 
     const data = JSON.parse(document.getElementById('wf-data').textContent);
     const nodes = data.nodes;
@@ -96,12 +97,12 @@ const graphJson = JSON.stringify({ nodes, links });
     const LAYER_FALLBACK = '#9B8CFF';
     const colorFor = (n) =>
       n.type === 'root' ? '#FF7A1A'
-        : n.type === 'protocol' ? (n.complete ? '#FF7A1A' : '#2FB8E0')
+        : n.type === 'protocol' ? '#FF7A1A'
         : n.type === 'layer' ? (n.color || LAYER_FALLBACK)
         : n.type === 'hardware' ? '#2FB8E0'
         : '#3FD17C';
     const radiusFor = (n) =>
-      n.type === 'root' ? 10 : n.type === 'protocol' ? 7 : n.type === 'layer' ? 5.5 : 4.5;
+      n.type === 'root' ? 8 : n.type === 'protocol' ? 5 : n.type === 'layer' ? 4 : 3;
 
     const expanded = new Set(['rfsam']);
     const ancestorsExpanded = (id) => {
@@ -130,22 +131,29 @@ const graphJson = JSON.stringify({ nodes, links });
       .linkDirectionalParticleColor(() => 'rgba(47,184,224,0.7)')
       .nodeCanvasObject((node, ctx, scale) => {
         const r = radiusFor(node);
+        const plannedProto = node.type === 'protocol' && !node.complete;
+        ctx.globalAlpha = plannedProto ? 0.5 : 1;
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
         ctx.fillStyle = colorFor(node);
         ctx.fill();
         const hasKids = (childrenOf[node.id] || []).length > 0;
         if (hasKids && !expanded.has(node.id)) {
-          ctx.lineWidth = 1.5 / scale;
+          ctx.lineWidth = 1.2 / scale;
           ctx.strokeStyle = '#E6EDF3';
           ctx.stroke();
         }
-        const fontSize = Math.max(11 / scale, 2.2);
+        ctx.globalAlpha = 1;
+        const fontSize = Math.max(4, 11 / scale);
         ctx.font = `${fontSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillStyle = '#C4D0DD';
-        ctx.fillText(node.name, node.x, node.y + r + 1.5 / scale);
+        const ly = node.y + r + 2 / scale;
+        ctx.lineWidth = 3 / scale;
+        ctx.strokeStyle = 'rgba(10,17,25,0.92)';
+        ctx.strokeText(node.name, node.x, ly);
+        ctx.fillStyle = '#D7E0EA';
+        ctx.fillText(node.name, node.x, ly);
       })
       .nodePointerAreaPaint((node, color, ctx) => {
         ctx.beginPath();
@@ -158,6 +166,7 @@ const graphJson = JSON.stringify({ nodes, links });
           if (expanded.has(node.id)) { expanded.delete(node.id); collapseDescendants(node.id); }
           else { expanded.add(node.id); }
           graph.graphData(visible());
+          setTimeout(() => graph.zoomToFit(500, 90), 350);
         }
         showPanel(node);
       })
@@ -166,8 +175,18 @@ const graphJson = JSON.stringify({ nodes, links });
     function size() { graph.width(el.clientWidth).height(el.clientHeight); }
     size();
     window.addEventListener('resize', size);
+
+    // Spread the layout so bubbles don't crowd their labels.
+    graph.d3Force('charge').strength(-340).distanceMax(700);
+    graph.d3Force('link').distance((l) => {
+      const t = l.target && typeof l.target === 'object' ? l.target.type : null;
+      return t === 'protocol' ? 170 : t === 'layer' ? 90 : 55;
+    });
+    graph.d3Force('collide', forceCollide((n) => radiusFor(n) + 9));
+    graph.d3VelocityDecay(0.32);
+
     graph.graphData(visible());
-    setTimeout(() => graph.zoomToFit(500, 70), 600);
+    setTimeout(() => graph.zoomToFit(600, 90), 700);
 
     // ---- detail panel ----
     const panel = document.getElementById('wf-panel');

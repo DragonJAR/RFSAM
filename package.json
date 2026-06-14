@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "astro": "^5.0.0",
-    "force-graph": "^1.43.0"
+    "force-graph": "^1.43.0",
+    "d3-force": "^3.0.0"
   },
   "devDependencies": {
     "gray-matter": "^4.0.3"
