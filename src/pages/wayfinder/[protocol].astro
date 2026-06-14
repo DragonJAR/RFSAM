@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ToolCard from '../../components/ToolCard.astro';
 import { protocols } from '../../data/protocols.js';
 import { layers } from '../../data/layers.js';
 import { toolchains } from '../../data/toolchains.js';
@@ -14,88 +13,260 @@ const { protocolId } = Astro.props;
 const proto = protocols.find((p) => p.id === protocolId);
 const tc = toolchains[protocolId] ?? { status: 'planned', reference: null, layers: {} };
 
-const allTools = await getCollection('tools');
-const toolBySlug = (slug) => allTools.find((t) => t.id === slug)?.data;
+const toolEntries = await getCollection('tools');
+const toolBySlug = Object.fromEntries(toolEntries.map((t) => [t.id, t.data]));
+const controls = await getCollection('controls');
+const layerName = Object.fromEntries(layers.map((l) => [l.id, l.name]));
 
-const allControls = await getCollection('controls');
-const controlsAt = (layerId) =>
-  allControls.filter((c) => c.data.protocol === protocolId && c.data.layer === layerId)
-    .sort((a, b) => a.data.id.localeCompare(b.data.id));
+// Plain-language steps mapped onto the layer descent.
+const STEP_DEFS = [
+  { key: 'identify', name: 'Identify the device', layers: ['IG'] },
+  { key: 'spectrum', name: 'See it in the spectrum', layers: ['SP'] },
+  { key: 'capture', name: 'Capture the signal', layers: ['PHY', 'LL'] },
+  { key: 'crypto', name: 'Break the crypto', layers: ['CR'] },
+  { key: 'attack', name: 'Take over / attack', layers: ['AT'] },
+  { key: 'app', name: 'Test the app layer', layers: ['AP'] },
+];
+const INTENTS = [
+  { key: 'everything', label: 'Everything', steps: 'all' },
+  { key: 'recon', label: 'Recon / sniff', steps: ['identify', 'spectrum', 'capture'] },
+  { key: 'capture', label: 'Capture', steps: ['spectrum', 'capture'] },
+  { key: 'decrypt', label: 'Decrypt', steps: ['capture', 'crypto'] },
+  { key: 'attack', label: 'Take over', steps: ['capture', 'attack', 'app'] },
+  { key: 'audit', label: 'Full audit', steps: 'all' },
+];
 
-// Show the descent (IG → AP) for every protocol; populated where the toolchain exists.
-const descent = layers;
+const swInfo = (slug) => {
+  const d = toolBySlug[slug];
+  return d ? { slug, name: d.name, repo: d.repo ?? null, homepage: d.homepage ?? null } : null;
+};
+const toolNode = (h, kind) => {
+  const d = toolBySlug[h.tool]; if (!d) return null;
+  return {
+    slug: h.tool, name: d.name, kind, vendor: d.vendor, toolType: d.type, spec: d.spec ?? null,
+    role: h.role ?? null, why: h.why ?? null, caveat: h.caveat ?? null, needs: h.needs ?? null,
+    repo: d.repo ?? null, homepage: d.homepage ?? null, note: d.note,
+    software: (h.software ?? []).map(swInfo).filter(Boolean),
+  };
+};
+
+const steps = STEP_DEFS.map((sd) => {
+  const notes = [];
+  let hardware = [], host = [];
+  const ctrls = new Set();
+  for (const lid of sd.layers) {
+    const def = tc.layers?.[lid];
+    if (def?.note) notes.push(def.note);
+    hardware = hardware.concat((def?.hardware ?? []).map((h) => toolNode(h, 'hardware')).filter(Boolean));
+    host = host.concat((def?.host ?? []).map((h) => toolNode(h, 'software')).filter(Boolean));
+    controls.filter((c) => c.data.protocol === protocolId && c.data.layer === lid).forEach((c) => ctrls.add(c.data.id));
+  }
+  return { key: sd.key, name: sd.name, layers: sd.layers.map((l) => `${l} · ${layerName[l]}`), note: notes.join(' '), controls: [...ctrls], hardware, host };
+});
+
+const payload = JSON.stringify({
+  protocol: { id: proto.id, name: proto.name, band: proto.band, status: tc.status, reference: tc.reference ?? null },
+  steps, intents: INTENTS,
+});
 ---
 <BaseLayout title={`Wayfinder · ${proto.name}`}>
-  <div class="container">
-    <div class="mono" style="font-size:11px;color:var(--mut2)"><a href="/wayfinder">Wayfinder</a> / {proto.name}</div>
-    <h1 style="font-size:34px;margin-top:12px">{proto.name}</h1>
-    <div class="mono" style="font-size:12px;color:var(--mut2);margin-top:4px">{proto.band}</div>
-
-    {tc.reference && (
-      <div style="border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:8px;padding:14px 18px;margin-top:18px;background:var(--panel)">
-        <div class="mono" style="font-size:10px;letter-spacing:.14em;color:var(--amber)">REFERENCE METHODOLOGY</div>
-        <div style="font-family:var(--disp);font-weight:600;margin-top:6px">
-          <a href={tc.reference.url} target="_blank" rel="noopener">{tc.reference.name} ↗</a>
-        </div>
-        <p style="font-size:13.5px;color:#CFD9E4;margin-top:6px;line-height:1.6">{tc.reference.note}</p>
-      </div>
-    )}
-
-    {tc.status !== 'complete' && (
-      <div style="border:1px dashed var(--line2);border-radius:8px;padding:14px 18px;margin-top:18px;color:var(--mut)">
-        The toolchain for {proto.name} is planned — the descent below links to any existing controls; the per-step
-        hardware/software guidance is being filled in.
-      </div>
-    )}
-
-    <div style="margin-top:28px">
-      {descent.map((l) => {
-        const def = tc.layers?.[l.id];
-        const hardware = def?.hardware ?? [];
-        const host = def?.host ?? [];
-        const ctrls = controlsAt(l.id);
-        if (!def && ctrls.length === 0 && tc.status === 'complete') return null;
-        return (
-          <section style="margin-top:22px;border-left:3px solid var(--line);padding-left:18px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style={`width:10px;height:10px;border-radius:50%;background:${l.color}`}></span>
-              <span class="mono" style={`font-size:12px;color:${l.color}`}>{l.id}</span>
-              <span style="font-family:var(--disp);font-weight:600;font-size:16px">{l.name}</span>
-            </div>
-            {def?.note && <p style="font-size:13.5px;color:var(--mut);margin:8px 0 0;line-height:1.6">{def.note}</p>}
-
-            {hardware.length > 0 && (
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:12px">
-                {hardware.map((h) => {
-                  const data = toolBySlug(h.tool);
-                  const sw = (h.software ?? []).map(toolBySlug).filter(Boolean);
-                  return data ? <ToolCard tool={data} role={h.role} why={h.why} caveat={h.caveat} software={sw} /> : null;
-                })}
-              </div>
-            )}
-
-            {host.length > 0 && (
-              <>
-                <div class="mono" style="font-size:10px;letter-spacing:.1em;color:var(--mut2);margin-top:14px">HOST SOFTWARE — runs on the host, see NEEDS</div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:8px">
-                  {host.map((h) => {
-                    const data = toolBySlug(h.tool);
-                    return data ? <ToolCard tool={data} role={h.role} why={h.why} caveat={h.caveat} needs={h.needs} /> : null;
-                  })}
-                </div>
-              </>
-            )}
-
-            {ctrls.length > 0 && (
-              <div class="mono" style="font-size:11px;margin-top:12px;color:var(--mut2)">
-                Controls: {ctrls.map((c, i) => (
-                  <>{i > 0 ? ' · ' : ''}<a style="color:var(--cyan)" href={`/controls/${c.data.id.toLowerCase()}`}>{c.data.id}</a></>
-                ))}
-              </div>
-            )}
-          </section>
-        );
-      })}
+  <div id="wf">
+    <header id="wf-top">
+      <a href="/wayfinder" class="mono back">← all technologies</a>
+      <div class="mono title">{proto.name} <span class="band">{proto.band}</span></div>
+      <div id="wf-intents" class="mono"></div>
+    </header>
+    <div id="wf-stage">
+      <div id="wf-graph"></div>
+      <aside id="wf-side">
+        <div id="wf-side-body"></div>
+      </aside>
     </div>
   </div>
+
+  <script type="application/json" id="wf-payload" set:html={payload}></script>
+
+  <script>
+    import ForceGraph from 'force-graph';
+
+    const P = JSON.parse(document.getElementById('wf-payload').textContent);
+    const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const linkA = (url, label) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${label}</a>` : '';
+    const slugify = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    // ---------- build pinned, ordered graph ----------
+    const STEP_GAP = 74, TOOL_X = 60, TOOL_DX = 50, TOOL_ROW = 30, COLS = 5;
+    const nodes = [], links = [];
+    nodes.push({ id: 'tech', name: P.protocol.name, kind: 'tech', stepKey: '*', x: 0, y: 0, fx: 0, fy: 0, detail: { kind: 'tech' } });
+    let prev = 'tech';
+    P.steps.forEach((s, i) => {
+      const y = (i + 1) * STEP_GAP;
+      const sid = 'step:' + s.key;
+      nodes.push({ id: sid, name: `${i + 1}. ${s.name}`, kind: 'step', stepKey: s.key, x: 0, y, fx: 0, fy: y, detail: { kind: 'step', step: s } });
+      links.push({ source: prev, target: sid, spine: true });
+      prev = sid;
+      const tools = [...s.hardware, ...s.host];
+      tools.forEach((t, j) => {
+        const col = j % COLS, row = Math.floor(j / COLS);
+        const x = TOOL_X + col * TOOL_DX;
+        const ty = y + row * TOOL_ROW - (Math.max(0, Math.ceil(tools.length / COLS) - 1) * TOOL_ROW) / 2;
+        const tid = sid + ':' + t.slug;
+        nodes.push({ id: tid, name: t.name, kind: t.kind, stepKey: s.key, x, y: ty, fx: x, fy: ty, detail: { kind: 'tool', tool: t } });
+        links.push({ source: sid, target: tid });
+      });
+    });
+
+    let intent = P.intents[0]; // everything
+    const stepActive = (key) => key === '*' || intent.steps === 'all' || intent.steps.includes(key);
+    const COLORS = { tech: '#FF7A1A', step: '#9B8CFF', hardware: '#2FB8E0', software: '#3FD17C' };
+    const radius = (n) => n.kind === 'tech' ? 8 : n.kind === 'step' ? 5.5 : 4;
+
+    const el = document.getElementById('wf-graph');
+    const graph = new ForceGraph(el)
+      .backgroundColor('#0A1119')
+      .cooldownTicks(0)
+      .linkColor((l) => stepActive(targetStep(l)) ? (l.spine ? 'rgba(255,122,26,0.5)' : 'rgba(136,154,171,0.3)') : 'rgba(136,154,171,0.07)')
+      .linkWidth((l) => l.spine ? 1.4 : 0.6)
+      .linkDirectionalArrowLength((l) => l.spine ? 4 : 0)
+      .linkDirectionalArrowRelPos(1)
+      .nodeCanvasObject((node, ctx, scale) => {
+        const active = stepActive(node.stepKey);
+        ctx.globalAlpha = active ? 1 : 0.16;
+        const r = radius(node);
+        ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = COLORS[node.kind] || '#8B9AAB'; ctx.fill();
+        const fontSize = Math.max(4, (node.kind === 'step' ? 13 : 10) / scale);
+        ctx.font = `${node.kind === 'step' ? 600 : 400} ${fontSize}px Inter, system-ui, sans-serif`;
+        ctx.textBaseline = 'middle';
+        if (node.kind === 'step' || node.kind === 'tech') {
+          ctx.textAlign = 'right';
+          ctx.lineWidth = 3 / scale; ctx.strokeStyle = 'rgba(10,17,25,0.9)';
+          ctx.strokeText(node.name, node.x - r - 4, node.y);
+          ctx.fillStyle = node.kind === 'tech' ? '#FF7A1A' : '#E6EDF3';
+          ctx.fillText(node.name, node.x - r - 4, node.y);
+        } else {
+          ctx.textAlign = 'left';
+          ctx.lineWidth = 3 / scale; ctx.strokeStyle = 'rgba(10,17,25,0.9)';
+          ctx.strokeText(node.name, node.x + r + 4, node.y);
+          ctx.fillStyle = '#C4D0DD';
+          ctx.fillText(node.name, node.x + r + 4, node.y);
+        }
+        ctx.globalAlpha = 1;
+      })
+      .nodePointerAreaPaint((node, color, ctx) => {
+        ctx.beginPath(); ctx.arc(node.x, node.y, radius(node) + 3, 0, 2 * Math.PI); ctx.fillStyle = color; ctx.fill();
+      })
+      .onNodeClick((n) => showDetail(n))
+      .onBackgroundClick(() => renderKit());
+
+    function targetStep(l) { const t = typeof l.target === 'object' ? l.target : nodes.find((n) => n.id === l.target); return t ? t.stepKey : '*'; }
+    function fit() { graph.width(el.clientWidth).height(el.clientHeight); graph.zoomToFit(400, 80); }
+    graph.graphData({ nodes, links });
+    graph.width(el.clientWidth).height(el.clientHeight);
+    setTimeout(fit, 250);
+    window.addEventListener('resize', () => graph.width(el.clientWidth).height(el.clientHeight));
+
+    // ---------- intent chips ----------
+    const chips = document.getElementById('wf-intents');
+    chips.innerHTML = P.intents.map((it) => `<button data-k="${it.key}" class="${it.key === intent.key ? 'on' : ''}">${esc(it.label)}</button>`).join('');
+    chips.querySelectorAll('button').forEach((b) => b.onclick = () => {
+      intent = P.intents.find((i) => i.key === b.dataset.k);
+      chips.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.k === intent.key));
+      renderKit();
+    });
+
+    // ---------- kit (the deliverable) ----------
+    const side = document.getElementById('wf-side-body');
+    const dedupe = (arr) => { const m = new Map(); arr.forEach((t) => m.set(t.slug, t)); return [...m.values()]; };
+    function kitFor() {
+      const hw = [], sw = [];
+      P.steps.filter((s) => stepActive(s.key)).forEach((s) => {
+        s.hardware.forEach((h) => { hw.push(h); (h.software || []).forEach((x) => sw.push(x)); });
+        s.host.forEach((h) => { sw.push(h); });
+      });
+      return { hw: dedupe(hw), sw: dedupe(sw) };
+    }
+    function toolRow(t) {
+      const link = t.repo || t.homepage;
+      return `<a class="kit-row" href="/tools/${esc(slugify(t.name))}"><span class="dot ${t.kind === 'hardware' ? 'hw' : 'sw'}"></span><span class="nm">${esc(t.name)}</span>${t.spec ? `<span class="sp">${esc(t.spec)}</span>` : ''}${link ? `<a class="rp" href="${esc(link)}" target="_blank" rel="noopener">↗</a>` : ''}</a>`;
+    }
+    function renderKit() {
+      const { hw, sw } = kitFor();
+      const planned = P.protocol.status !== 'complete';
+      side.innerHTML = `
+        <div class="kicker">YOUR KIT · ${esc(intent.label)}</div>
+        ${planned ? `<p class="muted">${esc(P.protocol.name)}'s toolchain is still being filled in. The descent and controls are here; the kit lands when the tools are curated.</p>` : ''}
+        ${P.protocol.reference ? `<div class="ref">${linkA(P.protocol.reference.url, 'Reference: ' + esc(P.protocol.reference.name) + ' ↗')}</div>` : ''}
+        <div class="kit-h">Hardware tools <span>${hw.length}</span></div>
+        <div class="kit-list">${hw.map(toolRow).join('') || '<span class="muted">—</span>'}</div>
+        <div class="kit-h">Software tools <span>${sw.length}</span></div>
+        <div class="kit-list">${sw.map((s) => toolRow({ ...s, kind: 'software' })).join('') || '<span class="muted">—</span>'}</div>
+        <p class="hint mono">Click a step or tool in the graph for the detail and the reasons.</p>`;
+    }
+
+    function showDetail(node) {
+      const d = node.detail;
+      if (d.kind === 'tech') return renderKit();
+      let h = `<button class="back2" id="wf-back">← kit</button>`;
+      if (d.kind === 'step') {
+        const s = d.step;
+        h += `<div class="kicker">${s.layers.map(esc).join(' · ')}</div><h2>${esc(s.name)}</h2>
+          ${s.note ? `<p>${esc(s.note)}</p>` : ''}
+          ${s.controls.length ? `<div class="kicker">CONTROLS</div><div>${s.controls.map((c) => `<a class="chip" href="/controls/${c.toLowerCase()}">${esc(c)}</a>`).join(' ')}</div>` : ''}`;
+      } else if (d.kind === 'tool') {
+        const t = d.tool, tc2 = t.toolType === 'hardware' ? '#2FB8E0' : t.toolType === 'project' ? '#9B8CFF' : '#3FD17C';
+        h += `<div class="badge" style="color:${tc2};border-color:${tc2}">${esc((t.toolType || '').toUpperCase())}</div>
+          <h2>${esc(t.name)}</h2><div class="spec">${esc(t.vendor)}${t.spec ? ' · ' + esc(t.spec) : ''}</div>
+          ${t.repo ? linkA(t.repo, 'GitHub repository ↗') : linkA(t.homepage, 'Project site ↗')}
+          ${t.role ? `<div class="role">${esc(t.role)}</div>` : ''}
+          ${t.why ? `<p>${esc(t.why)}</p>` : `<p class="muted">${esc(t.note)}</p>`}
+          ${t.caveat ? `<p class="caveat">⚠ ${esc(t.caveat)}</p>` : ''}
+          ${t.needs ? `<p class="needs"><b>NEEDS:</b> ${esc(t.needs)}</p>` : ''}
+          ${t.software?.length ? `<div class="kicker">RUNS</div><div>${t.software.map((s) => `<span class="chip">${linkA(s.repo || s.homepage, esc(s.name) + ' ↗') || esc(s.name)}</span>`).join(' ')}</div>` : ''}
+          <a class="cta" href="/tools/${esc(t.slug)}">Tool page →</a>`;
+      }
+      side.innerHTML = h;
+      document.getElementById('wf-back').onclick = renderKit;
+    }
+
+    renderKit();
+  </script>
+
+  <style>
+    #wf { height: calc(100vh - 53px); display: flex; flex-direction: column; }
+    #wf-top { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    #wf-top .back { font-size: 11px; color: var(--mut); }
+    #wf-top .title { font-size: 14px; color: var(--ink); }
+    #wf-top .band { color: var(--mut2); font-size: 11px; }
+    #wf-intents { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+    #wf-intents button { font-family: var(--mono); font-size: 11px; color: var(--mut); background: none; border: 1px solid var(--line); border-radius: 5px; padding: 3px 10px; cursor: pointer; }
+    #wf-intents button:hover { color: var(--ink); border-color: var(--line2); }
+    #wf-intents button.on { color: #0A1119; background: var(--orange); border-color: var(--orange); }
+    #wf-stage { flex: 1; display: flex; min-height: 0; }
+    #wf-graph { flex: 1; min-width: 0; }
+    #wf-side { width: 340px; flex: 0 0 340px; border-left: 1px solid var(--line); background: var(--bg2); overflow-y: auto; padding: 18px 18px 40px; }
+    #wf-side .kicker { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--mut2); margin-top: 14px; }
+    #wf-side h2 { font-family: var(--disp); font-size: 20px; margin: 6px 0; }
+    #wf-side .spec { font-family: var(--mono); font-size: 12px; color: var(--mut2); margin-bottom: 8px; }
+    #wf-side p { color: #CFD9E4; font-size: 13.5px; line-height: 1.6; margin: 8px 0; }
+    #wf-side .muted { color: var(--mut); }
+    #wf-side .caveat { color: #E7DCC2; } #wf-side .needs { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
+    #wf-side .role { font-family: var(--mono); font-size: 12px; color: var(--orange); margin-top: 8px; }
+    #wf-side a { color: var(--cyan); }
+    #wf-side .ref { font-family: var(--mono); font-size: 11px; margin: 8px 0; }
+    #wf-side .kit-h { display: flex; justify-content: space-between; font-family: var(--disp); font-weight: 600; font-size: 14px; margin: 18px 0 6px; border-bottom: 1px solid var(--line); padding-bottom: 5px; }
+    #wf-side .kit-h span { font-family: var(--mono); color: var(--mut2); }
+    #wf-side .kit-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(34,52,74,.5); }
+    #wf-side .kit-row .nm { color: var(--ink); font-size: 13.5px; }
+    #wf-side .kit-row .sp { font-family: var(--mono); font-size: 10px; color: var(--mut2); margin-left: auto; }
+    #wf-side .kit-row .rp { margin-left: 6px; color: var(--amber); }
+    #wf-side .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    #wf-side .dot.hw { background: var(--cyan); } #wf-side .dot.sw { background: var(--green); }
+    #wf-side .chip { display: inline-block; font-family: var(--mono); font-size: 11px; border: 1px solid var(--line2); border-radius: 4px; padding: 2px 8px; margin: 3px 4px 0 0; }
+    #wf-side .badge { display: inline-block; font-family: var(--mono); font-size: 10px; border: 1px solid; border-radius: 3px; padding: 2px 7px; }
+    #wf-side .cta, #wf-side .back2 { display: inline-block; margin-top: 16px; font-family: var(--mono); font-size: 12px; color: var(--orange); background: none; border: 0; cursor: pointer; padding: 0; }
+    #wf-side .hint { font-size: 10px; color: var(--mut2); margin-top: 20px; }
+    :global(body:has(#wf)) footer { display: none; }
+    @media (max-width: 760px) { #wf-side { display: none; } }
+  </style>
 </BaseLayout>

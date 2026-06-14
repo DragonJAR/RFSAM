@@ -1,129 +1,39 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { protocols } from '../../data/protocols.js';
-import { layers } from '../../data/layers.js';
 import { toolchains } from '../../data/toolchains.js';
 
-const toolEntries = await getCollection('tools');
-const toolBySlug = Object.fromEntries(toolEntries.map((t) => [t.id, t.data]));
-const controls = await getCollection('controls');
-
-const nodes = [];
+const nodes = [{ id: 'rfsam', name: 'RFSAM', kind: 'root' }];
 const links = [];
-const add = (n) => nodes.push(n);
-const link = (source, target) => links.push({ source, target });
-
-add({ id: 'rfsam', name: 'RFSAM', type: 'root', detail: { kind: 'root' } });
-
-const swInfo = (slug) => {
-  const d = toolBySlug[slug];
-  return d ? { slug, name: d.name, repo: d.repo ?? null, homepage: d.homepage ?? null } : null;
-};
-
 for (const p of protocols) {
-  const pid = `p:${p.id}`;
-  const tc = toolchains[p.id] ?? { status: 'planned', layers: {}, reference: null };
-  add({
-    id: pid, name: p.name, type: 'protocol', complete: tc.status === 'complete',
-    detail: { kind: 'protocol', name: p.name, band: p.band, status: tc.status, reference: tc.reference ?? null, href: `/wayfinder/${p.id.toLowerCase()}` },
-  });
-  link('rfsam', pid);
-
-  for (const l of layers) {
-    const def = tc.layers?.[l.id];
-    const ctrls = controls.filter((c) => c.data.protocol === p.id && c.data.layer === l.id).map((c) => c.data.id);
-    if (!def && ctrls.length === 0) continue;
-    const lid = `${pid}:${l.id}`;
-    add({ id: lid, name: `${l.id} · ${l.name}`, type: 'layer', color: l.color, detail: { kind: 'layer', id: l.id, name: l.name, note: def?.note ?? null, controls: ctrls } });
-    link(pid, lid);
-
-    for (const h of def?.hardware ?? []) {
-      const d = toolBySlug[h.tool]; if (!d) continue;
-      const hid = `${lid}:hw:${h.tool}`;
-      add({
-        id: hid, name: d.name, type: 'hardware',
-        detail: { kind: 'tool', toolType: 'hardware', name: d.name, vendor: d.vendor, spec: d.spec ?? null, role: h.role ?? null, why: h.why ?? null, caveat: h.caveat ?? null, needs: h.needs ?? null, repo: d.repo ?? null, homepage: d.homepage ?? null, note: d.note, slug: h.tool, software: (h.software ?? []).map(swInfo).filter(Boolean) },
-      });
-      link(lid, hid);
-    }
-    for (const h of def?.host ?? []) {
-      const d = toolBySlug[h.tool]; if (!d) continue;
-      const hid = `${lid}:host:${h.tool}`;
-      add({
-        id: hid, name: d.name, type: 'software',
-        detail: { kind: 'tool', toolType: d.type, name: d.name, vendor: d.vendor, spec: d.spec ?? null, role: h.role ?? null, why: h.why ?? null, caveat: h.caveat ?? null, needs: h.needs ?? null, repo: d.repo ?? null, homepage: d.homepage ?? null, note: d.note, slug: h.tool, host: true, software: [] },
-      });
-      link(lid, hid);
-    }
-  }
+  nodes.push({ id: p.id, name: p.name, kind: 'protocol', complete: (toolchains[p.id]?.status ?? 'planned') === 'complete', href: `/wayfinder/${p.id.toLowerCase()}` });
+  links.push({ source: 'rfsam', target: p.id });
 }
-
 const graphJson = JSON.stringify({ nodes, links });
 ---
 <BaseLayout title="Wayfinder">
   <div id="wf-wrap">
     <div id="wf-graph"></div>
-    <div id="wf-hint" class="mono">RF Wayfinder · click a technology to expand its descent · drag to move · scroll to zoom</div>
-    <aside id="wf-panel" aria-hidden="true">
-      <button id="wf-close" aria-label="Close">×</button>
-      <div id="wf-panel-body"></div>
-    </aside>
+    <div id="wf-hint" class="mono">RF Wayfinder · pick a technology to see its assessment path and the kit you need · drag · scroll to zoom</div>
     <div id="wf-legend" class="mono">
-      <span><i style="background:#FF7A1A"></i>RFSAM / technology</span>
-      <span><i style="background:#2FB8E0"></i>hardware</span>
-      <span><i style="background:#3FD17C"></i>software</span>
-      <span><i style="background:#9B8CFF"></i>layer</span>
+      <span><i style="background:#FF7A1A"></i>toolchain ready</span>
+      <span><i style="background:#2FB8E0"></i>planned</span>
     </div>
   </div>
 
   <script type="application/json" id="wf-data" set:html={graphJson}></script>
-
   <script>
     import ForceGraph from 'force-graph';
     import { forceCollide } from 'd3-force';
 
     const data = JSON.parse(document.getElementById('wf-data').textContent);
-    const nodes = data.nodes;
-    const links = data.links;
-    const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
-    const parentOf = {};
-    const childrenOf = {};
-    for (const l of links) {
-      parentOf[l.target] = l.source;
-      (childrenOf[l.source] = childrenOf[l.source] || []).push(l.target);
-    }
-
-    const LAYER_FALLBACK = '#9B8CFF';
-    const colorFor = (n) =>
-      n.type === 'root' ? '#FF7A1A'
-        : n.type === 'protocol' ? '#FF7A1A'
-        : n.type === 'layer' ? (n.color || LAYER_FALLBACK)
-        : n.type === 'hardware' ? '#2FB8E0'
-        : '#3FD17C';
-    const radiusFor = (n) =>
-      n.type === 'root' ? 8 : n.type === 'protocol' ? 5 : n.type === 'layer' ? 4 : 3;
-
-    const expanded = new Set(['rfsam']);
-    const ancestorsExpanded = (id) => {
-      let p = parentOf[id];
-      while (p) { if (!expanded.has(p)) return false; p = parentOf[p]; }
-      return true;
-    };
-    const visible = () => {
-      const ns = nodes.filter((n) => n.id === 'rfsam' || ancestorsExpanded(n.id));
-      const set = new Set(ns.map((n) => n.id));
-      return { nodes: ns, links: links.filter((l) => set.has(typeof l.source === 'object' ? l.source.id : l.source) && set.has(typeof l.target === 'object' ? l.target.id : l.target)) };
-    };
-    const collapseDescendants = (id) => {
-      for (const c of childrenOf[id] || []) { expanded.delete(c); collapseDescendants(c); }
-    };
+    const colorFor = (n) => n.kind === 'root' ? '#FF7A1A' : (n.complete ? '#FF7A1A' : '#2FB8E0');
+    const radiusFor = (n) => n.kind === 'root' ? 9 : 6;
 
     const el = document.getElementById('wf-graph');
     const graph = new ForceGraph(el)
       .backgroundColor('#0A1119')
-      .nodeRelSize(1)
-      .nodeId('id')
+      .graphData(data)
       .linkColor(() => 'rgba(136,154,171,0.25)')
       .linkWidth(() => 0.6)
       .linkDirectionalParticles(1)
@@ -131,129 +41,38 @@ const graphJson = JSON.stringify({ nodes, links });
       .linkDirectionalParticleColor(() => 'rgba(47,184,224,0.7)')
       .nodeCanvasObject((node, ctx, scale) => {
         const r = radiusFor(node);
-        const plannedProto = node.type === 'protocol' && !node.complete;
-        ctx.globalAlpha = plannedProto ? 0.5 : 1;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
-        ctx.fillStyle = colorFor(node);
-        ctx.fill();
-        const hasKids = (childrenOf[node.id] || []).length > 0;
-        if (hasKids && !expanded.has(node.id)) {
-          ctx.lineWidth = 1.2 / scale;
-          ctx.strokeStyle = '#E6EDF3';
-          ctx.stroke();
-        }
+        ctx.globalAlpha = node.kind === 'protocol' && !node.complete ? 0.6 : 1;
+        ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = colorFor(node); ctx.fill();
         ctx.globalAlpha = 1;
         const fontSize = Math.max(4, 11 / scale);
         ctx.font = `${fontSize}px Inter, system-ui, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        const ly = node.y + r + 2 / scale;
-        ctx.lineWidth = 3 / scale;
-        ctx.strokeStyle = 'rgba(10,17,25,0.92)';
-        ctx.strokeText(node.name, node.x, ly);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.lineWidth = 3 / scale; ctx.strokeStyle = 'rgba(10,17,25,0.92)';
+        ctx.strokeText(node.name, node.x, node.y + r + 2 / scale);
         ctx.fillStyle = '#D7E0EA';
-        ctx.fillText(node.name, node.x, ly);
+        ctx.fillText(node.name, node.x, node.y + r + 2 / scale);
       })
       .nodePointerAreaPaint((node, color, ctx) => {
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, radiusFor(node) + 2, 0, 2 * Math.PI);
-        ctx.fillStyle = color;
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(node.x, node.y, radiusFor(node) + 3, 0, 2 * Math.PI); ctx.fillStyle = color; ctx.fill();
       })
-      .onNodeClick((node) => {
-        if ((childrenOf[node.id] || []).length) {
-          if (expanded.has(node.id)) { expanded.delete(node.id); collapseDescendants(node.id); }
-          else { expanded.add(node.id); }
-          graph.graphData(visible());
-          setTimeout(() => graph.zoomToFit(500, 90), 350);
-        }
-        showPanel(node);
-      })
-      .onBackgroundClick(() => hidePanel());
+      .onNodeClick((node) => { if (node.href) window.location.href = node.href; });
 
+    graph.d3Force('charge').strength(-280);
+    graph.d3Force('link').distance(150);
+    graph.d3Force('collide', forceCollide((n) => radiusFor(n) + 16));
     function size() { graph.width(el.clientWidth).height(el.clientHeight); }
     size();
     window.addEventListener('resize', size);
-
-    // Spread the layout so bubbles don't crowd their labels.
-    graph.d3Force('charge').strength(-340).distanceMax(700);
-    graph.d3Force('link').distance((l) => {
-      const t = l.target && typeof l.target === 'object' ? l.target.type : null;
-      return t === 'protocol' ? 170 : t === 'layer' ? 90 : 55;
-    });
-    graph.d3Force('collide', forceCollide((n) => radiusFor(n) + 9));
-    graph.d3VelocityDecay(0.32);
-
-    graph.graphData(visible());
-    setTimeout(() => graph.zoomToFit(600, 90), 700);
-
-    // ---- detail panel ----
-    const panel = document.getElementById('wf-panel');
-    const body = document.getElementById('wf-panel-body');
-    document.getElementById('wf-close').onclick = hidePanel;
-    function hidePanel() { panel.classList.remove('open'); panel.setAttribute('aria-hidden', 'true'); }
-    const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    const linkA = (url, label) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${label}</a>` : '';
-
-    function showPanel(node) {
-      const d = node.detail || {};
-      let h = '';
-      if (d.kind === 'root') {
-        h = `<h2>RFSAM</h2><p class="muted">A north for RF research and auditing. Click a technology bubble to expand its descent, then a layer to reveal the tools at that step. Click any tool for the kit, the reasons, and its repo.</p>`;
-      } else if (d.kind === 'protocol') {
-        h = `<div class="kicker">${d.status === 'complete' ? 'TOOLCHAIN READY' : 'TOOLCHAIN PLANNED'}</div>
-          <h2>${esc(d.name)}</h2><div class="spec">${esc(d.band)}</div>
-          ${d.reference ? `<div class="block"><div class="kicker amber">REFERENCE METHODOLOGY</div><div>${linkA(d.reference.url, esc(d.reference.name) + ' ↗')}</div><p class="muted">${esc(d.reference.note)}</p></div>` : ''}
-          <p class="muted">Click the bubble to expand its layers.</p>
-          <a class="cta" href="${esc(d.href)}">Open full page →</a>`;
-      } else if (d.kind === 'layer') {
-        h = `<div class="kicker">LAYER ${esc(d.id)}</div><h2>${esc(d.name)}</h2>
-          ${d.note ? `<p>${esc(d.note)}</p>` : ''}
-          ${d.controls?.length ? `<div class="block"><div class="kicker">CONTROLS</div>${d.controls.map((c) => `<a class="chip" href="/controls/${c.toLowerCase()}">${esc(c)}</a>`).join(' ')}</div>` : ''}`;
-      } else if (d.kind === 'tool') {
-        const tc = d.toolType === 'hardware' ? '#2FB8E0' : d.toolType === 'project' ? '#9B8CFF' : '#3FD17C';
-        h = `<div class="badge" style="color:${tc};border-color:${tc}">${esc((d.toolType || '').toUpperCase())}</div>
-          <h2>${esc(d.name)}</h2><div class="spec">${esc(d.vendor)}${d.spec ? ' · ' + esc(d.spec) : ''}</div>
-          ${d.repo ? linkA(d.repo, 'GitHub repository ↗') : (d.homepage ? linkA(d.homepage, 'Project site ↗') : '')}
-          ${d.role ? `<div class="role">${esc(d.role)}</div>` : ''}
-          ${d.why ? `<p>${esc(d.why)}</p>` : `<p class="muted">${esc(d.note)}</p>`}
-          ${d.caveat ? `<p class="caveat">⚠ ${esc(d.caveat)}</p>` : ''}
-          ${d.needs ? `<p class="needs"><b>NEEDS:</b> ${esc(d.needs)}</p>` : ''}
-          ${d.software?.length ? `<div class="block"><div class="kicker">RUNS</div>${d.software.map((s) => `<span class="chip">${linkA(s.repo || s.homepage, esc(s.name) + ' ↗') || esc(s.name)}</span>`).join(' ')}</div>` : ''}
-          <a class="cta" href="/tools/${esc(d.slug)}">Tool page →</a>`;
-      }
-      body.innerHTML = h;
-      panel.classList.add('open');
-      panel.setAttribute('aria-hidden', 'false');
-    }
+    setTimeout(() => graph.zoomToFit(600, 100), 700);
   </script>
 
   <style>
-    /* full-bleed graph under the sticky nav */
     #wf-wrap { position: relative; height: calc(100vh - 53px); overflow: hidden; }
     #wf-graph { position: absolute; inset: 0; }
     #wf-hint { position: absolute; top: 14px; left: 16px; font-size: 11px; color: var(--mut2); pointer-events: none; }
-    #wf-legend { position: absolute; bottom: 14px; left: 16px; display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--mut); }
+    #wf-legend { position: absolute; bottom: 14px; left: 16px; display: flex; gap: 14px; font-size: 11px; color: var(--mut); }
     #wf-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
-    #wf-panel { position: absolute; top: 0; right: 0; height: 100%; width: 360px; max-width: 88vw; background: var(--bg2); border-left: 1px solid var(--line); padding: 24px 22px; overflow-y: auto; transform: translateX(100%); transition: transform .22s ease; }
-    #wf-panel.open { transform: translateX(0); }
-    #wf-close { position: absolute; top: 12px; right: 14px; background: none; border: 0; color: var(--mut); font-size: 22px; cursor: pointer; line-height: 1; }
-    #wf-panel h2 { font-family: var(--disp); font-size: 22px; margin: 4px 0; }
-    #wf-panel .spec { font-family: var(--mono); font-size: 12px; color: var(--mut2); margin-bottom: 10px; }
-    #wf-panel p { color: #CFD9E4; line-height: 1.6; font-size: 14px; margin: 8px 0; }
-    #wf-panel p.muted, #wf-panel .muted { color: var(--mut); }
-    #wf-panel .caveat { color: #E7DCC2; font-size: 13px; }
-    #wf-panel .needs { font-family: var(--mono); font-size: 12px; color: var(--cyan); }
-    #wf-panel .role { font-family: var(--mono); font-size: 12px; color: var(--orange); margin-top: 10px; letter-spacing: .03em; }
-    #wf-panel .kicker { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--mut2); margin-top: 14px; }
-    #wf-panel .kicker.amber { color: var(--amber); }
-    #wf-panel .block { margin-top: 12px; }
-    #wf-panel a { color: var(--cyan); }
-    #wf-panel .badge { display: inline-block; font-family: var(--mono); font-size: 10px; border: 1px solid; border-radius: 3px; padding: 2px 7px; }
-    #wf-panel .chip { display: inline-block; font-family: var(--mono); font-size: 11px; border: 1px solid var(--line2); border-radius: 4px; padding: 2px 8px; margin: 3px 4px 0 0; }
-    #wf-panel .cta { display: inline-block; margin-top: 18px; font-family: var(--mono); font-size: 12px; color: var(--orange); }
-    /* this page hides the global footer's pull; graph owns the viewport */
     :global(body:has(#wf-wrap)) footer { display: none; }
   </style>
 </BaseLayout>
