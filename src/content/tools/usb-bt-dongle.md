@@ -1,4 +1,5 @@
 ---
+slug: usb-bt-dongle
 name: USB Bluetooth adapter
 vendor: generic
 type: hardware

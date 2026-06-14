@@ -1,4 +1,5 @@
 ---
+slug: killerbee
 name: KillerBee
 vendor: River Loop Security
 type: software

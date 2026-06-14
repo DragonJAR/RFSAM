@@ -1,4 +1,5 @@
 ---
+slug: open5gs
 name: Open5GS
 vendor: Open5GS
 type: software

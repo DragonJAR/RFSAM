@@ -1,4 +1,5 @@
 ---
+slug: imsi-catcher
 name: IMSI-catcher (Oros42)
 vendor: Oros42
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: nrf-sniffer
 name: nRF Sniffer for Bluetooth LE
 vendor: Nordic Semiconductor
 type: software

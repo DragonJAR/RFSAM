@@ -70,7 +70,8 @@ const tools = [
   },
   {
     slug: 'alfa-awus036ach', name: 'ALFA AWUS036ACH', vendor: 'Alfa Network', type: 'hardware',
-    protocols: ['Wi-Fi'], software: ['aircrack-ng', 'bettercap', 'wireshark'],
+    protocols: ['Wi-Fi'], homepage: 'https://alfa-network.com/products/awus036ach',
+    software: ['aircrack-ng', 'bettercap', 'wireshark'],
     note: 'RTL8812AU dual-band Wi-Fi adapter with monitor mode and injection — the workhorse 802.11 capture/injection radio for surveys and handshake capture.',
   },
   {
@@ -262,7 +263,7 @@ mkdirSync(dir, { recursive: true });
 
 for (const t of merged) {
   const { slug, note, ...rest } = t;
-  const data = { ...rest, ...(t.ec ? { ec: true } : {}), note };
+  const data = { slug, ...rest, ...(t.ec ? { ec: true } : {}), note };
   writeFileSync(join(dir, `${slug}.md`), matter.stringify(`${note}\n`, data));
 }
 console.log(`Seeded ${merged.length} tools (${tools.length} base + ${extra.length} from protocol files).`);

@@ -1,4 +1,5 @@
 ---
+slug: falcon
 name: FALCON
 vendor: falkenber9 (TU Dortmund)
 type: software

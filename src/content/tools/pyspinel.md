@@ -1,4 +1,5 @@
 ---
+slug: pyspinel
 name: pyspinel
 vendor: Google / Thread Group
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: crocodilehunter
 name: Crocodile Hunter
 vendor: Electronic Frontier Foundation (EFF)
 type: software

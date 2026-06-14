@@ -1,4 +1,5 @@
 ---
+slug: wifi-pineapple
 name: WiFi Pineapple
 vendor: Hak5
 type: hardware

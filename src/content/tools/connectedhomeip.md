@@ -1,4 +1,5 @@
 ---
+slug: connectedhomeip
 name: Matter SDK (connectedhomeip)
 vendor: Connectivity Standards Alliance / Project CHIP
 type: project

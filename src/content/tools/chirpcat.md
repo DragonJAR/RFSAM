@@ -1,4 +1,5 @@
 ---
+slug: chirpcat
 name: ChirpCat
 vendor: Electronic Cats
 type: software

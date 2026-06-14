@@ -1,4 +1,5 @@
 ---
+slug: openairinterface5g
 name: OpenAirInterface (OAI)
 vendor: OpenAirInterface Software Alliance
 type: software

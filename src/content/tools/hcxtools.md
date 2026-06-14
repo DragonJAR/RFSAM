@@ -1,4 +1,5 @@
 ---
+slug: hcxtools
 name: hcxtools
 vendor: ZerBea
 type: software

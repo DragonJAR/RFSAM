@@ -1,4 +1,5 @@
 ---
+slug: lorattack
 name: LoRAttack
 vendor: konicst1
 type: software

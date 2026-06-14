@@ -1,4 +1,5 @@
 ---
+slug: chip-repl
 name: chip-repl (Matter Python controller)
 vendor: Connectivity Standards Alliance / Project CHIP
 type: software

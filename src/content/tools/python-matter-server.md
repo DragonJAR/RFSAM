@@ -1,4 +1,5 @@
 ---
+slug: python-matter-server
 name: Python Matter Server
 vendor: Open Home Foundation / Nabu Casa
 type: software

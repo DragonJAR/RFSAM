@@ -1,4 +1,5 @@
 ---
+slug: forthink-uwb-sniffer
 name: Forthink UWB Sniffer (software + Wireshark plugin)
 vendor: Forthink / Everhigh
 type: software

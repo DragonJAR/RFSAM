@@ -1,4 +1,5 @@
 ---
+slug: gr-air-modes
 name: gr-air-modes
 vendor: Nick Foster (bistromath)
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: reaver
 name: Reaver (t6x fork)
 vendor: t6x
 type: software

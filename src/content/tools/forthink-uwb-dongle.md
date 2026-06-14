@@ -1,4 +1,5 @@
 ---
+slug: forthink-uwb-dongle
 name: Forthink UWB-Dongle-Sniffer
 vendor: Forthink / Everhigh
 type: hardware

@@ -1,4 +1,5 @@
 ---
+slug: srsran-4g
 name: srsRAN 4G
 vendor: Software Radio Systems (SRS)
 type: software

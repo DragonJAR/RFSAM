@@ -1,4 +1,5 @@
 ---
+slug: ltesniffer
 name: LTESniffer
 vendor: KAIST SysSec
 type: software

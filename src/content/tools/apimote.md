@@ -1,4 +1,5 @@
 ---
+slug: apimote
 name: ApiMote
 vendor: River Loop Security
 type: hardware

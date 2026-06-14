@@ -1,4 +1,5 @@
 ---
+slug: free5gc
 name: free5GC
 vendor: free5GC (NYCU/Taiwan)
 type: software

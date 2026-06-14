@@ -1,4 +1,5 @@
 ---
+slug: catnip
 name: catnip
 vendor: Electronic Cats
 type: software

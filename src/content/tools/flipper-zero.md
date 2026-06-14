@@ -1,4 +1,5 @@
 ---
+slug: flipper-zero
 name: Flipper Zero
 vendor: Flipper Devices
 type: hardware

@@ -1,4 +1,5 @@
 ---
+slug: imsi-catcher-srsran
 name: srsRAN active IMSI catcher
 vendor: roskeys
 type: software

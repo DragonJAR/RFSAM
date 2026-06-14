@@ -1,4 +1,5 @@
 ---
+slug: laf
 name: LoRaWAN Auditing Framework (LAF)
 vendor: IOActive
 type: software

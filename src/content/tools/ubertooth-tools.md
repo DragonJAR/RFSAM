@@ -1,4 +1,5 @@
 ---
+slug: ubertooth-tools
 name: Ubertooth host tools
 vendor: Great Scott Gadgets
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: eaphammer
 name: EAPHammer
 vendor: s0lst1c3
 type: software

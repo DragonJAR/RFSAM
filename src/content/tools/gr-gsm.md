@@ -1,4 +1,5 @@
 ---
+slug: gr-gsm
 name: gr-gsm
 vendor: Piotr Krysik
 type: software

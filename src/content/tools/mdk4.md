@@ -1,4 +1,5 @@
 ---
+slug: mdk4
 name: MDK4
 vendor: aircrack-ng
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: openbts
 name: OpenBTS
 vendor: Range Networks
 type: software

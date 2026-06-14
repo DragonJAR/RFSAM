@@ -1,4 +1,5 @@
 ---
+slug: wifiphisher
 name: Wifiphisher
 vendor: Wifiphisher project
 type: software

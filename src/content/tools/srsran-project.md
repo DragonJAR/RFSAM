@@ -1,4 +1,5 @@
 ---
+slug: srsran-project
 name: srsRAN Project
 vendor: Software Radio Systems (SRS)
 type: software

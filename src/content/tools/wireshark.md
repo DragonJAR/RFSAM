@@ -1,4 +1,5 @@
 ---
+slug: wireshark
 name: Wireshark
 vendor: open source
 type: software

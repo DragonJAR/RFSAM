@@ -1,4 +1,5 @@
 ---
+slug: nrf-sniffer-802154
 name: nRF Sniffer for 802.15.4
 vendor: Nordic Semiconductor
 type: software

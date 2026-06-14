@@ -1,4 +1,5 @@
 ---
+slug: libnfc
 name: libnfc
 vendor: nfc-tools
 type: software

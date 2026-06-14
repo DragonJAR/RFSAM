@@ -1,4 +1,5 @@
 ---
+slug: yard-stick-one
 name: YARD Stick One
 vendor: Great Scott Gadgets
 type: hardware

@@ -1,4 +1,5 @@
 ---
+slug: acr122u
 name: PN532 / ACR122U USB NFC reader
 vendor: generic (NXP PN532 / ACS)
 type: hardware

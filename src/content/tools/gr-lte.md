@@ -1,4 +1,5 @@
 ---
+slug: gr-lte
 name: gr-lte
 vendor: KIT Communications Engineering Lab
 type: software

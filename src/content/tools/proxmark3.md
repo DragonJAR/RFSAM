@@ -1,4 +1,5 @@
 ---
+slug: proxmark3
 name: Proxmark3
 vendor: RFID Research Group (Iceman fork)
 type: hardware

@@ -1,4 +1,5 @@
 ---
+slug: u-center
 name: u-center
 vendor: u-blox
 type: software

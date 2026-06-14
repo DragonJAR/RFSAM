@@ -1,4 +1,5 @@
 ---
+slug: hashcat
 name: hashcat
 vendor: hashcat
 type: software

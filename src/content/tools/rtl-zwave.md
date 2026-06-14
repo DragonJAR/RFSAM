@@ -1,4 +1,5 @@
 ---
+slug: rtl-zwave
 name: rtl-zwave
 vendor: Anders Esbensen (andersesbensen)
 type: software

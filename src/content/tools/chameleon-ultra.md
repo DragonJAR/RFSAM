@@ -1,4 +1,5 @@
 ---
+slug: chameleon-ultra
 name: ChameleonUltra
 vendor: RFID Research Group (RRG)
 type: hardware

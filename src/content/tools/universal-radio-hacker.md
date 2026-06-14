@@ -1,4 +1,5 @@
 ---
+slug: universal-radio-hacker
 name: Universal Radio Hacker
 vendor: open source
 type: software

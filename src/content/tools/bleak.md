@@ -1,4 +1,5 @@
 ---
+slug: bleak
 name: Bleak
 vendor: open source (Henrik Blidh)
 type: software

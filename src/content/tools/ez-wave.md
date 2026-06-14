@@ -1,4 +1,5 @@
 ---
+slug: ez-wave
 name: EZ-Wave
 vendor: Joseph Hall & Ben Ramsey (AFIT)
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: minino
 name: Minino
 vendor: Electronic Cats
 type: hardware

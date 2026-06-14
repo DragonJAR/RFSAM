@@ -1,4 +1,5 @@
 ---
+slug: flipperzero-firmware
 name: Flipper Zero firmware
 vendor: Flipper Devices
 type: software

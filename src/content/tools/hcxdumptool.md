@@ -1,4 +1,5 @@
 ---
+slug: hcxdumptool
 name: hcxdumptool
 vendor: ZerBea
 type: software

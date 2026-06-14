@@ -1,4 +1,5 @@
 ---
+slug: whad
 name: WHAD
 vendor: WHAD Team
 type: software

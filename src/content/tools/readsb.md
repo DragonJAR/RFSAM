@@ -1,4 +1,5 @@
 ---
+slug: readsb
 name: readsb
 vendor: wiedehopf (Matthias Wirth)
 type: software

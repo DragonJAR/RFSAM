@@ -1,4 +1,5 @@
 ---
+slug: hostapd-mana
 name: hostapd-mana
 vendor: SensePost
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: usrp-b210
 name: USRP B210
 vendor: Ettus Research (NI)
 type: hardware

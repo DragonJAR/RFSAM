@@ -1,4 +1,5 @@
 ---
+slug: zbdsniff
 name: zbdsniff (KillerBee)
 vendor: River Loop Security
 type: software

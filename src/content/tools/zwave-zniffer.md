@@ -1,4 +1,5 @@
 ---
+slug: zwave-zniffer
 name: Z-Wave Zniffer
 vendor: Silicon Labs
 type: software

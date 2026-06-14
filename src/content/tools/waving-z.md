@@ -1,4 +1,5 @@
 ---
+slug: waving-z
 name: Waving-Z
 vendor: Paolo de Dios (baol)
 type: software

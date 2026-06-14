@@ -1,4 +1,5 @@
 ---
+slug: quectel-rm500q
 name: Quectel RM500Q-GL
 vendor: Quectel
 type: hardware

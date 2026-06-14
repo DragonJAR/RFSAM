@@ -1,4 +1,5 @@
 ---
+slug: chameleon-ultra-gui
 name: Chameleon Ultra GUI
 vendor: GameTec-live
 type: software

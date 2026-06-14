@@ -1,4 +1,5 @@
 ---
+slug: dump978
 name: dump978 (FlightAware fork)
 vendor: FlightAware (Oliver Jowett)
 type: software

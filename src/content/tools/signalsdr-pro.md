@@ -1,4 +1,5 @@
 ---
+slug: signalsdr-pro
 name: SignalSDR Pro
 vendor: Signalens
 type: hardware

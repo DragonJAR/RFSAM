@@ -1,4 +1,5 @@
 ---
+slug: loracrack
 name: Loracrack
 vendor: Applied Risk (Sipke Mellema)
 type: project

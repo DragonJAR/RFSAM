@@ -1,4 +1,5 @@
 ---
+slug: zwave-pc-controller
 name: Z-Wave PC Controller
 vendor: Silicon Labs
 type: software

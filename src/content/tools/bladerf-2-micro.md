@@ -1,4 +1,5 @@
 ---
+slug: bladerf-2-micro
 name: bladeRF 2.0 micro xA9
 vendor: Nuand
 type: hardware

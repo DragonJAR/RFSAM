@@ -1,4 +1,5 @@
 ---
+slug: gps-sdr-sim
 name: gps-sdr-sim
 vendor: osqzss (Takuji Ebinuma)
 type: software

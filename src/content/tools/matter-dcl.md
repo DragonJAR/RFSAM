@@ -1,4 +1,5 @@
 ---
+slug: matter-dcl
 name: Matter Distributed Compliance Ledger (DCL)
 vendor: Connectivity Standards Alliance
 type: project

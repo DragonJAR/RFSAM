@@ -1,4 +1,5 @@
 ---
+slug: bombercat
 name: BomberCat
 vendor: Electronic Cats
 type: hardware

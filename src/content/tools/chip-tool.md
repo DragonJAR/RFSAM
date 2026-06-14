@@ -1,4 +1,5 @@
 ---
+slug: chip-tool
 name: chip-tool
 vendor: Connectivity Standards Alliance / Project CHIP
 type: software

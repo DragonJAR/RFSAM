@@ -1,4 +1,5 @@
 ---
+slug: 5gsniffer
 name: 5GSniffer
 vendor: Sprite Lab (Northeastern University)
 type: software

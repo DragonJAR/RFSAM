@@ -91,7 +91,16 @@ const payload = JSON.stringify({
     const TYPE_COLOR = { hardware: '#2FB8E0', software: '#3FD17C', project: '#9B8CFF' };
 
     // ---- pinned pipeline layout: step (spine) → software → hardware, plus a shared decoder ----
-    const X1 = 86, X2 = 350, X3 = 560, NODE_VG = 28, MIN_SLOT = 92, STEP_PAD = 32;
+    const X1 = 86, NODE_VG = 28, MIN_SLOT = 92, STEP_PAD = 32, CHAR_W = 11, COL_GAP = 40;
+    // Columns scale to the longest label so software roles can't overrun the hardware
+    // column — decoder at X1, software at swCol, hardware at hwCol.
+    let maxDec = 0, maxSw = 0, anyDec = false;
+    P.steps.forEach((s) => {
+      if (s.decoder) { anyDec = true; maxDec = Math.max(maxDec, s.decoder.name.length); }
+      (s.tools || []).forEach((t) => { maxSw = Math.max(maxSw, (t.role || t.name).length); });
+    });
+    const swCol = anyDec ? Math.round(X1 + maxDec * CHAR_W + COL_GAP) : X1;
+    const hwCol = Math.round(swCol + maxSw * CHAR_W + COL_GAP);
     const nodes = [], links = [];
     nodes.push({ id: 'tech', name: P.protocol.name, kind: 'tech', stepKey: '*', x: 0, y: 0, fx: 0, fy: 0, detail: { kind: 'tech' } });
     let prev = 'tech', cursor = MIN_SLOT;
@@ -110,8 +119,8 @@ const payload = JSON.stringify({
 
       // Pipeline: step → decoder → software → hardware.  (No decoder: step → software → hardware.)
       const hasDec = !!s.decoder;
-      const softwareX = hasDec ? X2 : X1;
-      const hardwareX = hasDec ? X3 : X2;
+      const softwareX = swCol;
+      const hardwareX = hwCol;
       let decId = null;
       if (hasDec) {
         decId = sid + ':dec';
@@ -209,7 +218,7 @@ const payload = JSON.stringify({
     }
     function kitRow(t) {
       const link = t.repo || t.homepage;
-      return `<a class="kit-row" href="/tools/${esc(slugify(t.name))}"><span class="dot" style="background:${TYPE_COLOR[t.type] || '#8B9AAB'}"></span><span class="nm">${esc(t.name)}</span>${t.spec ? `<span class="sp">${esc(t.spec)}</span>` : ''}${link ? `<span class="rp">↗</span>` : ''}</a>`;
+      return `<a class="kit-row" href="/tools/${esc(t.slug)}"><span class="dot" style="background:${TYPE_COLOR[t.type] || '#8B9AAB'}"></span><span class="nm">${esc(t.name)}</span>${t.spec ? `<span class="sp">${esc(t.spec)}</span>` : ''}${link ? `<span class="rp">↗</span>` : ''}</a>`;
     }
     function factsBlock() {
       if (!P.protocol.facts?.length) return '';

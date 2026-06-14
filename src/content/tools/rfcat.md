@@ -1,4 +1,5 @@
 ---
+slug: rfcat
 name: rfcat
 vendor: atlas0fd00m
 type: software

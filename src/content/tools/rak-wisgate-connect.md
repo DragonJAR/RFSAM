@@ -1,4 +1,5 @@
 ---
+slug: rak-wisgate-connect
 name: RAK WisGate Connect
 vendor: RAKwireless
 type: hardware

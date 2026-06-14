@@ -1,4 +1,5 @@
 ---
+slug: hackrf-one
 name: HackRF One
 vendor: Great Scott Gadgets
 type: hardware

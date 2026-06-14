@@ -1,4 +1,5 @@
 ---
+slug: dwm3000-dwt-driver
 name: DW3000 driver / firmware (foldedtoad port)
 vendor: 'open source (Callender), on Qorvo dwt_uwb_driver'
 type: project

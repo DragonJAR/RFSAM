@@ -1,4 +1,5 @@
 ---
+slug: btlejack
 name: Btlejack
 vendor: Damien Cauquil (virtualabs)
 type: software

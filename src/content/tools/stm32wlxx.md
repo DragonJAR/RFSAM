@@ -1,4 +1,5 @@
 ---
+slug: stm32wlxx
 name: STM32WLxx LoRa board
 vendor: STMicroelectronics
 type: hardware

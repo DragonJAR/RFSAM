@@ -1,4 +1,5 @@
 ---
+slug: crackle
 name: crackle
 vendor: Mike Ryan
 type: software

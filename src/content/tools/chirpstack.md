@@ -1,4 +1,5 @@
 ---
+slug: chirpstack
 name: ChirpStack
 vendor: ChirpStack (Orne Brocaar)
 type: software

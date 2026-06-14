@@ -1,4 +1,5 @@
 ---
+slug: rayhunter
 name: Rayhunter
 vendor: Electronic Frontier Foundation (EFF)
 type: software

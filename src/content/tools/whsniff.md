@@ -1,4 +1,5 @@
 ---
+slug: whsniff
 name: whsniff
 vendor: homewsn
 type: software

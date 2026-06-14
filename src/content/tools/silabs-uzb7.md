@@ -1,4 +1,5 @@
 ---
+slug: silabs-uzb7
 name: Silicon Labs UZB-7 Z-Wave 700 Stick (SLUSB001A)
 vendor: Silicon Labs
 type: hardware

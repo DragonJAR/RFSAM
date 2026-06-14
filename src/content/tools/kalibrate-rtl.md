@@ -1,4 +1,5 @@
 ---
+slug: kalibrate-rtl
 name: kalibrate-rtl
 vendor: steve-m (kalibrate fork)
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: bettercap
 name: bettercap
 vendor: bettercap
 type: software

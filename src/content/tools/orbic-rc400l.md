@@ -1,4 +1,5 @@
 ---
+slug: orbic-rc400l
 name: Orbic RC400L hotspot
 vendor: Orbic
 type: hardware

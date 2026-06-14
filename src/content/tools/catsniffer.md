@@ -1,4 +1,5 @@
 ---
+slug: catsniffer
 name: CatSniffer
 vendor: Electronic Cats
 type: hardware

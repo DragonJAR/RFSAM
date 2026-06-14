@@ -1,4 +1,5 @@
 ---
+slug: aircrack-ng
 name: aircrack-ng
 vendor: open source
 type: software

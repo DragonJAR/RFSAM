@@ -1,4 +1,5 @@
 ---
+slug: gpsd
 name: gpsd
 vendor: gpsd project (Eric S. Raymond et al.)
 type: software

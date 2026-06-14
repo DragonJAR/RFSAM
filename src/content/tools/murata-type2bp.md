@@ -1,4 +1,5 @@
 ---
+slug: murata-type2bp
 name: Murata Type 2BP UWB module
 vendor: Murata (NXP Trimension SR150)
 type: hardware

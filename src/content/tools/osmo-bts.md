@@ -1,4 +1,5 @@
 ---
+slug: osmo-bts
 name: OsmoBTS (Osmocom GSM stack)
 vendor: Osmocom
 type: software

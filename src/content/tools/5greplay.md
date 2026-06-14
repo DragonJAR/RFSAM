@@ -1,4 +1,5 @@
 ---
+slug: 5greplay
 name: 5Greplay
 vendor: Montimage
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: lora-wideband-decoder
 name: LoRa Wideband Decoder
 vendor: persistentcache
 type: software

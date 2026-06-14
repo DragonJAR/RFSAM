@@ -1,4 +1,5 @@
 ---
+slug: kraken-a51
 name: Kraken (A5/1 cracker)
 vendor: SRLabs / Joshua Wright fork
 type: project

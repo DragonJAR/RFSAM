@@ -1,4 +1,5 @@
 ---
+slug: qcsuper
 name: QCSuper
 vendor: P1sec
 type: software

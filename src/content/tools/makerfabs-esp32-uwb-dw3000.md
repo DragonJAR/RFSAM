@@ -1,4 +1,5 @@
 ---
+slug: makerfabs-esp32-uwb-dw3000
 name: Makerfabs ESP32 UWB DW3000
 vendor: Makerfabs
 type: hardware

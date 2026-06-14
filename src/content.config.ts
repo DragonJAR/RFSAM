@@ -69,6 +69,7 @@ const resources = defineCollection({
 const tools = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/tools' }),
   schema: z.object({
+    slug: z.string().optional(),
     name: z.string(),
     vendor: z.string(),
     type: z.enum(['hardware', 'software', 'project']).default('hardware'),

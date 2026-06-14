@@ -1,4 +1,5 @@
 ---
+slug: pymodes
 name: pyModeS
 vendor: Junzi Sun (junzis)
 type: software

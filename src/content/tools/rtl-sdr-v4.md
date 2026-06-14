@@ -1,4 +1,5 @@
 ---
+slug: rtl-sdr-v4
 name: RTL-SDR Blog V4
 vendor: RTL-SDR Blog
 type: hardware

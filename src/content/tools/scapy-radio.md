@@ -1,4 +1,5 @@
 ---
+slug: scapy-radio
 name: Scapy-radio
 vendor: Bastille Research
 type: software

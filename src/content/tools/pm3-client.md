@@ -1,4 +1,5 @@
 ---
+slug: pm3-client
 name: Proxmark3 client (pm3)
 vendor: RFID Research Group (Iceman fork)
 type: software

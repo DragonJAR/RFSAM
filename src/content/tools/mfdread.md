@@ -1,4 +1,5 @@
 ---
+slug: mfdread
 name: mfdread
 vendor: Anton Shipulin (zhovner)
 type: software

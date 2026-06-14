@@ -1,9 +1,11 @@
 ---
+slug: alfa-awus036ach
 name: ALFA AWUS036ACH
 vendor: Alfa Network
 type: hardware
 protocols:
   - Wi-Fi
+homepage: 'https://alfa-network.com/products/awus036ach'
 software:
   - aircrack-ng
   - bettercap

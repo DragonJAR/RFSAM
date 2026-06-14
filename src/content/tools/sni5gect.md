@@ -1,4 +1,5 @@
 ---
+slug: sni5gect
 name: Sni5Gect
 vendor: ASSET Research Group (SUTD)
 type: software

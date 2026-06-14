@@ -1,4 +1,5 @@
 ---
+slug: gr-zwave_poore
 name: gr-zwave_poore
 vendor: Chris Poore (cpoore1)
 type: software

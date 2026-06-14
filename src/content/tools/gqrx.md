@@ -1,4 +1,5 @@
 ---
+slug: gqrx
 name: Gqrx SDR
 vendor: open source
 type: software

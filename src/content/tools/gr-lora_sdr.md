@@ -1,4 +1,5 @@
 ---
+slug: gr-lora_sdr
 name: gr-lora_sdr
 vendor: EPFL TCL (Joachim Tapparel)
 type: software

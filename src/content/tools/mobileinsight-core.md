@@ -1,4 +1,5 @@
 ---
+slug: mobileinsight-core
 name: MobileInsight
 vendor: MobileInsight (UCLA/Purdue)
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: 5ghoul
 name: 5Ghoul
 vendor: ASSET Research Group (SUTD)
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: seemoo-uwb-sniffer
 name: SEEMOO uwb-sniffer
 vendor: 'SEEMOO Lab, TU Darmstadt'
 type: software

@@ -1,4 +1,5 @@
 ---
+slug: injectable-firmware
 name: InjectaBLE firmware
 vendor: Romain Cayre
 type: project

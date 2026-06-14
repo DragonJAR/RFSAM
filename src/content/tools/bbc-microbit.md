@@ -1,4 +1,5 @@
 ---
+slug: bbc-microbit
 name: 'BBC micro:bit'
 vendor: 'Micro:bit Educational Foundation'
 type: hardware

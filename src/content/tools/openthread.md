@@ -1,4 +1,5 @@
 ---
+slug: openthread
 name: OpenThread
 vendor: Google / Thread Group
 type: project

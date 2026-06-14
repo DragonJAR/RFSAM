@@ -1,4 +1,5 @@
 ---
+slug: adsb-out
 name: ADSB-Out
 vendor: Linar Yusupov (lyusupov)
 type: project

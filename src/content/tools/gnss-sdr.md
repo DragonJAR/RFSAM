@@ -1,4 +1,5 @@
 ---
+slug: gnss-sdr
 name: GNSS-SDR
 vendor: CTTC (Carles Fernández-Prades et al.)
 type: software

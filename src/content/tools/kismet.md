@@ -1,4 +1,5 @@
 ---
+slug: kismet
 name: Kismet
 vendor: Kismet Wireless
 type: software

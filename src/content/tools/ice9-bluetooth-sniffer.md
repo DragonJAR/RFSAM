@@ -1,4 +1,5 @@
 ---
+slug: ice9-bluetooth-sniffer
 name: ice9-bluetooth-sniffer
 vendor: ICE9 Consulting (Mike Ryan)
 type: software

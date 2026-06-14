@@ -1,4 +1,5 @@
 ---
+slug: mfoc
 name: mfoc
 vendor: nfc-tools
 type: software

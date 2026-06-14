@@ -1,4 +1,5 @@
 ---
+slug: ubertooth-one
 name: Ubertooth One
 vendor: Great Scott Gadgets
 type: hardware

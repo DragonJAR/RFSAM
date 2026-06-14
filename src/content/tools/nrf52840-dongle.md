@@ -1,4 +1,5 @@
 ---
+slug: nrf52840-dongle
 name: nRF52840 Dongle
 vendor: Nordic Semiconductor
 type: hardware

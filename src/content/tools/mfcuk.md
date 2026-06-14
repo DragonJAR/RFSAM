@@ -1,4 +1,5 @@
 ---
+slug: mfcuk
 name: MFCUK
 vendor: nfc-tools
 type: software

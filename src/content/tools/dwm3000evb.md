@@ -1,4 +1,5 @@
 ---
+slug: dwm3000evb
 name: Qorvo DWM3000EVB
 vendor: Qorvo (Decawave)
 type: hardware

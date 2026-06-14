@@ -1,4 +1,5 @@
 ---
+slug: ublox-neo-gps
 name: u-blox NEO GPS/GNSS receiver
 vendor: u-blox
 type: hardware

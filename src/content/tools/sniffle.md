@@ -1,4 +1,5 @@
 ---
+slug: sniffle
 name: Sniffle
 vendor: NCC Group
 type: software
