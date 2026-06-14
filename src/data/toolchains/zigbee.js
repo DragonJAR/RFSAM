@@ -40,7 +40,8 @@ export default {
         { "tool": "catnip", "role": "CatSniffer capture", "why": "Electronic Cats' CatSniffer-Tools (catnip, which bundles pycatsniffer) drives the CC1352-based CatSniffer as an 802.15.4/Zigbee sniffer and streams frames into Wireshark via its extcap — the native capture path for a CatSniffer.", "deps": ["catsniffer"] },
         { "tool": "nrf-sniffer-802154", "role": "Turnkey capture", "why": "Nordic's firmware + Wireshark extcap plugin captures raw 2.4 GHz 802.15.4 straight into Wireshark — the easiest, best-documented first capture on cheap nRF52840 hardware.", "deps": ["nrf52840-dongle"] },
         { "tool": "whsniff", "role": "CC2531 capture", "why": "Bridges a TI CC2531 USB dongle to Wireshark for live 2.4 GHz 802.15.4 capture — a cheap, simple capture path when you have a CC2531.", "caveat": "CC2531 is 2.4 GHz only and capture-only (no injection).", "deps": ["nrf52840-dongle"] },
-        { "tool": "minino", "role": "Pocket sniffer", "why": "Standalone ESP32-C6 802.15.4 sniffer that writes Wireshark-compatible captures to microSD — capture in the field with no host PC.", "deps": [] }
+        { "tool": "minino", "role": "Pocket sniffer", "why": "Standalone ESP32-C6 802.15.4 sniffer that writes Wireshark-compatible captures to microSD — capture in the field with no host PC.", "deps": [] },
+        { "tool": "whad", "role": "Multi-protocol sniff/inject", "why": "WHAD drives an nRF52840 (its Butterfly firmware) or an APIMote as an 802.15.4/Zigbee sniffer from one Python framework, exporting PCAP/Scapy — and on a transmit-capable radio it can forge and inject frames too. The same toolchain you use for BLE and Thread.", "deps": ["nrf52840-dongle", "apimote"] }
       ]
     },
     "CR": {

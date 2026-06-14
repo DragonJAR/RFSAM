@@ -99,7 +99,20 @@ const tools = [
     note: 'A ~$15 nRF51822 board — the reference cheap radio for running Btlejack to sniff, jam and hijack BLE connections.',
   },
 
+  {
+    slug: 'stm32wlxx', name: 'STM32WLxx LoRa board', vendor: 'STMicroelectronics', type: 'hardware',
+    protocols: ['LoRa', 'Sub-GHz'], spec: 'STM32WL SoC · integrated sub-GHz LoRa/(G)FSK radio',
+    homepage: 'https://github.com/whad-team/stm32wlxx-firmware',
+    software: ['whad'],
+    note: "Any STM32WLxx-based board (e.g. Nucleo-WL55JC, Seeed LoRa-E5) — an Arm Cortex-M4 with an integrated sub-GHz radio. Flashed with WHAD's stm32wlxx-firmware it becomes a WHAD-driven LoRa/LoRaWAN sniff-and-inject radio.",
+  },
   // ---- software / projects ----
+  {
+    slug: 'whad', name: 'WHAD', vendor: 'WHAD Team', type: 'software',
+    protocols: ['BLE', 'Zigbee', 'Thread', '802.15.4', 'LoRaWAN', 'ESB'],
+    repo: 'https://github.com/whad-team/whad-client',
+    note: "Wireless Hacking Devices — a unified Python framework and host protocol that drives many radios to sniff and inject across wireless stacks: BLE, IEEE 802.15.4 / Zigbee / RF4CE, Enhanced ShockBurst, Logitech Unifying, LoRaWAN and a generic PHY layer. Backends include the nRF52840 'Butterfly' firmware, an STM32WLxx (LoRa) firmware, ESP32, Ubertooth, APIMote, RZUSBstick, RFStorm/nRF24 and Yard Stick One, plus host HCI — one toolchain and PCAP/Scapy interface across protocols.",
+  },
   {
     slug: 'sniffle', name: 'Sniffle', vendor: 'NCC Group', type: 'software',
     protocols: ['BLE'], repo: 'https://github.com/nccgroup/Sniffle',
