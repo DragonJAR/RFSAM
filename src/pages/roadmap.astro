@@ -5,6 +5,7 @@ import { coverageMap } from '../data/coverage-map.js';
 import { protocols } from '../data/protocols.js';
 import { layers } from '../data/layers.js';
 import { toolchains } from '../data/toolchains.js';
+import { readFileSync, existsSync } from 'node:fs';
 
 const controls = await getCollection('controls');
 const statusOf = (id) => controls.find((c) => c.data.id === id)?.data.reviewStatus;
@@ -23,6 +24,27 @@ const wfDone = wayfinder.filter((w) => w.status === 'complete').length;
 const existingCount = controls.length;
 const plannedCount = coverageMap.reduce((n, p) => n + p.controls.filter((c) => c.status === 'planned').length, 0);
 const draftCount = controls.filter((c) => c.data.reviewStatus === 'draft').length;
+
+// --- Coverage heatmap: each protocol × layer's state, computed at build time ---
+//   real  = a procedure exists with a real field case (no [FILL:] placeholders)
+//   illus = a procedure exists but its field case is an illustrative template
+//   gap   = the Wayfinder names tools here but no procedure is written  ← help wanted
+//   none  = not yet scoped
+const LAYER_ORDER = layers.map((l) => l.id);
+const REPO = 'https://github.com/ElectronicCats/RFSAM';
+const isIllustrative = (id) => {
+  const f = `src/content/controls/${id.toLowerCase()}.md`;
+  return existsSync(f) && /\[FILL:/.test(readFileSync(f, 'utf8'));
+};
+const cellState = (pid, lid) => {
+  const procs = controls.filter((c) => c.data.protocol === pid && c.data.layer === lid);
+  if (procs.length) return { state: procs.some((c) => !isIllustrative(c.data.id)) ? 'real' : 'illus', ids: procs.map((c) => c.data.id) };
+  const wf = (toolchains[pid]?.layers?.[lid]?.tools || []).length > 0;
+  return { state: wf ? 'gap' : 'none', ids: [] };
+};
+const heat = protocols.map((p) => ({ p, cells: LAYER_ORDER.map((lid) => ({ lid, ...cellState(p.id, lid) })) }));
+const gapCount = heat.reduce((n, r) => n + r.cells.filter((c) => c.state === 'gap').length, 0);
+const realCount = heat.reduce((n, r) => n + r.cells.filter((c) => c.state === 'real').length, 0);
 ---
 <BaseLayout title="Roadmap">
   <div class="container">
@@ -48,25 +70,61 @@ const draftCount = controls.filter((c) => c.data.reviewStatus === 'draft').lengt
       ))}
     </div>
 
-    <h2 class="track-h">Procedures <span class="badge">{existingCount} pages · {draftCount} draft · {plannedCount} planned</span></h2>
-    <p style="color:var(--mut2);font-size:13px;margin-top:4px">
-      <span class="mono" style="color:var(--cyan)">DRAFT</span> = written and being reviewed ·
-      <span class="mono" style="color:var(--amber)">STUB</span> = page exists, prose still to be deepened ·
-      <span class="mono" style="color:var(--mut)">PLANNED</span> = proposed scope, unwritten.
+    <h2 class="track-h">Procedures <span class="badge">{existingCount} written · {realCount} field-tested · {gapCount} open gaps · {plannedCount} planned</span></h2>
+    <p class="contrib-intro">
+      RFSAM grows by pull request. This heatmap is the honest state of coverage — every cell is a
+      <strong>protocol × layer</strong> of the descent, so you can see exactly what exists and what doesn't. The
+      <span class="amber">amber</span> cells are where the Wayfinder already names the kit but no procedure is written
+      yet: the best place to start. Read
+      <a href={`${REPO}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noopener">CONTRIBUTING</a>, copy a template, and open a PR.
     </p>
+
+    <div class="heat-wrap">
+      <div class="heat">
+        <div class="hcorner"></div>
+        {LAYER_ORDER.map((lid) => (
+          <div class="hhead mono" style={`color:${color(lid)}`} title={layers.find((l) => l.id === lid)?.name}>{lid}</div>
+        ))}
+        {heat.map((row) => (
+          <Fragment>
+            <a class="hname" href={`/RFSAM/procedures/${row.p.id.toLowerCase()}`}>{row.p.name}</a>
+            {row.cells.map((c) => {
+              const desc = { real: 'procedure with a real field case', illus: 'procedure — illustrative field case (needs a real capture)', gap: 'Wayfinder kit exists, procedure not written yet — help wanted', none: 'not yet scoped' }[c.state];
+              const href = (c.state === 'real' || c.state === 'illus')
+                ? (c.ids.length === 1 ? `/RFSAM/procedures/${c.ids[0].toLowerCase()}` : `/RFSAM/procedures/${row.p.id.toLowerCase()}`)
+                : c.state === 'gap' ? `/RFSAM/wayfinder/${row.p.id.toLowerCase()}` : null;
+              const sym = { real: '●', illus: '◐', gap: '+', none: '' }[c.state];
+              const title = `${row.p.name} · ${c.lid} — ${desc}`;
+              return href
+                ? <a class={`hcell s-${c.state}`} href={href} title={title}>{sym}</a>
+                : <div class={`hcell s-${c.state}`} title={title}>{sym}</div>;
+            })}
+          </Fragment>
+        ))}
+      </div>
+    </div>
+    <div class="heat-legend mono">
+      <span><i class="c-real"></i> real field case</span>
+      <span><i class="c-illus"></i> procedure · needs a real capture</span>
+      <span><i class="c-gap"></i> kit ready — procedure unwritten (help wanted)</span>
+      <span><i class="c-none"></i> not yet scoped</span>
+    </div>
+
+    <h3 class="sub-h">Per-protocol detail</h3>
     {coverageMap.map((p) => (
-      <section style="margin-top:26px">
+      <section style="margin-top:22px">
         <h3 style="font-family:var(--disp);font-size:17px">{nameOf(p.protocol)}</h3>
         <div style="margin-top:8px">
           {p.controls.map((c) => {
             const live = statusOf(c.id);
+            const stColor = live === 'verified' ? 'var(--green)' : live === 'draft' ? 'var(--cyan)' : 'var(--amber)';
             return (
               <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
                 <span style={`width:8px;height:8px;border-radius:50%;background:${color(c.layer)};display:inline-block;flex-shrink:0`}></span>
                 <span class="mono" style="font-size:11px;color:var(--mut2);width:175px;flex-shrink:0">{c.id}</span>
                 <span style="flex:1">{c.title}</span>
                 {c.status === 'existing'
-                  ? <a class="review" style={`color:${live === 'draft' ? 'var(--cyan)' : 'var(--amber)'}`} href={`/RFSAM/procedures/${c.id.toLowerCase()}`}>{(live ?? 'stub').toUpperCase()}</a>
+                  ? <a class="review" style={`color:${stColor}`} href={`/RFSAM/procedures/${c.id.toLowerCase()}`}>{(live ?? 'stub').toUpperCase()}</a>
                   : <span class="review stub" style="color:var(--mut)">PLANNED</span>}
               </div>
             );
@@ -90,5 +148,28 @@ const draftCount = controls.filter((c) => c.data.reviewStatus === 'draft').lengt
     .pill.ok { color: var(--green); border-color: rgba(63, 209, 124, .4); }
     .pill.plan { color: var(--mut); border-color: var(--line2); }
     .review { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; }
+    .contrib-intro { color: var(--mut2); font-size: 13px; margin-top: 8px; max-width: 80ch; line-height: 1.65; }
+    .contrib-intro strong { color: var(--ink); }
+    .contrib-intro .amber { color: var(--orange); }
+    .contrib-intro a { color: var(--cyan); }
+    .heat-wrap { overflow-x: auto; margin-top: 16px; padding-bottom: 4px; }
+    .heat { display: grid; grid-template-columns: 124px repeat(7, minmax(32px, 1fr)); gap: 5px; min-width: 420px; }
+    .heat .hhead { font-size: 10px; text-align: center; letter-spacing: .06em; align-self: end; padding-bottom: 3px; }
+    .heat .hname { font-size: 12px; color: var(--mut); display: flex; align-items: center; height: 34px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 6px; }
+    .heat .hname:hover { color: var(--ink); }
+    .heat .hcell { height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 1px solid transparent; color: inherit; text-decoration: none; transition: transform .1s; }
+    a.hcell { cursor: pointer; }
+    a.hcell:hover { transform: scale(1.12); }
+    .s-real { background: rgba(63,209,124,.9); color: #07120b; }
+    .s-illus { background: rgba(63,209,124,.16); color: var(--green); border-color: rgba(63,209,124,.4); }
+    .s-gap { background: rgba(255,122,26,.09); color: var(--orange); border: 1px dashed rgba(255,122,26,.6); font-weight: 700; }
+    .s-none { background: rgba(34,52,74,.3); }
+    .heat-legend { display: flex; flex-wrap: wrap; gap: 7px 16px; margin-top: 12px; font-size: 11px; color: var(--mut2); }
+    .heat-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
+    .heat-legend .c-real { background: rgba(63,209,124,.9); }
+    .heat-legend .c-illus { background: rgba(63,209,124,.16); border: 1px solid rgba(63,209,124,.4); }
+    .heat-legend .c-gap { background: rgba(255,122,26,.09); border: 1px dashed rgba(255,122,26,.6); }
+    .heat-legend .c-none { background: rgba(34,52,74,.5); }
+    .sub-h { font-family: var(--disp); font-size: 15px; color: var(--mut); margin-top: 44px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
   </style>
 </BaseLayout>
