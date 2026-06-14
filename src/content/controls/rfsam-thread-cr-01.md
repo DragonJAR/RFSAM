@@ -132,7 +132,8 @@ tools:
   - pyspinel
   - catsniffer
 bsam: []
-resources: []
+resources:
+  - RFSAM-RES-17
 reviewStatus: draft
 confidence: high
 lastResearched: 2026-06-14

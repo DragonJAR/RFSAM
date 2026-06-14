@@ -113,7 +113,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-01
-  - RFSAM-RES-08
+  - RFSAM-RES-22
   - RFSAM-RES-09
 reviewStatus: draft
 confidence: medium
@@ -148,7 +148,7 @@ Whether there is a 5G core to talk to at all is part of this baseline: a Standal
 
 4. **Determine SA vs NSA.** From the modem read (or from the SIB content), establish whether the cell is Standalone (its own 5G core; NR RRC/NAS-5GS) or Non-Standalone (5G NR carrier anchored to an LTE eNB, control plane on LTE). This decides whether there is a 5G core to interact with in later controls.
 
-5. **Record the inventory.** For each cell, capture: operator (PLMN MCC-MNC), band, downlink NR-ARFCN, PCI, numerology/bandwidth, TAC and SA/NSA mode. Mark which cells fall inside your SDR's tuning and instantaneous-bandwidth envelope — those are the sniffable targets that scope the later 5G NR capture controls. For the full identify-then-capture flow on a disciplined reference, see RFSAM-RES-08, RFSAM-RES-09 and RFSAM-RES-01.
+5. **Record the inventory.** For each cell, capture: operator (PLMN MCC-MNC), band, downlink NR-ARFCN, PCI, numerology/bandwidth, TAC and SA/NSA mode. Mark which cells fall inside your SDR's tuning and instantaneous-bandwidth envelope — those are the sniffable targets that scope the later 5G NR capture controls. For the full identify-then-capture flow on a disciplined reference, see RFSAM-RES-22, RFSAM-RES-09 and RFSAM-RES-01.
 
 ## Field case
 
@@ -167,4 +167,4 @@ This is an environmental baseline and target-selection step, not a device defect
 
 - **Device integrator** — select 5G basebands/modems that implement fake-base-station and downgrade detection, that resist being lured into a rogue cell's pre-authentication NAS/RRC exchange, and that do not leak device capabilities or activity patterns pre-authentication [hussain2019reasoner][borgaonkar2019aka]; expose modem diagnostics (the DIAG interface) only to authorised tooling, since the same passive read this control performs is also an attacker's reconnaissance feed.
 
-- **Auditor / operator of the test** — keep this step strictly receive-only; do not transmit on licensed spectrum. Treat the operator/band/NR-ARFCN/PCI/SA-NSA inventory as scoping data for the assessment, and confirm each target cell is inside your receiver's tuning and bandwidth envelope (and within FR1, not FR2) before committing capture hardware (RFSAM-RES-08, RFSAM-RES-09).
+- **Auditor / operator of the test** — keep this step strictly receive-only; do not transmit on licensed spectrum. Treat the operator/band/NR-ARFCN/PCI/SA-NSA inventory as scoping data for the assessment, and confirm each target cell is inside your receiver's tuning and bandwidth envelope (and within FR1, not FR2) before committing capture hardware (RFSAM-RES-22, RFSAM-RES-09).

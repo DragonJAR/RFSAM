@@ -103,6 +103,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-01
+  - RFSAM-RES-23
 reviewStatus: draft
 confidence: high
 lastResearched: 2026-06-14

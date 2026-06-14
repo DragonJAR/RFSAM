@@ -126,7 +126,7 @@ tools:
   - usrp-b210
 bsam: []
 resources:
-  - RFSAM-RES-08
+  - RFSAM-RES-22
   - RFSAM-RES-09
 reviewStatus: draft
 confidence: medium
@@ -147,7 +147,7 @@ The passive view is bounded the same way LTE's is. 5G-AKA derives the air-interf
 
 > Authorised testing only. The passive read steps below do not transmit, but you are receiving on licensed cellular spectrum — do so in line with local law and your engagement scope. Any step that stands up a cell (Step 2, alternative B) transmits in licensed spectrum and must be done on your own equipment, with a test SIM, inside RF shielding, under an authorised test licence — never radiate on a live operator's band.
 
-1. **Confirm the target carrier first.** You must already know the band/NR-ARFCN and bandwidth (see RFSAM-RES-08 for the cellular identify-and-capture flow, and RFSAM-RES-09 for the disciplined-clock capture that OFDM grid recovery requires). Sanity-check on a waterfall that you are looking at a 5G downlink carrier and its SSB:
+1. **Confirm the target carrier first.** You must already know the band/NR-ARFCN and bandwidth (see RFSAM-RES-22 for the cellular identify-and-capture flow, and RFSAM-RES-09 for the disciplined-clock capture that OFDM grid recovery requires). Sanity-check on a waterfall that you are looking at a 5G downlink carrier and its SSB:
    ```bash
    gqrx
    ```

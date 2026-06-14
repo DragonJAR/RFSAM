@@ -140,7 +140,8 @@ tools:
   - seemoo-uwb-sniffer
   - wireshark
 bsam: []
-resources: []
+resources:
+  - RFSAM-RES-24
 reviewStatus: verified
 confidence: medium
 lastResearched: 2026-06-14

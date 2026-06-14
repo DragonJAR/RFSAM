@@ -121,7 +121,8 @@ tools:
   - bladerf-2-micro
   - usrp-b210
 bsam: []
-resources: []
+resources:
+  - RFSAM-RES-20
 reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14

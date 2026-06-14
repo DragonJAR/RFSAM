@@ -106,6 +106,7 @@ tools:
   - gnss-sdr
 resources:
   - RFSAM-RES-01
+  - RFSAM-RES-19
 bsam: []
 reviewStatus: draft
 confidence: high

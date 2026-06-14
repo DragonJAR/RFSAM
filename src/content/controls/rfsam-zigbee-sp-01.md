@@ -98,7 +98,8 @@ tools:
   - minino
   - gqrx
 bsam: []
-resources: []
+resources:
+  - RFSAM-RES-16
 reviewStatus: draft
 confidence: medium
 lastResearched: 2026-06-14

@@ -113,7 +113,8 @@ tools:
   - makerfabs-esp32-uwb-dw3000
   - wireshark
 bsam: []
-resources: []
+resources:
+  - RFSAM-RES-24
 reviewStatus: draft
 confidence: high
 lastResearched: 2026-06-14
