@@ -1,0 +1,65 @@
+[
+  {
+    "slug": "dump1090",
+    "name": "dump1090 (FlightAware fork)",
+    "vendor": "FlightAware (orig. Salvatore Sanfilippo)",
+    "type": "software",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/flightaware/dump1090",
+    "note": "The classic 1090 MHz Mode S / ADS-B decoder for RTL-SDR. Demodulates the 1 Mbps PPM Extended Squitter, decodes DF17/DF18 frames (ICAO 24-bit address, callsign, position, velocity, altitude) and serves the result over a built-in web map and on Beast/raw/JSON network ports. The maintained dump1090-fa fork is the de-facto reference receiver; pure RX, no transmit."
+  },
+  {
+    "slug": "readsb",
+    "name": "readsb",
+    "vendor": "wiedehopf (Matthias Wirth)",
+    "type": "software",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/wiedehopf/readsb",
+    "note": "A modern, high-performance fork of the dump1090 lineage and the actively maintained ADS-B 'swiss-knife' decoder. Decodes 1090ES Mode S / ADS-B (and ingests UAT from dump978), tracks many aircraft at once, and outputs Beast, raw and JSON for downstream maps like tar1090. The default decoder for a permanent receiver today."
+  },
+  {
+    "slug": "dump978",
+    "name": "dump978 (FlightAware fork)",
+    "vendor": "FlightAware (Oliver Jowett)",
+    "type": "software",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/flightaware/dump978",
+    "note": "Decoder for the US 978 MHz UAT (Universal Access Transceiver) variant of ADS-B used by lower-altitude general aviation. Demodulates the UAT waveform from an RTL-SDR and decodes the messages, feeding the same maps/aggregators as the 1090 path. Use it alongside dump1090/readsb to cover both ADS-B links; pure RX."
+  },
+  {
+    "slug": "gr-air-modes",
+    "name": "gr-air-modes",
+    "vendor": "Nick Foster (bistromath)",
+    "type": "software",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/bistromath/gr-air-modes",
+    "note": "A GNU Radio Mode S / ADS-B receiver: a flowgraph that demodulates 1090 MHz and decodes the Extended Squitter, with a live map output. The choice when you want the signal inside a GNU Radio flowgraph to see and modify each DSP block rather than a black-box decoder. Older codebase (last active ~2021) — a learning/DSP receiver rather than a polished aggregator."
+  },
+  {
+    "slug": "tar1090",
+    "name": "tar1090",
+    "vendor": "wiedehopf (Matthias Wirth)",
+    "type": "software",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/wiedehopf/tar1090",
+    "note": "An improved web map front-end for the decoded traffic from readsb or dump1090-fa: a live, interactive map of every tracked aircraft with history trails, filtering and per-aircraft detail. It consumes the decoder's JSON output and is the readable 'air picture' view, not a decoder itself."
+  },
+  {
+    "slug": "adsb-out",
+    "name": "ADSB-Out",
+    "vendor": "Linar Yusupov (lyusupov)",
+    "type": "project",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/lyusupov/ADSB-Out",
+    "note": "A Python encoder that builds forged 1090ES ADS-B Extended Squitter frames (chosen ICAO address, position, altitude) into an I/Q sample file for transmission by a TX-capable SDR (HackRF via hackrf_transfer). The concrete way to demonstrate ADS-B spoofing/injection — there is no authentication on the link, so a higher-power forged frame is accepted as a real aircraft. Author states it is for academic purposes only. AUTHORIZED, RF-CONTAINED testing only: never radiate on-air — use a shielded enclosure or a conducted (cabled) setup. Stable but inactive (last commit ~2021)."
+  },
+  {
+    "slug": "pymodes",
+    "name": "pyModeS",
+    "vendor": "Junzi Sun (junzis)",
+    "type": "software",
+    "protocols": ["ADS-B"],
+    "repo": "https://github.com/junzis/pyModeS",
+    "note": "A pure-Python decoder library for Mode S and ADS-B messages: feed it hex frames (or stream them from dump1090 over TCP/Beast) and it returns the decoded fields — ICAO address, callsign, airborne/surface position (CPR), velocity, altitude — plus DF4/5/11/20/21 surveillance and Comm-B BDS registers. The reference way to interpret message contents and to run plausibility / anti-spoof checks on a decoded feed in your own code."
+  }
+]

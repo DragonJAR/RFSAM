@@ -21,6 +21,11 @@ import zigbee from './toolchains/zigbee.js';
 import gsm from './toolchains/gsm.js';
 import gnss from './toolchains/gnss.js';
 import thread from './toolchains/thread.js';
+import subg from './toolchains/subg.js';
+import zwave from './toolchains/zwave.js';
+import adsb from './toolchains/adsb.js';
+import nr5g from './toolchains/nr5g.js';
+import uwb from './toolchains/uwb.js';
 
 export const toolchains = {
   BLE: {
@@ -172,13 +177,13 @@ export const toolchains = {
   LORA: lora,
   LTE: lte,
   RFID: rfid,
-  SUBG:   { status: 'planned', reference: null, layers: {} },
+  SUBG: subg,
   ZIGBEE: zigbee,
-  ZWAVE:  { status: 'planned', reference: null, layers: {} },
+  ZWAVE: zwave,
   THREAD: thread,
   GNSS: gnss,
-  ADSB:   { status: 'planned', reference: null, layers: {} },
-  NR5G:   { status: 'planned', reference: null, layers: {} },
+  ADSB: adsb,
+  NR5G: nr5g,
   GSM: gsm,
-  UWB:    { status: 'planned', reference: null, layers: {} },
+  UWB: uwb,
 };
