@@ -40,9 +40,11 @@ Write content under the **layer** keys; the page maps them to the steps above.
    Express it as `{ tool: 'sniffle', deps: ['catsniffer'] }`. A software bubble with no
    `deps` (and no `needs`) is a bug — unless the tool *is* the radio (rare).
 
-3. **Pipeline = hardware → software → decoder.** Sniffers run on radios and feed a shared
-   decoder. Put the decoder at the layer level: `decoder: 'wireshark'`. It renders once,
-   downstream of every sniffer — never wired straight to hardware, never a sibling tool.
+3. **The decoder is the entry: step → decoder → software → hardware.** When a step has a
+   `decoder` (e.g. `decoder: 'wireshark'`), it renders as the **first node connected to the
+   step**. Each sniffer software hangs off the decoder, and each sniffer's radio hangs off the
+   software. Read it as "open Wireshark → fed by Sniffle → running on CatSniffer." The decoder
+   is a single shared node; never wire it straight to hardware, never make it a sibling tool.
 
 4. **When the dependency is data, bond to its source and explain where to get it.** crackle
    needs a pairing PCAP, so `deps: ['wireshark']` and `needs: 'Capture it at the Capture
