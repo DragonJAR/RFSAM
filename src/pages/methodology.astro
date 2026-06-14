@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { layers } from '../data/layers.js';
+import { bsamRelation } from '../data/bsamRelation.js';
+---
+<BaseLayout title="Methodology">
+  <div class="container">
+    <h1 style="font-size:34px">Methodology</h1>
+
+    <h2 class="mono" style="font-size:13px;letter-spacing:.16em;margin-top:32px;color:var(--mut2)">THE LAYER MODEL</h2>
+    {layers.map((l) => (
+      <div style="display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)">
+        <div class="mono" style={`width:46px;color:${l.color}`}>{l.id}</div>
+        <div>
+          <div style="font-family:var(--disp);font-weight:600">{l.name}</div>
+          <div style="color:var(--mut);font-size:13px">{l.note}</div>
+        </div>
+      </div>
+    ))}
+
+    <h2 class="mono" style="font-size:13px;letter-spacing:.16em;margin-top:40px;color:var(--mut2)">WHY RFSAM &amp; WHAT IT BUILDS ON</h2>
+    <p style="color:#CFD9E4;line-height:1.7;margin-top:10px">{bsamRelation.priorArt}</p>
+
+    <h2 class="mono" style="font-size:13px;letter-spacing:.16em;margin-top:40px;color:var(--mut2)">RELATIONSHIP TO BSAM</h2>
+    <p style="color:#CFD9E4;line-height:1.7;margin:10px 0">{bsamRelation.summary}</p>
+    <div style="border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:12px">
+      {bsamRelation.ownership.map((o) => (
+        <div style="display:flex;gap:16px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--line)">
+          <div class="mono" style="flex:0 0 230px;color:var(--cyan);font-size:12px">{o.rfsam}</div>
+          <div style="color:var(--mut);font-size:13px">{o.note}</div>
+        </div>
+      ))}
+    </div>
+    <a class="mono" style="display:inline-block;margin-top:16px;color:var(--amber);font-size:12px" href={bsamRelation.url} target="_blank" rel="noopener">View BSAM at tarlogic.com/bsam ↗</a>
+  </div>
+</BaseLayout>
