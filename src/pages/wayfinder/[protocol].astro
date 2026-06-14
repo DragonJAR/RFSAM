@@ -76,11 +76,11 @@ const descent = layers;
 
             {host.length > 0 && (
               <>
-                <div class="mono" style="font-size:10px;letter-spacing:.1em;color:var(--mut2);margin-top:14px">HOST SOFTWARE — no extra radio</div>
+                <div class="mono" style="font-size:10px;letter-spacing:.1em;color:var(--mut2);margin-top:14px">HOST SOFTWARE — runs on the host, see NEEDS</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:8px">
                   {host.map((h) => {
                     const data = toolBySlug(h.tool);
-                    return data ? <ToolCard tool={data} role={h.role} why={h.why} caveat={h.caveat} /> : null;
+                    return data ? <ToolCard tool={data} role={h.role} why={h.why} caveat={h.caveat} needs={h.needs} /> : null;
                   })}
                 </div>
               </>

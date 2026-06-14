@@ -16,10 +16,10 @@ const tools = [
   },
   {
     slug: 'bladerf-2-micro', name: 'bladeRF 2.0 micro xA9', vendor: 'Nuand', type: 'hardware',
-    protocols: ['Wide-band SDR'], spec: '~56 MHz IBW · 47 MHz–6 GHz · 2×2 MIMO',
-    homepage: 'https://www.nuand.com/product/bladerf-xa9/',
+    protocols: ['Wide-band SDR'], spec: '56 MHz IBW · up to 122.88 MHz oversampled (8-bit) · 47 MHz–6 GHz',
+    homepage: 'https://www.nuand.com/2023-02-release-122-88mhz-bandwidth/',
     software: ['ice9-bluetooth-sniffer'],
-    note: 'Wideband full-duplex SDR (AD9361). ~56 MHz instantaneous bandwidth covers most of the 80 MHz BLE band in one pass — wider than a HackRF, so fewer retunes when running ice9.',
+    note: 'Wideband full-duplex SDR (AD9361). ~56 MHz standard, and since the 2023.02 release an oversampling mode reaches 122.88 MHz instantaneous bandwidth (at 8-bit depth over USB 3.0) — enough to cover the entire 80 MHz BLE band in a single pass.',
   },
   {
     slug: 'usrp-b210', name: 'USRP B210', vendor: 'Ettus Research (NI)', type: 'hardware',
