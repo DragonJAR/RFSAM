@@ -1,0 +1,20 @@
+---
+import { bsam } from '../data/bsam.js';
+const { ids, deferred } = Astro.props;
+const note = deferred
+  ? 'This layer is covered by BSAM. RFSAM does not duplicate it — run these BSAM controls and carry the result into the RF assessment flow.'
+  : 'For the link-layer judgement, RFSAM defers to these BSAM controls. RFSAM’s role here is the RF capture that gets you to the point where they apply.';
+---
+{ids?.length > 0 && (
+  <div>
+    <p style="font-size:13.5px;color:var(--mut);font-style:italic;margin-bottom:10px">{note}</p>
+    {ids.map((id) => (
+      <a href={bsam[id]?.url ?? 'https://www.tarlogic.com/bsam/'} target="_blank" rel="noopener"
+         style="display:flex;gap:14px;align-items:center;padding:11px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;margin-bottom:6px">
+        <span class="mono" style="font-size:11.5px;color:var(--amber);width:110px;flex-shrink:0">{id}</span>
+        <span style="font-size:13.5px">{bsam[id]?.title ?? id}</span>
+        <span style="margin-left:auto;color:var(--mut2)">↗</span>
+      </a>
+    ))}
+  </div>
+)}

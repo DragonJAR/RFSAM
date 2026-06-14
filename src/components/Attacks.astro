@@ -1,0 +1,27 @@
+---
+const { attacks } = Astro.props;
+---
+{attacks?.length > 0 && (
+  <div style="display:flex;flex-direction:column;gap:10px;margin:6px 0">
+    {attacks.map((a) => (
+      <div style="border:1px solid var(--line);border-left:3px solid var(--red);border-radius:8px;padding:14px 18px;background:var(--panel)">
+        <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <span style="font-family:var(--disp);font-weight:600">{a.name}</span>
+          {a.cve?.length > 0 && <span class="mono" style="font-size:10.5px;color:var(--amber)">{a.cve.join(', ')}</span>}
+        </div>
+        <p style="font-size:13.5px;color:#CFD9E4;margin-top:6px;line-height:1.6">{a.summary}</p>
+        {(a.impact || a.preconditions) && (
+          <div class="mono" style="font-size:11px;color:var(--mut2);margin-top:8px;line-height:1.6">
+            {a.impact && <div><span style="color:var(--mut)">Impact:</span> {a.impact}</div>}
+            {a.preconditions && <div><span style="color:var(--mut)">Preconditions:</span> {a.preconditions}</div>}
+          </div>
+        )}
+        {(a.refs?.length > 0 || a.note) && (
+          <div class="mono" style="font-size:11px;color:var(--cyan);margin-top:8px">
+            {a.note ?? a.refs.join(', ')}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}

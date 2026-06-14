@@ -1,0 +1,16 @@
+---
+import { layers } from '../data/layers.js';
+import { criticality } from '../data/criticality.js';
+const { control } = Astro.props;
+const ly = layers.find((l) => l.id === control.layer);
+const cr = criticality[control.criticality];
+const darkText = control.criticality === 'low' || control.criticality === 'medium';
+---
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0">
+  {control.applicability.map((a) => (
+    <span class="mono" style="font-size:10.5px;padding:3px 10px;border-radius:4px;background:var(--panel2);color:var(--cyan)">{a}</span>
+  ))}
+  <span class="mono" style={`font-size:10.5px;padding:3px 10px;border-radius:4px;border:1px solid ${ly.color};color:${ly.color}`}>{ly.id} · {ly.name}</span>
+  <span class="mono" style={`font-size:10.5px;padding:3px 10px;border-radius:4px;background:${cr.color};color:${darkText ? '#0A1119' : '#fff'};font-weight:600`}>{cr.label.toUpperCase()}</span>
+  {control.deferred && <span class="mono" style="font-size:10.5px;padding:3px 10px;border-radius:4px;border:1px solid var(--cyan);color:var(--cyan)">↗ DEFERS TO BSAM</span>}
+</div>
