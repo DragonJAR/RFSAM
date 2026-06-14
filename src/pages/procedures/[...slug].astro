@@ -10,10 +10,16 @@ import RelatedResources from '../../components/RelatedResources.astro';
 import Pager from '../../components/Pager.astro';
 import { protocols } from '../../data/protocols.js';
 import { layers } from '../../data/layers.js';
+import { layerRank } from '../../lib/taxonomy.js';
+
+// Order procedures by the DESCENT (IG→SP→PHY→LL→CR→AT→AP), the way the methodology
+// teaches them — not alphabetically by id. `layerRank` ranks IG=0 … AP=6; the index
+// additionally groups by protocol order. This also drives the prev/next pager.
+const prank = (pid) => protocols.findIndex((p) => p.id === pid);
 
 export async function getStaticPaths() {
   const controls = await getCollection('controls');
-  const byProto = (pid) => controls.filter((c) => c.data.protocol === pid).sort((a, b) => a.data.id.localeCompare(b.data.id));
+  const byProto = (pid) => controls.filter((c) => c.data.protocol === pid).sort((a, b) => layerRank(a.data.layer) - layerRank(b.data.layer) || a.data.id.localeCompare(b.data.id));
 
   const paths = [];
   // section index at /controls
@@ -51,7 +57,7 @@ if (kind === 'control') {
   protoId = Astro.props.protocolId;
   listForProto = allControls
     .filter((c) => kind === 'index' ? true : c.data.protocol === protoId)
-    .sort((a, b) => a.data.id.localeCompare(b.data.id));
+    .sort((a, b) => prank(a.data.protocol) - prank(b.data.protocol) || layerRank(a.data.layer) - layerRank(b.data.layer) || a.data.id.localeCompare(b.data.id));
 }
 ---
 {kind === 'control' ? (
