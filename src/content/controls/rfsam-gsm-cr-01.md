@@ -120,6 +120,13 @@ references:
     year: 2010
     url: 'https://laforge.gnumonks.org/blog/20101112-history_of_a52_withdrawal/'
     type: blog
+  - key: grgsmtestdata
+    title: 'gr-gsm sample capture vf_call6_a725_d174_g5_Kc1EF00BAB3BAC7002.cfile (SRLabs Airprobe How-To origin) and the gr-gsm "Usage: Decoding How-To" wiki'
+    authors: 'P. Krysik et al. (gr-gsm); SRLabs'
+    venue: 'GitHub: ptrkrysik/test_data and ptrkrysik/gr-gsm'
+    year: 2017
+    url: 'https://github.com/ptrkrysik/test_data'
+    type: tool
 tools:
   - kalibrate-rtl
   - gr-gsm
@@ -130,7 +137,7 @@ bsam: []
 resources:
   - RFSAM-RES-01
   - RFSAM-RES-23
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -192,14 +199,14 @@ All steps are **passive reception** of what the network already broadcasts, on e
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. Assessing a fixed cellular alarm panel on a private, RF-shielded test cell, the negotiated cipher and identity behaviour are read passively before any key work. `kal -s GSM900` locates the test BTS's ARFCN; `grgsm_livemon_headless` decodes its downlink into GSMTAP, and Wireshark shows steady System Information and paging frames. Filtering the **Cipher Mode Command** reveals the algorithm the cell selected for the panel's signalling, and the **Paging Request** / **Identity Request** messages show how the panel is identified on the air. The Oros42 IMSI-catcher, reading the same GSMTAP feed, confirms the identity exposure passively (no transmit). Record the findings for the unit under test:
+Worked from a public sample capture rather than a live target: gr-gsm ships the SRLabs "Airprobe How-To" capture `vf_call6_a725_d174_g5_Kc1EF00BAB3BAC7002.cfile` (ptrkrysik/test_data; the README records its SRLabs origin), and the gr-gsm "Usage: Decoding How-To" wiki plus the project's CI decode fixtures replay it end to end [grgsmtestdata]. Decoding it with `grgsm_decode -c vf_call6_a725_d174_g5_Kc1EF00BAB3BAC7002.cfile -s $((100000000/174)) -a 725 -m BCCH -t 0` (decimation 174, so a 100e6/174 sample rate) confirms the carrier on **ARFCN 725 (E-GSM-900 downlink)**, and re-running on the SDCCH8 with the recovered key (`-m SDCCH8 -t 1 -e 1 -k 0x1E,0xF0,0x0B,0xAB,0x3B,0xAC,0x70,0x02`) decrypts the session. In the decrypted SDCCH8 fixture the **RR Cipher Mode Command** carries a Cipher Mode Setting whose start-ciphering bit is set with algorithm identifier `000`, i.e. **A5/1**; the recovered 64-bit A5/1 session key is `Kc = 1E F0 0B AB 3B AC 70 02`. The identity exchanged on the air is **TMSI only** — the paging / identity IEs carry P-TMSI values (e.g. `0x014faf9a`, `0x015c5703`); no IMSI is exposed in the documented decode [grgsmtestdata]. Findings for this public sample:
 
-- ARFCN / downlink: [FILL: channel and frequency measured]
-- Cipher Mode Command algorithm: [FILL: A5/0 | A5/1 | A5/2 | A5/3 read from the Cipher Mode Command]
-- Identity seen on the air: [FILL: TMSI only, or IMSI exposed via paging / Identity Response]
-- Verdict: [FILL: e.g. "A5/1 + IMSI exposed during location update — confidentiality and privacy finding" — fill from the measured cipher and identity above]
+- ARFCN / downlink: ARFCN 725 (E-GSM-900 downlink), decoded at sample rate 100e6/174 (decimation 174) [grgsmtestdata]
+- Cipher Mode Command algorithm: A5/1 (Cipher Mode Setting byte `0x11` — start-ciphering bit set, algorithm identifier `000` = A5/1); recovered session key `Kc = 1E F0 0B AB 3B AC 70 02` [grgsmtestdata]
+- Identity seen on the air: TMSI only — P-TMSI values such as `0x014faf9a` and `0x015c5703`; no IMSI exposed in the documented decode [grgsmtestdata]
+- Verdict: A5/1 in force — a publicly broken cipher whose 64-bit Kc is recoverable from the captured keystream (here `1E F0 0B AB 3B AC 70 02`), so a confidentiality finding; identity handling is sound for this sample (TMSI only, no IMSI on the air) [grgsmtestdata]
 
-This walkthrough illustrates the passive cipher-and-identity workflow against a *test* cell; every bracketed `[FILL: …]` value must be supplied from your own capture. Do not cite a specific A5 algorithm, ARFCN or identity finding until measured. No claim is made about any production network.
+This is a documented public example, not a live interception: the capture, the decode commands, the negotiated A5/1, the recovered Kc and the TMSI-only identity behaviour are all taken from the gr-gsm sample capture and its wiki / CI fixtures [grgsmtestdata]. Against your own authorised target, substitute the ARFCN, A5 algorithm and identity finding you actually measure; no claim is made about any production network.
 
 ## Remediation
 

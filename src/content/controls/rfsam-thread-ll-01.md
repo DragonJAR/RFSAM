@@ -111,6 +111,12 @@ references:
     year: 2024
     url: 'https://nvd.nist.gov/vuln/detail/CVE-2024-3297'
     type: cve
+  - key: ot-dataset-tlv-vector
+    title: 'OpenThread example Active Operational Dataset TLV vector (kTlvBytes, tests/unit/test_dataset.cpp)'
+    venue: openthread/openthread
+    year: 2024
+    url: 'https://github.com/openthread/openthread/blob/252918bf10cf3ef8abdb1904178d543f6dc1e150/tests/unit/test_dataset.cpp#L41-L47'
+    type: tool
 tools:
   - nrf-sniffer-802154
   - pyspinel
@@ -120,7 +126,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-16
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -219,17 +225,21 @@ identity, topology and commissioning state the mesh discloses to a passive obser
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. Take a representative
-Matter-over-Thread smart-home bulb on a lab bench (your own devices, shielded). A wideband
-sweep shows activity around channel 15; an nRF52840 RCP driven by
-`python sniffer.py -c 15 -u /dev/ttyACM0 --crc -b 460800` streams frames into Wireshark.
-With the filter `wpan.frame_type == 0x0 || mle`, the beacon response discloses, with no
-key supplied, the identifiers below — record the actual values from your own capture:
+Illustrative walkthrough — substitute the values your own capture records. On a lab bench
+(your own devices, shielded), a wideband sweep shows activity around channel 15; an
+nRF52840 RCP driven by `python sniffer.py -c 15 -u /dev/ttyACM0 --crc -b 460800` streams
+frames into Wireshark, and the filter `wpan.frame_type == 0x0 || mle` isolates the beacon
+and MLE discovery responses that disclose the network identifiers in the clear, with no key
+supplied. The identifiers below are not a live bench capture: they are taken from
+OpenThread's own published example Active Operational Dataset — the `kTlvBytes` test vector
+in `tests/unit/test_dataset.cpp` of openthread/openthread — which makes a concrete,
+verifiable illustration of exactly the fields a beacon / discovery response leaks
+[ot-dataset-tlv-vector]. On your own bench, substitute the values your sniffer records:
 
-- PAN ID: `[FILL: 0xNNNN]`
-- Extended PAN ID: `[FILL: NN:NN:NN:NN:NN:NN:NN:NN]`
-- Network Name: `[FILL: e.g. "OpenThread-abcd"]`
-- Channel: 15
+- PAN ID: `0xface` (the dataset's PAN ID, asserted as `panId == 0xface` in the same test) [ot-dataset-tlv-vector]
+- Extended PAN ID: `1d:e5:bf:ec:d5:16:5b:8f` [ot-dataset-tlv-vector]
+- Network Name: `"OpenThread-aac3"` [ot-dataset-tlv-vector]
+- Channel: 15 [ot-dataset-tlv-vector]
 
 `avahi-browse -rt _meshcop._udp` on the same LAN returns a Border Agent entry when a
 commissioning path is reachable. MAC payloads remain AES-128-CCM* encrypted and are left

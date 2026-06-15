@@ -111,6 +111,13 @@ references:
     year: 2026
     url: 'https://github.com/RfidResearchGroup/proxmark3/blob/master/doc/commands.md'
     type: tool
+  - key: pm3-mfkey-examples
+    title: 'Proxmark3 (Iceman fork) — tools/mfc/card_reader/mfkey_examples.md, sample MIFARE Classic trace'
+    authors: RFID Research Group (Iceman)
+    venue: GitHub
+    year: 2026
+    url: 'https://github.com/RfidResearchGroup/proxmark3/blob/master/tools/mfc/card_reader/mfkey_examples.md'
+    type: tool
 tools:
   - pm3-client
   - chameleon-ultra-gui
@@ -118,7 +125,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-13
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -162,11 +169,11 @@ All steps below are authorised-testing steps: run them only against cards you ow
 
 ## Field case
 
-Representative worked example (test card, authorised). A building-access fob is presented to the LF antenna; `lf search` returns nothing, so it is not a 125 kHz credential. Moved to the HF antenna, `hf search` reports an `ISO 14443-A` tag, UID `[FILL: UID from your test card]`, SAK `08`, ATQA `0004`, chip guess **MIFARE Classic 1K** — the SAK/ATQA pair that fingerprints a 1K Classic. Because it is Classic, `hf mf info` is run to classify the PRNG; on this card it reports a `[FILL: weak | hardened | static encrypted nonce]` nonce.
+A sample MIFARE Classic trace shipped with Proxmark3 (RfidResearchGroup/proxmark3, `tools/mfc/card_reader/mfkey_examples.md`, "Sample trace") documents a genuine ISO/IEC 14443-A 1K card and makes the identification fork concrete [pm3-mfkey-examples]. In that trace the card's anticollision reply gives **ATQA `0004`** (`TAG 04 00`) and **SAK `08`** (`TAG 08 b6 dd`) — the MIFARE Classic 1K fingerprint — with UID **`9C599B32`** (`TAG 9c 59 9b 32 6c`). The repository's own usage line labels `9C599B32` as the card's `<uid>` and feeds the captured authentication nonces to mfkey64 to recover a Crypto1 sector key, i.e. it is a **weak-Crypto1 (attackable-PRNG) MIFARE Classic 1K** [pm3-mfkey-examples]. An LF pass over the same band would have returned nothing, since this is a 13.56 MHz HF credential, not a 125 kHz one.
 
-That single sequence sets the whole assessment: a **MIFARE Classic 1K with a weak PRNG** is in scope for the card-only darkside bootstrap [courtois2009darkside] then nested key recovery [garcia2009pickpocketing]; a **hardened** one routes to hardnested [meijer2015hardnested]; had `hf search` instead reported **DESFire** or **NTAG**, the Crypto1 family would not apply and the assessment would pivot to its AES/configuration posture. The fork — `UID-only` vs `Crypto1` vs `DESFire AES` — is exactly what this control records, and it is decided before a single key is touched.
+That single sequence sets the whole assessment: a **MIFARE Classic 1K with a weak PRNG** is in scope for the card-only darkside bootstrap [courtois2009darkside] then nested key recovery [garcia2009pickpocketing]; a **hardened** one would instead route to hardnested [meijer2015hardnested]; had `hf search` reported **DESFire** or **NTAG**, the Crypto1 family would not apply and the assessment would pivot to its AES/configuration posture. The fork — `UID-only` vs `Crypto1` vs `DESFire AES` — is exactly what this control records, and it is decided before a single key is touched.
 
-The `[FILL: …]` placeholders (UID and PRNG class) are deliberately left for the tester to populate from a real card. The SAK `08` / ATQA `0004` pair is the well-known MIFARE Classic 1K fingerprint, but confirm it against the specific card under test: cloned/magic Gen1a/Gen2 cards can present a non-standard SAK/ATQA even though they emulate a 1K.
+The SAK `08` / ATQA `0004` pair seen in this sample trace is the well-known MIFARE Classic 1K fingerprint, but it should always be confirmed against the specific card under test: cloned/magic Gen1a/Gen2 cards can present a non-standard SAK/ATQA even though they emulate a 1K.
 
 ## Remediation
 

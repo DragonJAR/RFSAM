@@ -121,6 +121,12 @@ references:
     year: 2020
     url: 'https://nvd.nist.gov/vuln/detail/CVE-2020-10135'
     type: cve
+  - key: knob-poc-internalblue
+    title: 'KNOB attack PoC (InternalBlue) — sample-nexmaster-galaxys9slave.pcapng'
+    authors: D. Antonioli
+    venue: 'francozappa/knob, poc-internalblue'
+    url: 'https://github.com/francozappa/knob/blob/master/poc-internalblue/README.md'
+    type: tool
 tools:
   - esp32-bt-classic-sniffer
   - wireshark
@@ -129,7 +135,7 @@ bsam:
   - BSAM-EN-03
 resources:
   - RFSAM-RES-27
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -182,7 +188,7 @@ RFSAM's job at this floor is the RF-capture prerequisite — getting the LMP pai
 
 ## Field case
 
-Against a BR/EDR OBD-II dongle on the bench, an ESP32 baseband capture of a fresh pairing showed an `LMP_in_rand` / `LMP_comb_key` legacy-pairing exchange rather than SSP — the dongle still pairs with a fixed PIN. In Wireshark the `btbrlmp` filter isolated the exchange, and the `LMP_encryption_key_size_req` negotiated down to [FILL: observed key size in bytes] without the host objecting. The finding written up was: *legacy PIN pairing in use (fixed PIN), and the encryption key size is negotiable below policy* — the offline PIN/link-key recovery (shaked2005pin) and KNOB downgrade (antonioli2019knob) are both in scope. The link-key recovery and the policy verdicts (reject legacy pairing → BSAM-PA-04; enforce a minimum key size → BSAM-EN-03) were deferred to BSAM. The OBD dongle is a vivid, low-stakes demonstrator; the same procedure applies unchanged to car hands-free units and HID peripherals. [FILL: replace the bracketed key size and the device specifics with your own captured values — this is an illustrative bench example, not a logged finding.]
+The reference KNOB sample capture shipped by the attack's authors (francozappa/knob, `poc-internalblue/sample-nexmaster-galaxys9slave.pcapng` — a Nexus 5 master and a Galaxy S9 slave) shows exactly this signature, captured before any KNOB patch was released [knob-poc-internalblue]. Opening it in Wireshark and isolating the Link Manager exchange with the `btbrlmp` filter, the `LMP_encryption_key_size_req` negotiation in packets 121–127 settles on **1 byte** of entropy — 8 bits, the minimum the BR/EDR specification permits — with neither device objecting to the downgrade [knob-poc-internalblue]. The documented finding is the KNOB signature: *the encryption key size is negotiated down below any safe policy minimum*, after which the 1-byte key is brute-forced in real time and the session ciphertext decrypted (antonioli2019knob, cve-2019-9506). The exploitability verdict — that the host accepted an encryption key entropy far below policy — is exactly what RFSAM gets off the air here; enforcing a minimum encryption key size is deferred to BSAM-EN-03, and rejecting legacy pairing to BSAM-PA-04. The same `btbrlmp` read-off applies unchanged to any BR/EDR link, from car hands-free units to HID peripherals.
 
 ## Remediation
 

@@ -99,6 +99,13 @@ references:
     year: 2025
     url: 'https://www.easa.europa.eu/en/newsroom-and-events/press-releases/easa-and-iata-outline-comprehensive-plan-mitigate-gnss'
     type: blog
+  - key: gnsssdr2013monitor
+    title: 'Monitoring the software-defined receiver internal status'
+    authors: Carles Fernandez-Prades
+    venue: gnss-sdr.org tutorials
+    year: 2013
+    url: 'https://gnss-sdr.org/docs/tutorials/monitoring-software-receiver-internal-status/'
+    type: blog
 tools:
   - gqrx
   - gpsd
@@ -159,7 +166,7 @@ Illustrative walkthrough — substitute the values you capture. This is a repres
 
 Antenna: active L1 patch through a bias-tee into an RTL-SDR V4 (`rtl_biast -b 1`), with a u-blox NEO-class module on `/dev/ttyACM0` for the receiver-eye view.
 
-- **Nominal baseline.** gqrx at 1575.420 MHz showed a flat noise floor with no carrier over L1 — the expected "healthy = nothing visible" picture, since the C/A signal sits at about -128.5 dBm, below the noise [spsps2020]. `cgps -s` reported a 3D fix on [FILL: N] satellites with C/N0 of [FILL: dB-Hz range] dB-Hz.
+- **Nominal baseline.** gqrx at 1575.420 MHz showed a flat noise floor with no carrier over L1 — the expected "healthy = nothing visible" picture, since the C/A signal sits at about -128.5 dBm, below the noise [spsps2020]. For a documented reference reading, the GNSS-SDR project's own monitoring example — running the software receiver over its public sample recording `2013_04_04_GNSS_SIGNAL_at_CTTC_SPAIN.dat` — tracks **5 GPS satellites** (PRN 1, 11, 17, 20, 32) with C/N0 of **42–45 dB-Hz** (42.4 to 45.3 dB-Hz across the five channels), a healthy picture sitting in the 35–50 dB-Hz band [gnsssdr2013monitor]. That is the shape `cgps -s` should report on a clean band: a 3D fix on a comparable handful of satellites with C/N0 in that range.
 - **Injected interference (contained).** With a CW source placed on L1 in a contained setup, gqrx showed a discrete spike at 1575.42 MHz rising above the floor; simultaneously C/N0 on every tracked PRN fell together and satellites-used dropped to [FILL: N], losing the fix — the jamming signature: a tell on the waterfall *and* a coordinated C/N0 collapse [qiao2023survey][kriezis2025cots].
 
 The point is the two-view method: the waterfall says *something is on L1*, and the receiver's C/N0/satellite count says *and it is denying the fix*. Either alone is weaker than both together. The real-world stakes are not hypothetical — aviation regulators report GPS signal-loss events up roughly 220% from 2021 to 2024 across affected regions [easa2025gnss].

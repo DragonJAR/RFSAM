@@ -87,6 +87,11 @@ references:
     venue: GitHub
     url: 'https://github.com/ElectronicCats/Minino'
     type: tool
+  - key: airodump-csv
+    title: 'aircrack-ng — airgraph-ng sample airodump-ng CSV (scripts/airgraph-ng/test/test-1.txt) and airodump-ng PWR column definition'
+    venue: aircrack-ng
+    url: 'https://github.com/aircrack-ng/aircrack-ng/blob/master/scripts/airgraph-ng/test/test-1.txt'
+    type: tool
   - key: wpa3-spec
     title: 'WPA3 Specification — 6 GHz band constraints (WPA3/OWE only, PMF mandatory, no transition mode)'
     authors: Wi-Fi Alliance
@@ -100,7 +105,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-11
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -159,7 +164,7 @@ The point of the survey is that the two gaps below get recorded, not hidden:
 - **6 GHz not surveyed** — the RTL8812AU has no 6 GHz radio, so any Wi-Fi 6E client steering to 6 GHz is invisible. Mark it as a capability gap requiring a Wi-Fi 6E adapter to close [fcc-6ghz-2020].
 - **5 GHz DFS channels (52–144)** — no APs observed there, but a passive sweep cannot distinguish "no AP" from "AP present, not captured" on DFS channels without a longer dwell; record it as `unconfirmed` rather than `clear` [linux-dfs].
 
-Record the measured signal level for each BSSID from the live `airodump-ng` table rather than assuming it: [FILL: measured PWR per BSSID].
+Record the measured signal level for each BSSID from the live `airodump-ng` table rather than assuming it. For a documented public reference of that table format, the sample airodump-ng survey CSV shipped with aircrack-ng (aircrack-ng/aircrack-ng, `scripts/airgraph-ng/test/test-1.txt`) carries a `Power` column per BSSID [airodump-csv]: `02:1D:7E:47:F6:B3` (ch 11, WPA2/CCMP/PSK, ESSID `kwifi`) Power 18; `00:13:46:08:87:0E` (ch 6, WPA/TKIP/PSK, `kevinh`) Power 14; `00:16:B6:39:B6:ED` (ch 6, WPA2/CCMP/PSK, `giggity`) Power 14; `00:02:2D:8E:F9:FB` (ch 1, WEP) Power 20; and `02:7A:75:47:0E:87` (ch 11, OPN) Power -1. One caveat when reading any such table: this older capture stores Power as a positive magnitude with `-1` as the no-signal sentinel, whereas the current airodump-ng live-table convention (per its manpage) is negative dBm — strong ≈ -40, average ≈ -55, weak ≈ -70, and `-1` meaning the driver does not report a signal level [airodump-csv]. Read each BSSID's value against whichever convention your build emits, and treat `-1` as "no reading," not "very weak."
 
 ## Remediation
 

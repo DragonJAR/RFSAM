@@ -104,6 +104,13 @@ references:
     year: 2024
     url: 'https://github.com/merbanan/rtl_433'
     type: tool
+  - key: rtl433ev1527
+    title: 'rtl_433 — Generic Remote SC226x EV1527 decoder (generic_remote.c) and EV1527 flex spec / sample corpus'
+    authors: 'B. Larsson (merbanan) et al.'
+    venue: 'merbanan/rtl_433 + merbanan/rtl_433_tests'
+    year: 2024
+    url: 'https://github.com/merbanan/rtl_433/blob/master/src/devices/generic_remote.c'
+    type: tool
 tools:
   - universal-radio-hacker
   - rtl-433
@@ -164,12 +171,12 @@ All steps below are passive receive-and-demodulate. They involve no transmission
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. This is a representative worked example for a generic 433.92 MHz fixed-code remote (e.g. an EV1527/PT2262-class OOK doorbell or socket remote — the most common class on the band, decoded by rtl_433's named protocols [rtl433repo]), not a measured capture of a specific named unit. The modulation family (OOK/ASK), the fixed-code outcome and the per-press repetition are the general, citable behaviour of this device class [rtl433primer][rtl433repo]; the numeric values are device-specific and must be measured, so they are left as `[FILL: …]` placeholders:
+Documented public walkthrough — substitute the values you capture. This is a worked example for the most common class on the band, an EV1527/PT2262-class OOK fixed-code remote (doorbell or socket remote), anchored to rtl_433's published decoder and shipped sample corpus for this exact device class rather than to a live capture of our own [rtl433ev1527]. The modulation family (OOK/ASK), the fixed-code outcome and the per-press repetition are the general, citable behaviour of this device class [rtl433primer][rtl433repo]; the concrete timings below are the ones rtl_433 documents for it, but for any specific unit they must still be re-measured.
 
-- Sweep confirmed the carrier at **433.92 MHz**; the waterfall showed short OOK bursts (blinking blocks, not two stacked FSK lines) each time the button was pressed.
-- `rtl_433 -f 433.92M -A` reported the burst as **OOK_PWM** with a short pulse of `[FILL: short-pulse µs]` and a long pulse of `[FILL: long-pulse µs]`, period `[FILL: period µs]` — i.e. a bit rate of roughly `[FILL: baud]` baud.
-- Loaded into URH, autodetect labelled the signal **ASK**, bit length `[FILL: samples-per-symbol]`, and resolved the frame to `[FILL: N]` bits per burst, repeated several times per press.
-- The two captures of the same button press demodulated to an **identical** bitstream — establishing this as a *fixed code* (the fixed-vs-rolling determination this PHY framing hands to the link/attack layers), so a plain capture-and-replay is the relevant downstream test rather than a RollJam-class technique.
+- The carrier sits at **433.92 MHz**; the waterfall shows short OOK bursts (blinking blocks, not two stacked FSK lines) each time the button is pressed.
+- rtl_433's decoder for this exact class — `Generic Remote SC226x EV1527` (`src/devices/generic_remote.c`) — characterises the burst as **OOK_PWM** with a short pulse of **464 µs** and a long pulse of **1404 µs** (tolerance 200 µs), i.e. a PWM bit period of roughly **1868 µs (~535 baud)** [rtl433ev1527]. The sibling in-repo EV1527 flex spec (`conf/EV1527-4Button-Universal-Remote.conf`, `m=OOK_PWM s=369 l=1072 g=1400 r=12840 bits>=24 repeats>=3`) records the same OOK_PWM family with comparable timings for a 4-button variant [rtl433ev1527].
+- Loaded into URH, autodetect labels the signal **ASK**, bit length `[FILL: samples-per-symbol]`, and resolves the frame to **25** bits per burst — 24 data bits plus a trailing always-1 stop bit, per the decoder's `bits != 25` / "Last bit (MSB here) is always 1" framing check [rtl433ev1527]. The 24-bit data word repeats several times per press: rtl_433's EV1527 family confirms a row by requiring it to recur **≥ 3** times per transmission (`bitbuffer_find_repeated_row(bitbuffer, 3, 24)`) [rtl433ev1527].
+- Two captures of the same button press demodulate to an **identical** bitstream — establishing this as a *fixed code* (the fixed-vs-rolling determination this PHY framing hands to the link/attack layers), so a plain capture-and-replay is the relevant downstream test rather than a RollJam-class technique. The rtl_433_tests corpus (`tests/generic_remote/01/`, with `gfile001.cu8` and its expected `gfile001.json`) ships exactly such a repeated fixed-code burst for this decoder [rtl433ev1527].
 
 ## Remediation
 

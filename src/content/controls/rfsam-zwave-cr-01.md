@@ -116,6 +116,13 @@ references:
     year: 2020
     url: 'https://arxiv.org/abs/2001.08497'
     type: paper
+  - key: wavingz-readme
+    title: 'waving-z — README (G.9959 Z-Wave SDR transmit/receive)'
+    authors: 'baol (waving-z contributors)'
+    venue: GitHub (baol/waving-z)
+    year: 2018
+    url: 'https://raw.githubusercontent.com/baol/waving-z/master/README.md'
+    type: tool
 tools:
   - zwave-zniffer
   - waving-z
@@ -183,10 +190,10 @@ Read the result as: **S0 present** → exploitable via the paired capture + key-
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. This is a representative bench assessment of a US Z-Wave door lock and hub on your own test network, not a measured engagement; the bracketed `[FILL: …]` values are placeholders, and no specific Home ID, Node ID or observed scheme is asserted. Record your own measured values (and the actual security command classes seen) before citing anything here as a finding — do not present the placeholders as a result.
+Illustrative walkthrough grounded on a documented public frame for the header step. The header values below are taken from the field-labelled transmit example shipped with the waving-z project, not from a live engagement; the security-scheme and downgrade observations remain bracketed `[FILL: …]` placeholders, since no specific inclusion or observed scheme is asserted here. Record your own measured values (and the actual security command classes seen) before citing the scheme/downgrade lines as a finding — do not present those placeholders as a result.
 
-- **Region.** FCC ID on the lock places it in the US band; survey at 908.42 MHz shows event-driven bursts when the bolt is thrown — capture rate set to R3/100 kbps after a no-decode at R1.
-- **Header.** `wave-in` prints the network in the clear: Home ID `[FILL: 0xXXXXXXXX]`, lock at Node ID `[FILL: NN]`, hub at Node ID `01`. This is the filter for everything that follows.
+- **Region.** A US-band Z-Wave device surveys at 908.42 MHz and shows event-driven bursts when polled or when its state changes — capture rate set to R3/100 kbps after a no-decode at R1.
+- **Header.** The waving-z README documents a field-labelled G.9959 frame whose `wave-out` example encodes exactly the clear-text header this step reads off the air (baol/waving-z, README, EU "Transmit" example) [wavingz-readme]: a `COMMAND_CLASS_SWITCH_BINARY` (`0x25`) SET-ON (`01 ff`) frame on Home ID `0xD6B26208` from controller/hub Node ID `01` to target device Node ID `07`. That documented artifact illustrates the in-the-clear network fingerprint — Home ID `0xD6B26208`, hub at Node ID `01`, target at Node ID `07` — which is the filter for everything that follows on a real capture.
 - **Inclusion.** Excluding and re-including the lock while the Zniffer captures shows the security handshake. If a `COMMAND_CLASS_SECURITY` (`0x98`) key-transport frame appears, the network is **S0** and the network key is being carried encrypted under the all-zero temporary key [fouladi2013] — the recovery is then performed under the paired capture/crypto control, not here. If a `COMMAND_CLASS_SECURITY_2` (`0x9F`) KEX/public-key exchange appears instead, the network is **S2** over Curve25519 [silabs-ins13474] and there is no key to recover offline; the assessment of this control ends at that classification.
 - **Downgrade check.** The lock's Node Info `[FILL: lists / does not list]` both `0x9F` and `0x98`; if both are present the device is Z-Shave-eligible [tierney2018zshave].
 

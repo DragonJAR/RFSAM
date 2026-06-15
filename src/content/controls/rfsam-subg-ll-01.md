@@ -75,6 +75,13 @@ references:
     year: 2026
     url: 'https://triq.org/rtl_433/DATA_FORMAT.html'
     type: spec
+  - key: rtl433tests-generic-remote
+    title: 'rtl_433_tests — generic_remote/01 sample capture (SC2260 fixed-code OOK remote): expected JSON decode and Readme.txt'
+    authors: B. Larsson (merbanan) and contributors
+    venue: GitHub
+    year: 2026
+    url: 'https://github.com/merbanan/rtl_433_tests/tree/master/tests/generic_remote/01'
+    type: tool
   - key: urh
     title: 'Universal Radio Hacker: investigate wireless protocols like a boss'
     authors: J. Pohl, A. Noack
@@ -124,7 +131,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-15
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -172,17 +179,20 @@ The canonical example of a fixed address is the EV1527/PT2262 OOK encoder family
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture against your own authorised target. Take an EV1527-class 433.92 MHz fixed-code remote as the representative device. Point `rtl_433` at the band and press the button; a recognised class decodes to repeated lines naming the device and a stable identifier:
+A documented public example makes the fixed-address pattern concrete. A sample capture set shipped with the rtl_433 test corpus (merbanan/rtl_433_tests, `tests/generic_remote/01/` — an SC2260 fixed-code OOK remote of the PT2262/EV1527 family) decodes via `rtl_433` to the project's recorded expected JSON [rtl433tests-generic-remote]:
 
 ```bash
 rtl_433 -f 433.92M -F json
 ```
 
+Pressing "arm" yields a line naming the device and a stable identifier; pressing "disarm" on the same remote yields the same identifier with a different command:
+
 ```json
-{"model":"[FILL: decoded model name]","id":[FILL: decoded id],"cmd":[FILL: button code]}
+{"model":"Generic-Remote","id":5069,"cmd":192}
+{"model":"Generic-Remote","id":5069,"cmd":12}
 ```
 
-If the `id` does not change across presses of the same remote and is the same when you press a different button on it, that confirms the `id` is the device address, not the command [rtl433dataformat]. Loading three captures into URH and diffing them, expect the leading [FILL: N]-bit field to be constant (preamble + address), a 4-bit field to change only with the button (the command), and no incrementing field — the signature of a **fixed code: identification only, no counter, no checksum over a secret** [urh] [ev1527]. The security finding then writes itself: the receiver acts on any frame carrying that address, so the recovered frame is everything it trusts. Because this class's address is often a short DIP-switch or OTP field, the same recovery that reads the address also bounds the keyspace — the kind of small fixed-code space OpenSesame enumerated in seconds [opensesame] [hackaday-opensesame] — though the active replay and brute force themselves are assessed under RFSAM-SUBG-AT-01.
+The `id` is identical (`5069` = `0x13CD`) across both captures while `cmd` changes with the button (`192` for "arm", `12` for "disarm"), which is exactly the fixed-address / variable-command pattern — the `id` is the device address, not the command [rtl433dataformat] [rtl433tests-generic-remote]. The repo's `Readme.txt` documents the device and the per-file button mapping and reports the decode "ID 16bit = 0x13CD" (= 5069) [rtl433tests-generic-remote]. Loading the captures into URH and diffing them, the leading 16-bit field is constant (preamble + address), the command field changes only with the button, and no field increments between presses — the signature of a **fixed code: identification only, no counter, no checksum over a secret** [urh] [ev1527]. The security finding then writes itself: the receiver acts on any frame carrying that address, so the recovered frame is everything it trusts. Because this class's address is often a short DIP-switch or OTP field, the same recovery that reads the address also bounds the keyspace — the kind of small fixed-code space OpenSesame enumerated in seconds [opensesame] [hackaday-opensesame] — though the active replay and brute force themselves are assessed under RFSAM-SUBG-AT-01.
 
 ## Remediation
 

@@ -117,6 +117,12 @@ references:
     year: 2019
     url: 'https://nvd.nist.gov/vuln/detail/CVE-2019-19194'
     type: cve
+  - key: crackle-tests-01
+    title: 'crackle test fixture tests/01_crack: LE Legacy Just Works pairing PCAP and expected output'
+    authors: M. Ryan
+    venue: 'mikeryan/crackle (GitHub)'
+    url: 'https://github.com/mikeryan/crackle/tree/master/tests/01_crack'
+    type: tool
 tools:
   - crackle
   - sniffle
@@ -130,7 +136,7 @@ bsam:
 resources:
   - RFSAM-RES-04
   - RFSAM-RES-05
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -178,13 +184,13 @@ So the security-relevant questions this control answers are: *did the link pair 
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. Against a representative LE Legacy fitness peripheral on a bench (your own device, RF-shielded), a Sniffle capture on the CatSniffer catches the full SMP exchange during a forced re-pair. Wireshark shows `Pairing Request` with `SC = 0`, `MITM = 0`, IO Capability `NoInputNoOutput` — i.e. LE Legacy *Just Works* — and `Maximum Encryption Key Size = 16`. Running
+A documented public example exercises exactly this control end to end. The crackle source tree ships a sample LE Legacy *Just Works* pairing capture (`pairing_and_ltk_exchange.pcap`) in its `tests/01_crack/` fixture, and the project's own recorded expected output shows the full crack [crackle-tests-01]. Run the same step this control specifies:
 
 ```bash
 crackle -i ble_pairing.pcap
 ```
 
-reports the Just-Works case (`TK = 0`) and recovers the LTK, and `crackle -i ble_pairing.pcap -o ble_decrypted.pcap` produces a capture in which the previously-encrypted `Write Request` to the control handle is now cleartext — confirming the session was decryptable from a passive capture alone. Record the measured values from your own engagement — `[FILL: recovered LTK, device address, control handle from a real measured capture]` — in place of this illustration.
+against that capture and crackle analyses connection 0 between the link endpoints `08:3e:8e:e1:0b:3e (public)` and `78:c5:e5:6e:dd:e8 (public)`, reports `Found 3 encrypted packets`, brute-forces the TK in `strategy 0, 20 bits of entropy`, and prints `TK found: 000000` — the Just-Works case — followed by `LTK found: 7f62c053f104a5bbe68b1d896a2ed49c` [crackle-tests-01]. Re-running with `-o ble_decrypted.pcap` decrypts the 3 encrypted packets (`Done, processed 713 total packets, decrypted 3`) and dumps a cleartext PCAP, confirming the session was decryptable from the passive capture alone. The same recovered key and the same address pair are independently documented in the project's `tests/02_ltk_decrypt/` fixture, which feeds the value back as `-l 7f62c053f104a5bbe68b1d896a2ed49c` to decrypt the session directly — confirming `7f62c053f104a5bbe68b1d896a2ed49c` as the repository's canonical shipped result [crackle-tests-01]. In your own engagement, the recovered LTK and the connecting device addresses will instead be those of the link you captured.
 
 ## Remediation
 

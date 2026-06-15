@@ -116,6 +116,13 @@ references:
     year: 2023
     url: 'https://github.com/SysSec-KAIST/LTESniffer'
     type: tool
+  - key: ltesniffer-dl-pcap
+    title: 'LTESniffer downlink-mode sample capture (pcap_file_example/ltesniffer_dl_mode.pcap)'
+    authors: SysSec-KAIST
+    venue: GitHub
+    year: 2023
+    url: 'https://github.com/SysSec-KAIST/LTESniffer/blob/main/pcap_file_example/ltesniffer_dl_mode.pcap'
+    type: tool
   - key: falcon-repo
     title: 'FALCON — Fast Analysis of LTE Control channels (source)'
     authors: 'R. Falkenberg et al. (TU Dortmund)'
@@ -201,14 +208,15 @@ The exact number of PDCCH blind-decode candidates a receiver must test per subfr
 
 ## Field case
 
-A representative, reproducible walk-through against an **authorised test cell** (your own srsENB/Open5GS lab on a test EARFCN inside RF shielding, or your own live subscription with operator permission), captured downlink-only on a GPSDO-disciplined USRP B210:
+Worked against the public downlink sample capture shipped with LTESniffer (SysSec-KAIST/LTESniffer, `pcap_file_example/ltesniffer_dl_mode.pcap`) [ltesniffer-dl-pcap], the data column reads exactly the way this control predicts. The capture is a 2,433-frame, ~`28.6 s` downlink recording (file timestamp 2023-04-25); dissecting it in Wireshark with the MAC-LTE/RRC dissector (USER0/DLT-147 mapped to `mac-lte-framed`) recovers the cell's identity and activity purely passively — no decryption is performed, because none of this is encrypted.
 
-- Step 1–2 locked the carrier and reported `Found Cell: PCI=[FILL: measured PCI]` with the MIB giving a `[FILL: measured bandwidth] MHz` channel.
-- Step 3 read SIB1 in Wireshark: PLMN `[FILL: measured MCC-MNC]`, cell identity `[FILL: measured ECI]`, TAC `[FILL: measured TAC]` — all in clear text, no decryption performed.
-- Step 4's PDCCH blind decode enumerated `[FILL: measured count]` distinct C-RNTIs active over a `[FILL: measured duration]` window, with their scheduling grants — a passive activity inventory of the cell.
-- Step 5's paging observation: paging records carried **S-TMSI** (expected, normal). No IMSI paging was observed in this capture window; the reportable finding here is therefore the scheduling/identity *metadata* exposure, not a permanent-identifier leak. (Per [shaik2016], a network that ever pages with IMSI would convert this into a permanent-identity exposure; per [kotuliak2022ltrack], the same passive decode plus timing-advance is the basis for stealthy localisation.)
+- The cell broadcasts its identity in the clear in SIB1 (BCCH-DL-SCH, SI-RNTI 65535, SFN 430): PLMN `901-55` (a non-geographic test/shared PLMN, MCC 901 "International Mobile, shared code"), cell identity `0x0019B010` (ECI `105217`, 28-bit), TAC `0x0007`, freqBandIndicator 7 — Band 7.
+- SIB2 reports a `20 MHz` channel: `ul-Bandwidth n100` (100 PRB), with `ul-CarrierFreq` EARFCN 21400 (Band 7 uplink). The downlink channel width follows the same 100-PRB grid.
+- The PDCCH/MAC decode over the ~`28.6 s` capture enumerates exactly `one` distinct active C-RNTI (value 70, 642 frames) alongside the broadcast/random-access RNTIs (SI-RNTI 65535 across 1,790 frames; RA-RNTI 2 in 1 frame) — a passive activity inventory of the cell, recovered without transmitting.
 
-The `[FILL: …]` markers above are author-capture-pending placeholders, kept verbatim: this field case is a reproducible template, and no specific measured value is asserted as a finding. A contributor running this against a lab cell or an authorised live capture replaces each placeholder with their own measured values.
+This is the metadata/identity exposure the control is built to surface: PLMN, ECI, TAC and per-cell scheduling are all readable from a passive downlink capture. The sample capture is downlink-only and contains no paging records that page with IMSI, so it demonstrates the SIB/PDCCH half of the check rather than a permanent-identifier leak. (Per [shaik2016], a network that ever pages with IMSI would convert this into a permanent-identity exposure; per [kotuliak2022ltrack], the same passive decode plus timing-advance is the basis for stealthy localisation.)
+
+The `Found Cell: PCI=[FILL: measured PCI]` line in Step 2 is not asserted from this PCAP — the LTESniffer sample capture carries decoded MAC/RRC frames rather than the raw IQ a live srsUE cell search would lock onto — so the PCI placeholder is kept verbatim for a contributor running the full receive chain against a lab or authorised live cell.
 
 ## Remediation
 

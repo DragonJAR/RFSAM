@@ -110,6 +110,13 @@ references:
     year: 2023
     url: 'https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Core-54/out/en/low-energy-controller/link-layer-specification.html'
     type: spec
+  - key: btlejack
+    title: 'BtleJack — a new Bluetooth Low Energy swiss-army knife (README, "Sniffing for new connections")'
+    authors: Damien Cauquil (virtualabs)
+    venue: GitHub
+    year: 2021
+    url: 'https://github.com/virtualabs/btlejack/blob/master/README.rst'
+    type: tool
 tools:
   - sniffle
   - catsniffer
@@ -168,9 +175,11 @@ All steps are passive reception. Capture only devices you own or are explicitly 
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture: a fitness band and its phone app, on your own bench (a test device, not a third party's). With Sniffle on a CatSniffer parked on channel 37, the band advertises as a connectable peripheral; opening the app triggers the phone to connect, and Sniffle logs the `CONNECT_IND`, latches the access address, and switches to following the data channels. Filtering `conn.pcap` in Wireshark on the connection's access address shows a continuous stream of data PDUs; if no `LL_ENC_REQ` appears, the link is unencrypted and the ATT notifications (e.g. step-count and heart-rate handles) dissect in the clear.
+A documented public example shows the full sequence end to end. The BtleJack README walks through catching a new connection off the air with `btlejack -c any`: it reports `Got CONNECT_REQ packet from 55:c5:95:6f:b4:df to 40:23:99:f6:0a:c0`, decodes the on-air `CONNECT_REQ` (`05 22 df b4 6f 95 c5 55 c0 0a f6 99 23 40 1d 7b 2f 0a 9a f4 93 01 12 00 27 00 00 00 d0 07 ff ff ff ff 1f 0b`), and prints the connection parameters straight from it — **access address `0x0a2f7b1d`**, CRC Init `0x93f49a`, hop interval 39 (a **48.75 ms** connection interval, since 39 × 1.25 ms), hop increment 11, channel map `0x1fffffffff` — then follows the link and emits the data-channel PDUs as `LL Data:` lines [btlejack]. That is exactly the observable this control produces: a stable access address tagging a continuous stream of followed data-channel PDUs, with the hop sequence read directly from the sniffed connection request.
 
-That captured-in-the-clear traffic is exactly the input the BSAM judgement consumes: BSAM-DI-04 weighs whether those plaintext readings are sensitive-data exposure, and BSAM-EN-02 weighs whether the service should have refused to operate without encryption. RFSAM's part ends at producing the PCAP. Concrete per-device values — the exact access address, the connection interval, the specific ATT handles, and how many data PDUs were captured before the app disconnected — are left as placeholders rather than fabricated: [FILL: target device model, observed access address, connection interval (ms), ATT handles seen, PDU count]. Do not assert a specific finding until these are captured on real hardware.
+The same workflow applies to your own bench device — a fitness band and its phone app on a test rig, not a third party's. With Sniffle on a CatSniffer parked on channel 37, the band advertises as a connectable peripheral; opening the app triggers the phone to connect, Sniffle logs the `CONNECT_IND`, latches the access address, and switches to following the data channels. Filtering `conn.pcap` in Wireshark on the connection's access address shows a continuous stream of data PDUs; if no `LL_ENC_REQ` appears, the link is unencrypted and the ATT notifications (e.g. step-count and heart-rate handles) dissect in the clear.
+
+That captured-in-the-clear traffic is exactly the input the BSAM judgement consumes: BSAM-DI-04 weighs whether those plaintext readings are sensitive-data exposure, and BSAM-EN-02 weighs whether the service should have refused to operate without encryption. RFSAM's part ends at producing the PCAP. The remaining per-device specifics on your own bench — the target model, the exact ATT handles exposed, and how many data PDUs were captured before the app disconnected — are left as placeholders rather than fabricated: [FILL: target device model, ATT handles seen, PDU count]. Do not assert a specific finding until these are captured on real hardware.
 
 ## Remediation
 

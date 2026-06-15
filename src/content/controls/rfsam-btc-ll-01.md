@@ -95,7 +95,7 @@ bsam:
 resources:
   - RFSAM-RES-25
   - RFSAM-RES-26
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -143,13 +143,13 @@ A legacy alternative is the Ubertooth One with `ubertooth-rx`, which can passive
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. Take a Bluetooth Classic OBD-II dongle on a bench (authorised, device owned) and point an original ESP32-DevKitC running the Garbelini sniffer at the dongle's BD_ADDR `[FILL: target BD_ADDR]`:
+A sample capture shipped with the Garbelini sniffer (`Matheus-Garbelini/esp32_bluetooth_classic_sniffer`, `logs/samples/ESP32.pcapng`) records exactly this workflow against a BlueKitchen "SPP Counter" btstack demo target running on an ESP32 with BD_ADDR `E0:D4:E8:19:C7:68` — a documented public example of the capture chain end to end, not a live capture of our own (garbelini2022esp32sniffer). To reproduce the same run, an original ESP32-DevKitC running the sniffer pages that BD_ADDR:
 
 ```bash
-./BTSnifferBREDR.py --port=/dev/ttyUSB0 --target=[FILL: target BD_ADDR] --live-terminal --live-wireshark
+./BTSnifferBREDR.py --port=/dev/ttyUSB0 --target=E0:D4:E8:19:C7:68 --live-terminal --live-wireshark
 ```
 
-The ESP32 pages and follows the link, and Wireshark's live session shows the baseband header plus LMP frames carrying the pairing/feature exchange, followed by ACL payloads. The captured LMP makes the device's pairing and encryption negotiation visible — the raw material the BSAM encryption controls (e.g. minimum key size, force-use-of-encryption) then assess. The same workflow applies unchanged to a Classic audio headset; the OBD dongle is simply a concrete, low-stakes example. By contrast, an Ubertooth One on the same target typically returns only intermittent Basic-Rate LAPs and never the LMP, illustrating the wayfinder's note that it is a partial, legacy option for serious BR/EDR work.
+In the shipped PCAP the ESP32 pages and follows the link, and the frames include the baseband header, FHS, ACL and LMP that the repo README lists as the sniffer's forwarded packet types; the same BD_ADDR appears little-endian in the capture's FHS frames as the bytes `68 c7 19 e8 d4 e0`, and the target's device-name string reads `SPP Counter E0:D4:E8:19:C7:68` (garbelini2022esp32sniffer). The captured LMP makes the device's pairing and encryption negotiation visible — the raw material the BSAM encryption controls (e.g. minimum key size, force-use-of-encryption) then assess. The same workflow applies unchanged to any authorised Classic target; the btstack SPP demo is simply the concrete, redistributable example the project ships. By contrast, an Ubertooth One on the same target typically returns only intermittent Basic-Rate LAPs and never the LMP, illustrating the wayfinder's note that it is a partial, legacy option for serious BR/EDR work.
 
 ## Remediation
 

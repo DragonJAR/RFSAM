@@ -125,6 +125,13 @@ references:
     year: 2017
     url: 'https://www.usenix.org/conference/woot17/workshop-program/presentation/benadjila'
     type: paper
+  - key: rtl433tests_hcs200
+    title: 'rtl_433 test signals — Microchip HCS200 KeeLoq remote captures (tests/Microchip/HCS200/01)'
+    authors: merbanan and contributors
+    venue: merbanan/rtl_433_tests
+    year: 2020
+    url: 'https://github.com/merbanan/rtl_433_tests/tree/master/tests/Microchip/HCS200/01'
+    type: tool
 tools:
   - rfcat
   - yard-stick-one
@@ -196,13 +203,17 @@ All transmit, jam and replay steps are active radio attacks. Perform them **only
 
 ## Field case
 
-> [!NOTE] No first-party measured capture is recorded for this control yet; the worked example below is representative, with every unmeasured value marked `[FILL: …]`. Do not cite it as a tested finding.
+> [!NOTE] The identify-and-confirm steps below (procedure steps 1–3) are grounded in a documented public capture corpus, not a first-party measured attack. The RollJam / RollBack / key-recovery sub-steps remain a representative checklist — they must be run against your own authorised target.
 
-A representative gate remote on **433.92 MHz, OOK/ASK at ~`[FILL: measured baud]` baud**. A `rtl_433 -f 433.92M -F json` scan and two button presses show a frame of the form `<serial> <rolling-field> <buttons> <crc>`, where the serial prefix `[FILL: serial bytes]` is constant across presses and the rolling field changes each press — confirming a rolling code (step 1–2). Teardown identifies the encoder as `[FILL: e.g. KeeLoq HCS301 / HITAG2 / vendor]` (step 3).
+As a public reference for the identify-and-confirm steps, the rtl_433 test corpus ships Microchip KeeLoq **HCS200** captures at **433.92 MHz, OOK/PWM**, sampled at 250 ksps, with a documented rtl_433 decode (merbanan/rtl_433_tests, `tests/Microchip/HCS200/01`) [rtl433tests_hcs200]. The README decoder records the symbol timing as short pulse ~370 µs, long pulse ~772 µs, gap ~4000 µs and inter-frame repeat ~14000 µs, behind a 12-pulse preamble (`0xfff`) [rtl433tests_hcs200] — the OOK/PWM equivalent of the **measured baud** the procedure asks for.
+
+Across three consecutive button-1 presses (`g001`/`g002`/`g003`), the decoded frame carries a constant **serial id `00D0921`** (`button: 1`) while the 32-bit `encrypted` (rolling) field changes every press — `528F2DB8` → `3CA7B9F4` → `D087C973` [rtl433tests_hcs200]. The fixed serial alongside a changing hopping field is exactly the rolling-code signature procedure steps 1–2 look for. rtl_433's own model string identifies the **encoder as a Microchip KeeLoq HCS200** and therefore the **cipher as KeeLoq** (step 3); the companion `tests/keeloq/01` capture corroborates the pattern, with a constant static tail (`…b3 52 e8`), a changing leading 32-bit rolling field, and the button byte varying (`02` vs `04`) between presses [rtl433tests_hcs200].
+
+The active-attack sub-steps below are a representative checklist against your own authorised remote — they are **not** demonstrated by the public corpus, which is a passive decode only:
 
 - **RollJam:** with a second YARD Stick One jamming the receiver while the first captures, the owner's press is denied and a banked code later opens the gate: `[FILL: observed yes/no, banked-code latency]`. Jamming detection present: `[FILL: yes/no]`.
 - **RollBack:** replaying `[FILL: N]` consecutive captured codes in order, then an earlier code: accepted = `[FILL: yes/no]`, resync depth = `[FILL: N]`.
-- **Key recovery:** cipher `[FILL: KeeLoq/HITAG2/other]`; in-scope for this RF capture = `[FILL: yes/no]` (KeeLoq manufacturer-key recovery needs side-channel access to a receiver, beyond a passive RF capture [eisenbarth2008keeloq]).
+- **Key recovery:** cipher confirmed **KeeLoq** (HCS200) from the rtl_433 decode [rtl433tests_hcs200]; in-scope for this RF capture = `[FILL: yes/no]` (KeeLoq manufacturer-key recovery needs side-channel access to a receiver, beyond a passive RF capture [eisenbarth2008keeloq]).
 
 The auditor's verdict is the trio: jam-and-bank feasible, resync depth, and whether the cipher is a broken one with practical key recovery in reach.
 

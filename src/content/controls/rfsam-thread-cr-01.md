@@ -125,6 +125,13 @@ references:
     year: 2024
     url: 'https://nvd.nist.gov/vuln/detail/CVE-2024-3454'
     type: cve
+  - key: matter-chip-tool-guide
+    title: 'Working with the CHIP Tool — Step 5: Determine Matter device''s discriminator and setup PIN code'
+    authors: Project CHIP / connectedhomeip
+    venue: 'project-chip/connectedhomeip (docs/development_controllers/chip-tool/chip_tool_guide.md)'
+    year: 2024
+    url: 'https://project-chip.github.io/connectedhomeip-doc/development_controllers/chip-tool/chip_tool_guide.html'
+    type: blog
 tools:
   - wireshark
   - chip-tool
@@ -175,11 +182,11 @@ Run every active or decrypt step only against your own equipment, test devices, 
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. This is a representative example showing how the procedure reads out, not a measured engagement; every device-specific value is marked `[FILL: …]` and must not be treated as an observed finding.
+This walkthrough is grounded in the Matter SDK's own documented example onboarding payload, so the decoded values below are public reference data — not a measured engagement against a third-party device. Any value still marked `[FILL: …]` is a capture-specific placeholder and must not be treated as an observed finding.
 
-A bench Matter-over-Thread sensor is profiled. Its label carries a QR code and an 11-digit manual setup code; decoding it yields a setup passcode of `[FILL: 8-digit setup passcode read from label]`, discriminator `[FILL: discriminator]`, and VID/PID `[FILL: VID]/[FILL: PID]`. An 802.15.4 capture on channel `[FILL: channel 11–26]` shows 6LoWPAN + MLE frames — confirming Thread, not Zigbee — with the MAC payload encrypted; without the network key, Wireshark leaves the payloads opaque (the expected, healthy state).
+The Matter SDK's chip-tool guide documents how to recover a device's onboarding parameters from its printed payload, using the SDK reference example payload — QR `MT:Y.K9042C00KA0648G00` / manual pairing code `749701123365521327694` — as its worked case [matter-chip-tool-guide]. Decoding that payload (the guide's "Step 5: Determine Matter device's discriminator and setup PIN code") yields a setup passcode of `20202021`, discriminator `3840 (0xF00)`, Vendor Id `65521 (0xFFF1)` and Product Id `32768 (0x8000)` [matter-chip-tool-guide]. An 802.15.4 capture on channel `[FILL: channel 11–26]` shows 6LoWPAN + MLE frames — confirming Thread, not Zigbee — with the MAC payload encrypted; without the network key, Wireshark leaves the payloads opaque (the expected, healthy state).
 
-With the device's commissioning window open on the bench, driving PASE with the *on-label* passcode using `chip-tool pairing ble-thread` commissions the node onto a test fabric and returns the operational Thread dataset, which then decrypts the capture in Wireshark — demonstrating that the entire chain hinges on the printed setup code, not on the AES-CCM* link layer. The relevant audit question, and the value that determines criticality, is whether that passcode is a unique high-entropy per-device value or a shared/guessable vendor default: `[FILL: per-device random vs. shared default — determines whether this is a hardening note or a real exposure]`. No exact, measured finding is asserted here.
+With a commissioning window open, the same guide drives PASE over BLE onto Thread with that on-label code via `./chip-tool pairing ble-thread 1 hex:<operational-dataset> 20202021 3840`, where `20202021` is the decoded setup passcode and `3840` the discriminator [matter-chip-tool-guide]. A successful pairing returns the operational Thread dataset, which then decrypts the capture in Wireshark — demonstrating that the entire chain hinges on the setup code, not on the AES-CCM* link layer. The audit question that determines criticality is whether that passcode is a unique high-entropy per-device value or a shared/guessable default. Here it is the latter: `20202021` (with discriminator `3840` and VID/PID `0xFFF1/0x8000`) is the SDK's shared example/test value, baked into the reference apps and reused across SDK documentation and sample builds [matter-chip-tool-guide] — exactly the kind of common, non-unique credential a real device must never ship, so on production hardware its presence would be a genuine exposure rather than a hardening note.
 
 ## Remediation
 

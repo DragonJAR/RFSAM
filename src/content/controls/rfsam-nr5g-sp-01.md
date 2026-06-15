@@ -102,6 +102,12 @@ references:
     venue: GitHub
     url: 'https://github.com/P1sec/QCSuper'
     type: tool
+  - key: spritelab5gsniffer
+    title: '5GSniffer — open-source 5G NR control-channel sniffer, with a sample recording of a real n71 operator cell (README "An example", SpriteLab-Private5G.toml, sample_output.out)'
+    authors: 'N. Ludant, P. Robyns, G. Noubir et al. (Northeastern SpriteLab); IEEE S&P 2023'
+    venue: GitHub
+    url: 'https://github.com/spritelab/5GSniffer'
+    type: tool
 tools:
   - gqrx
   - qcsuper
@@ -115,7 +121,7 @@ resources:
   - RFSAM-RES-01
   - RFSAM-RES-22
   - RFSAM-RES-09
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -152,13 +158,12 @@ Whether there is a 5G core to talk to at all is part of this baseline: a Standal
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. No measured 5G NR
-field capture backs this example; it is a representative reconstruction of running
-the procedure, with every cell-specific value left as a `[FILL: ...]` placeholder to
-be recorded when the procedure is reproduced against a real cell. It is not a
-measured finding.
+Documented public example — substitute the values you capture against your own
+target. This walk-through is grounded in a recording that ships with a published
+tool, not in a measured field capture of our own; the numbers below are read from
+that public dataset and its expected output, not produced live here.
 
-A representative walk-through against an n78 (3.5 GHz TDD) cell: gqrx, fed from a USRP B210, showed a wide CP-OFDM downlink "wall" near 3.5 GHz whose width plainly exceeded the ~56 MHz B210 view — consistent with a 100 MHz n78 carrier of which only a slice is visible, enough to locate the SSB. The carrier centre was [FILL: record the measured centre frequency and map it to the NR-ARFCN]. A Quectel RM500Q on the same bench, read over its DIAG port with QCSuper into Wireshark, independently reported the serving cell: PLMN [FILL: MCC-MNC], PCI [FILL: 0–1007], TAC [FILL: ...], band n78, and mode [FILL: SA or NSA]. Confirming operator, band, NR-ARFCN and PCI from two routes — the SDR waterfall and the modem DIAG read — is the prerequisite; without it, capture is aimed at nothing. FR2 mmWave cells, if any operate in the area, could not be checked: the SDRs in this kit stop at 6 GHz [ts38101].
+A recording of a real 5G operator cell that ships with 5GSniffer (spritelab/5GSniffer, IEEE S&P 2023) makes the identify-the-carrier step concrete [spritelab5gsniffer]. As the project's README "An example" section describes, the authors recorded a 5G operator in their area operating over a 10 MHz channel in band n71 (the 600 MHz FDD band), at 15 kHz subcarrier spacing (SCS numerology 0). This is exactly the spectrum-layer read this control owns: on a waterfall the carrier appears as a CP-OFDM downlink "wall" whose centre maps to an NR-ARFCN. From the log, the carrier's SSB sits at absoluteFrequencySSB / SSB-ARFCN 125550, which translates to 627.750 MHz (the TS 38.104 mapping 5 kHz × 125550 = 627.750 MHz), with absoluteFrequencyPointA 124464 = 622.320 MHz; the shipped configuration `5gsniffer/SpriteLab-Private5G.toml` records the recording's centre as `frequency = 627750000` (627.750 MHz) [spritelab5gsniffer][ts38211]. Running cell search over that recording, the tool's shipped expected output `5gsniffer/sample_output.out` decodes the cell as PCI / Cell ID 1 [spritelab5gsniffer]. So from this one public capture the operator-facing inventory reads: band n71 (FDD), 10 MHz channel, 15 kHz SCS, downlink SSB at NR-ARFCN 125550 (627.750 MHz), PointA NR-ARFCN 124464 (622.320 MHz), PCI 1 — every spectrum-layer value the procedure asks for, confirmed against a tool's own config and expected decode rather than asserted. (The PLMN MCC-MNC, TAC and SA/NSA mode are operator-deployment details the cross-check routes in steps 3–4 add; the published recording fixes the carrier/NR-ARFCN/PCI half that this spectrum-layer control owns.) FR2 mmWave cells, if any operate in the area, could not be checked from such a sub-6 GHz recording: the SDRs in this kit stop at 6 GHz [ts38101].
 
 ## Remediation
 

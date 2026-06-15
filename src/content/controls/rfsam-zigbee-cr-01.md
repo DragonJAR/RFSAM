@@ -112,6 +112,12 @@ references:
     year: 2023
     url: 'https://github.com/riverloopsec/killerbee'
     type: tool
+  - key: killerbee-control4-sample
+    title: 'control4-sample.pcap / control4-sample.txt — KillerBee-shipped Control4 OTA network-key delivery capture'
+    authors: River Loop Security
+    venue: GitHub (riverloopsec/killerbee, sample/)
+    url: 'https://github.com/riverloopsec/killerbee/blob/master/sample/control4-sample.pcap'
+    type: tool
   - key: secbee
     title: 'SecBee — ZigBee security testing tool (built on scapy-radio and KillerBee)'
     authors: Cognosec
@@ -196,18 +202,18 @@ The "ships with the default key enabled / never rotates" picture is a *represent
 
 ## Field case
 
-To reproduce against your own authorised test network: stand up a Coordinator/Trust Center (e.g. a Zigbee2MQTT or vendor hub) and a couple of end devices on a known 2.4 GHz channel, leaving the default Trust Center link key `ZigBeeAlliance09` in place (the common shipping configuration this control targets) [securelist2025]. Capture a fresh join, run `zbdsniff` over it, then load the recovered key into Wireshark and confirm the cluster traffic decrypts. Then provision one end device with a per-device **install code** and repeat — `zbdsniff` should fail on that device, demonstrating the secure path.
+A public KillerBee-shipped sample grounds the default-key / clear-transport row of this field case — no first-party capture is needed to demonstrate the break. The repo's own note (riverloopsec/killerbee, `sample/control4-sample.txt`) describes `sample/control4-sample.pcap` as "a sample packet capture from a Control4 appliance that includes OTA key delivery to a downstream device" that you can "extract the key with zbdsniff, and decrypt the contents with Wireshark" [killerbee-control4-sample]. Dissecting that shipped capture, the join's APS Transport-Key command (a Standard Network Key with key sequence number 0) carries **APS Security: False** — so the network key is delivered over the air in the clear, not even wrapped under `ZigBeeAlliance09` — and `zbdsniff` reads it straight off: the recovered Control4 network key is `26546b723b396a727b5d5271517d392f` [killerbee-control4-sample][killerbee]. (As the same note warns, that key must be entered byte-reversed into Wireshark's pre-configured keys to decrypt the session.) To exercise the secure path for comparison, stand up your own authorised test network, provision one end device with a per-device **install code**, and repeat — `zbdsniff` should fail on that device because the Transport-Key is protected by a key the attacker does not hold.
 
 ```text
-# per-device network-key provisioning findings from an authorised test capture
+# network-key provisioning findings; row A = KillerBee-shipped control4-sample.pcap (public)
 device / join          TC link key used     zbdsniff result      Wireshark decrypts   key rotated?
-[FILL: end device A]   ZigBeeAlliance09     [FILL: key recovered?] [FILL: y/n]          [FILL: seq static?]
+Control4 appliance     none (APS Sec=False) 26546b72…517d392f    y                    [FILL: seq static?]
 [FILL: end device B]   per-device install   [FILL: no key]         [FILL: n]            [FILL: seq static?]
 ```
 
-The expected shape: the default-key device yields a recovered network key from a single sniffed join (its whole mesh is then decryptable), while the install-code device defeats `zbdsniff` (the Transport-Key is protected by a key the attacker does not hold). The historical anchor for this is Zillner's Black Hat 2015 result — sniffing a default-key join compromises the active network key, and because Home-Automation door-locks and HVAC use the same profile as light bulbs, the impact is not limited to harmless devices [zillner2015].
+The shape is exactly as expected: the clear-transport Control4 device yields its full 128-bit network key from a single sniffed join (its whole mesh is then decryptable in Wireshark), while an install-code device defeats `zbdsniff` because the key never crosses the air in a recoverable form. The historical anchor for the default-key variant is Zillner's Black Hat 2015 result — sniffing a default-key join compromises the active network key, and because Home-Automation door-locks and HVAC use the same profile as light bulbs, the impact is not limited to harmless devices [zillner2015].
 
-The `[FILL: …]` rows above are placeholders for the reader's own authorised lab run — they are not measured findings and must not be presented as such. This control carries no first-party field capture; the worked example is a representative, reproducible lab procedure built on Zillner's published result, not a recorded measurement.
+Row A is the documented public KillerBee sample (`control4-sample.pcap`), not a first-party live capture — re-derive it locally with `zbdsniff sample/control4-sample.pcap` to confirm [killerbee-control4-sample]. Row B's `[FILL: …]` cells, and both rotation cells, remain placeholders for the reader's own authorised lab run and must not be presented as measured findings.
 
 ## Remediation
 

@@ -171,12 +171,14 @@ A Z-Wave door/window sensor believed to be a US-market unit is surveyed with an 
 
 The reproducible lesson is the region gate itself: pointed at 868.420 MHz (the EU channel) instead, the identical setup shows an empty waterfall and decodes nothing — the classic false negative this control exists to prevent. Region first, then everything else.
 
+For a documented public example of the clear-text Z-Wave header this control reads, the waving-z documentation gives a worked G.9959 frame with every field labelled [wavingz]: a transmit command of the form `./wave-out -p 'd6 b2 62 08 01 41 03 0d 07 25 01 ff'` maps to Home ID `d6 b2 62 08` (32-bit), Source/Node ID `01`, FrameCtl `41 03`, LEN `0d`, Dest ID `07`, command class `0x25` (`COMMAND_CLASS_SWITCH_BINARY`) and command `01 ff` (ON; `01 00` is OFF). That is exactly the clear-text Home ID + Node ID layout `wave-in` prints when it decodes a received burst (HomeId, SourceID, FrameCtl, LEN, DestID, CommandClass), so the published example illustrates the same header fields a real survey would read off the air.
+
 Concrete numbers for a worked write-up (fill from a real survey; do not present placeholders as measured results):
 
 - Device and believed region/model: [FILL: device + FCC ID / regional model].
 - Confirmed centre frequency the bursts appeared on: [FILL: e.g. 908.42 MHz].
 - Data rate at which frames decoded: [FILL: 9.6 / 40 / 100 kbps].
-- Observed Home ID / Node ID(s): [FILL: hex Home ID, decimal Node ID].
+- Observed Home ID / Node ID(s): in the waving-z worked frame [wavingz] the labelled fields are Home ID `d6 b2 62 08` (hex) and Source/Node ID `01` (decimal 1), with Dest ID `07` (decimal 7) — illustrating the hex Home ID + decimal Node ID a live survey records here.
 - Classic Z-Wave vs Z-Wave Long Range: [FILL].
 
 ## Remediation

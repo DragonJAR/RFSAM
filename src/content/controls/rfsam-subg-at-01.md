@@ -145,6 +145,12 @@ references:
     year: 2008
     url: 'https://informatik.rub.de/wp-content/uploads/2022/01/crypto2008_keeloq.pdf'
     type: paper
+  - key: rtl433-ev1527
+    title: 'rtl_433 test corpus — EV1527 universal remote and PIR sensor sample captures (decoded Raw Codes documented in readme)'
+    venue: GitHub (merbanan/rtl_433_tests)
+    year: 2024
+    url: 'https://github.com/merbanan/rtl_433_tests/blob/master/tests/EV1527-Universal-Remote/readme.md'
+    type: tool
 tools:
   - rfcat
   - universal-radio-hacker
@@ -155,7 +161,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-15
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
 lastResearched: 2026-06-14
 ---
@@ -214,12 +220,11 @@ RollJam is Samy Kamkar's DEF CON 23 (2015) work; it is cited here via a peer-rev
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. Against a fixed-code 433.92 MHz gate remote using an EV1527-class OOK encoder, a single press captured in URH would demodulate to a short, stable payload (an EV1527 frame is on the order of ~24 bits) that is byte-for-byte identical on every subsequent press — the fixed-code signature. Re-transmitting the recorded burst through a YARD Stick One at the recovered baud should operate the gate, confirming verbatim replay.
+A public sample-capture set shipped with rtl_433's test corpus grounds the fixed-code half of this walkthrough. The merbanan/rtl_433_tests repository (tests/EV1527-Universal-Remote/) records a real EV1527 4-button 433.92 MHz key-fob remote captured at 250 kS/s (cu8), and its readme documents rtl_433 decoding each press to a stable Raw Code: button A → `81898a`, B → `41898a`, C → `21898a`, D → `11898a`, and A+C → `a1898a` (rtl_433 labels the decoder output "Smoke detector GS 558", id 3148, unit 10) [rtl433-ev1527]. Every press of a given button decodes byte-for-byte identically — that invariance is precisely the fixed-code signature this control looks for, and it is what makes a verbatim replay of any one captured burst sufficient to drive the receiver. A companion capture in the same corpus (tests/EV1527-PIR-SGOOWAY/) shows the SGOOWAY PR2 EV1527 PIR sensor on the same 433.92 MHz band decoding to a single fixed Raw Code `357193` (id 11148, unit 19) [rtl433-ev1527] — the same fixed-code weakness applied to an alarm sensor whose reading the panel trusts.
 
-Switching to a KeeLoq rolling-code fob on the same bench, two consecutive presses demodulate to two *different* payloads, and a naive replay of the older one is rejected — exactly the replay resistance a rolling code provides. The jam-and-capture path is then exercised in a shielded enclosure to validate the RollJam primitive on owned equipment.
+On an authorised bench the workflow mirrors that documented data: a single press demodulated in URH yields the short, stable EV1527 payload; re-transmitting the recorded burst through a YARD Stick One at the recovered baud operates the gate (or spoofs the sensor reading), confirming verbatim replay.
 
-Record the concrete per-device numbers from an authorised test in place of the illustration above:
-> [FILL: target make/model, exact frequency and baud, captured payload, technique that succeeded, and receiver behaviour].
+Switching to a KeeLoq rolling-code fob, two consecutive presses demodulate to two *different* payloads, and a naive replay of the older one is rejected — exactly the replay resistance a rolling code provides. The jam-and-capture path is then exercised in a shielded enclosure to validate the RollJam primitive on owned equipment.
 
 ## Remediation
 

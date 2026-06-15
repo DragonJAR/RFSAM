@@ -102,6 +102,12 @@ references:
     year: 2022
     url: 'https://arxiv.org/abs/2206.03745'
     type: paper
+  - key: wireshark-wpa-induction
+    title: "wpa-Induction.pcap — Wireshark SampleCaptures wiki (Wifi / Wireless LAN captures / 802.11)"
+    authors: Wireshark project
+    venue: Wireshark SampleCaptures wiki
+    url: 'https://gitlab.com/wireshark/wireshark/-/wikis/SampleCaptures'
+    type: tool
 tools:
   - aircrack-ng
   - kismet
@@ -165,12 +171,16 @@ All capture below is **passive** and non-transmitting. Steps 1–4 observe only.
 
 ## Field case
 
-Illustrative walkthrough — not a measured engagement; substitute the values you capture. Every unmeasured datum is marked `[FILL: …]` and must not be cited as a real finding.
+Steps 3–4 are demonstrated below against a documented public sample so the read-out can be reproduced exactly; the step-5 active confirmation is left as an illustrative lab walk-through, where every unmeasured datum is marked `[FILL: …]` and must not be cited as a real finding.
 
-A representative walk-through against a lab AP on channel 6 with an ALFA AWUS036ACH:
+Worked against the public Wireshark sample capture `wpa-Induction.pcap` (Wireshark SampleCaptures wiki, "Wifi / Wireless LAN captures / 802.11") [wireshark-wpa-induction] — a passive 802.11 trace, not a live engagement of our own:
 
-- Step 3 on a consumer WPA2-PSK AP typically returns `mfpc=1, mfpr=0` — PMF capable but optional — so an associated client remains deauth-susceptible. Measured value for the target AP: `[FILL: mfpr/mfpc bits read from the beacon]`.
-- Step 4 over a `[FILL: N]`-minute capture in a `[FILL: location type, e.g. office lobby]` inventoried `[FILL: count]` distinct client MACs and `[FILL: count]` distinct probed SSIDs, of which `[FILL: any SSID strings resembling credentials/email, or "none observed"]`.
+- Step 3 on its WPA2-PSK beacon for SSID `Coherer` (BSSID `00:0c:41:82:b2:55`, AKM = PSK) returns `RSN Capabilities 0x0000` — `mfpr=0, mfpc=0`, PMF neither required nor capable — so management frames are unprotected and an associated client stays deauth-susceptible [wireshark-wpa-induction].
+- Step 4 over the same capture inventoried `2` distinct client MACs emitting directed probe requests (`00:0d:93:82:36:3a` probing `Coherer`, `00:0f:66:16:94:73` probing `linksys`) and `2` distinct probed SSIDs, of which `none observed` resembled credentials or email addresses [wireshark-wpa-induction].
+
+For the active confirmation, an illustrative lab walk-through against a consumer AP on channel 6 with an ALFA AWUS036ACH — substitute the values you capture:
+
+- Step 4 over a `[FILL: N]`-minute capture in a `[FILL: location type, e.g. office lobby]` would inventory the live PNLs of nearby clients.
 - Step 5, on the operator's own test laptop, a single `aireplay-ng --deauth 1` round dropped the client and airodump-ng captured the renewed EAPOL handshake within `[FILL: seconds]`.
 
 An Electronic Cats Minino (ESP32-C6) reproduces steps 1–4 standalone on 2.4 GHz, writing the capture to microSD and logging the survey geographically over its onboard GPS for the wardriving variant — useful where a laptop is impractical, with the caveat that it sees only 2.4 GHz management/handshake frames, not 5/6 GHz traffic. A WiFi Pineapple consumes the same step-4 PNL inventory to seed an evil-twin clone, but that is an Attack-layer action outside this control's scope and must be separately authorised.

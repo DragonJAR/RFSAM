@@ -138,6 +138,12 @@ references:
     venue: GitHub
     url: 'https://github.com/IOActive/laf'
     type: tool
+  - key: lorapacket
+    title: 'lora-packet — LoRaWAN packet decoder/encoder (test vectors + README walkthrough)'
+    authors: A. Kirby
+    venue: GitHub
+    url: 'https://github.com/anthonykirby/lora-packet'
+    type: tool
 tools:
   - loracrack
   - laf
@@ -213,12 +219,14 @@ Illustrative walkthrough — substitute the values you capture. To reproduce aga
 ```text
 # per-device key-management findings from an authorised test capture
 DevEUI / DevAddr        version  activation  DevNonce        AppKey test       ABP FCnt reset
-[FILL: id]              1.0.3    OTAA        [FILL: repeated?] [FILL: MIC match?] n/a
+[FILL: id]              1.0.3    OTAA        [FILL: repeated?] MIC match (2b11ff0d) n/a
 [FILL: id]              1.1      OTAA        monotonic        [FILL: no match]  n/a
 [FILL: id]              1.0.3    ABP         n/a              n/a               [FILL: y/n]
 ```
 
-The expected shape: the deliberately weak OTAA device yields a MIC match under the default key (its session keys are recoverable and traffic decryptable), the 1.0.x re-joining device shows a repeated DevNonce (join-replay exposure), and the ABP device's counter resets across reboot (keystream-reuse/replay exposure) — while a correctly provisioned 1.1 OTAA device passes all three. The `[FILL: …]` rows above are placeholders for the values you capture in your own authorised analysis — they are not measured findings.
+Reproducible public worked example (no live capture) for the step-4 cell. Rather than depend on a live measurement, the candidate-key/MIC test for the weak OTAA row above is grounded in a documented public test vector shipped with the `lora-packet` library [lorapacket]. For the data uplink frame `40F17DBE4900020001954378762B11FF0D`, feeding the candidate NwkSKey `44024241ed4ce9a68c6a8bc055233fd3` recomputes the MIC as `2b11ff0d`, which equals the frame's trailing MIC bytes — `verifyMIC` returns true (`MIC check=OK`) — and feeding the AppSKey `ec925802ae430ca77fd3dd73cb2cc588` decrypts the `FRMPayload` to the ASCII plaintext `test`. The same library's vectors also confirm the join side: for the JoinRequest `0039363463336913AA05693574323831330489C65B1304`, the candidate AppKey `98929b92c49edba9676d646d3b612456` recomputes the JoinRequest MIC as `c65b1304`, again matching the frame. These values are self-consistent and reproducible entirely offline (`__tests__/mic_test.ts`, `__tests__/decrypt_test.ts`, and the README CLI decoder walkthrough), so the "candidate key → MIC match → decryptable payload" chain of step 4 can be demonstrated end-to-end without any live RF capture [lorapacket].
+
+The expected shape: the deliberately weak OTAA device yields a MIC match under the default key (its session keys are recoverable and traffic decryptable, exactly as the `lora-packet` vector above shows), the 1.0.x re-joining device shows a repeated DevNonce (join-replay exposure), and the ABP device's counter resets across reboot (keystream-reuse/replay exposure) — while a correctly provisioned 1.1 OTAA device passes all three. The remaining `[FILL: …]` cells above are placeholders for the values you capture in your own authorised analysis — they are not measured findings.
 
 ## Remediation
 
