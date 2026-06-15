@@ -70,7 +70,7 @@ const realCount = heat.reduce((n, r) => n + r.cells.filter((c) => c.state === 'r
       ))}
     </div>
 
-    <h2 class="track-h">Procedures <span class="badge">{existingCount} written · {realCount} field-tested · {gapCount} open gaps · {plannedCount} planned</span></h2>
+    <h2 class="track-h">Procedures <span class="badge">{existingCount} written · {realCount} verified · {gapCount} open gaps · {plannedCount} planned</span></h2>
     <p class="contrib-intro">
       RFSAM grows by pull request. This heatmap is the honest state of coverage — every cell is a
       <strong>protocol × layer</strong> of the descent, so you can see exactly what exists and what doesn't. The
@@ -104,8 +104,8 @@ const realCount = heat.reduce((n, r) => n + r.cells.filter((c) => c.state === 'r
       </div>
     </div>
     <div class="heat-legend mono">
-      <span><i class="c-real"></i> real field case</span>
-      <span><i class="c-illus"></i> procedure · needs a real capture</span>
+      <span><i class="c-real"></i> verified — real field case</span>
+      <span><i class="c-illus"></i> reviewed — illustrative field case (needs a real capture)</span>
       <span><i class="c-gap"></i> kit ready — procedure unwritten (help wanted)</span>
       <span><i class="c-none"></i> not yet scoped</span>
     </div>
@@ -117,7 +117,7 @@ const realCount = heat.reduce((n, r) => n + r.cells.filter((c) => c.state === 'r
         <div style="margin-top:8px">
           {p.controls.map((c) => {
             const live = statusOf(c.id);
-            const stColor = live === 'verified' ? 'var(--green)' : live === 'draft' ? 'var(--cyan)' : 'var(--amber)';
+            const stColor = live === 'verified' ? 'var(--green)' : live === 'reviewed' ? 'var(--cyan)' : live === 'draft' ? 'var(--amber)' : 'var(--mut)';
             return (
               <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
                 <span style={`width:8px;height:8px;border-radius:50%;background:${color(c.layer)};display:inline-block;flex-shrink:0`}></span>

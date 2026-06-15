@@ -9,7 +9,11 @@ export const PROTOCOL_IDS = [
 ];
 
 export const CRITICALITY_IDS = ['info', 'low', 'medium', 'high', 'critical'];
-export const REVIEW_STATUSES = ['stub', 'draft', 'verified'];
+// stub → draft → reviewed → verified.
+//   reviewed = citations & method confirmed, but the field case is still an
+//              illustrative template (no real captured data).
+//   verified = reviewed AND demonstrated with a real field case.
+export const REVIEW_STATUSES = ['stub', 'draft', 'reviewed', 'verified'];
 export const CONFIDENCE_LEVELS = ['low', 'medium', 'high'];
 
 const ID_RE = new RegExp(

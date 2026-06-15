@@ -142,7 +142,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-24
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: medium
 lastResearched: 2026-06-14
 ---

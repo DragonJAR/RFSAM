@@ -183,7 +183,7 @@ tools:
 resources:
   - RFSAM-RES-11
   - RFSAM-RES-12
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

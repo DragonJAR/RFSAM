@@ -26,12 +26,12 @@ export function checkControl({ data, body, file }, reg) {
   for (const r of data.resources ?? []) if (!reg.resourceIds.has(r)) errs.push(`${tag}unknown resource id '${r}'`);
   for (const t of data.tools ?? []) if (!reg.toolSlugs.has(t)) errs.push(`${tag}unknown tool slug '${t}'`);
 
-  if (data.reviewStatus === 'draft' || data.reviewStatus === 'verified') {
+  if (['draft', 'reviewed', 'verified'].includes(data.reviewStatus)) {
     if (!data.objective?.trim()) errs.push(`${tag}${data.reviewStatus} control needs a non-empty objective`);
   }
-  if (data.reviewStatus === 'verified') {
-    if (!(data.references ?? []).length) errs.push(`${tag}verified control needs at least one reference`);
-    if (/\[!FLAG\]/.test(body)) errs.push(`${tag}verified control has unresolved [!FLAG] markers`);
+  if (data.reviewStatus === 'reviewed' || data.reviewStatus === 'verified') {
+    if (!(data.references ?? []).length) errs.push(`${tag}${data.reviewStatus} control needs at least one reference`);
+    if (/\[!FLAG\]/.test(body)) errs.push(`${tag}${data.reviewStatus} control has unresolved [!FLAG] markers`);
   }
   return errs;
 }

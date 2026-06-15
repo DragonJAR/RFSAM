@@ -174,7 +174,7 @@ bsam:
 resources:
   - RFSAM-RES-27
   - RFSAM-RES-28
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

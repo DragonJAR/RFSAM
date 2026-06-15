@@ -87,7 +87,7 @@ if (kind === 'control') {
   <DocsLayout title={kind === 'index' ? 'Procedures' : protoName(protoId)}>
     <h1 style="font-size:32px">{kind === 'index' ? 'Procedures' : protoName(protoId)}</h1>
     {kind === 'index' ? (
-      <p class="lead">A <strong>procedure</strong> verifies one thing for a single <strong>protocol × layer</strong> of the <a href="/RFSAM/methodology">descent</a> — a numbered, reproducible method with a real field case, the known attacks with citations, and layered remediation. These are the entries you run during, and cite in, an assessment. Browse by technology in the sidebar, or pick one from the full list below.</p>
+      <p class="lead">A <strong>procedure</strong> verifies one thing for a single <strong>protocol × layer</strong> of the <a href="/RFSAM/methodology">descent</a> — a numbered, reproducible method with a worked field case, the known attacks with citations, and layered remediation. These are the entries you run during, and cite in, an assessment. Browse by technology in the sidebar, or pick one from the full list below.</p>
     ) : (
       <p class="lead">The <strong>{protoName(protoId)}</strong> procedures — the descent for this technology step by step, each with its method, field case, known attacks and remediation.</p>
     )}
@@ -96,7 +96,7 @@ if (kind === 'control') {
       <span class="sep">·</span>
       <span>id = <span class="idfmt">RFSAM-&lt;PROTOCOL&gt;-&lt;LAYER&gt;-NN</span></span>
       <span class="sep">·</span>
-      <span>status <b class="bv">VERIFIED</b> reviewed <b class="bd">DRAFT</b> researched <b class="bs">STUB</b> scaffold</span>
+      <span>status <b class="bv">VERIFIED</b> real field case <b class="br">REVIEWED</b> cited, illustrative field case <b class="bd">DRAFT</b> in progress</span>
     </div>
     <div style="margin-top:14px">
       {listForProto.map((c) => (
@@ -119,7 +119,7 @@ if (kind === 'control') {
   .legend .idfmt { color:var(--mut); }
   .legend .sep { color:var(--line2); }
   .legend b { font-weight:600; margin:0 2px 0 6px; }
-  .legend .bv { color:var(--green); } .legend .bd { color:var(--amber); } .legend .bs { color:var(--mut); }
+  .legend .bv { color:var(--green); } .legend .br { color:var(--cyan); } .legend .bd { color:var(--amber); } .legend .bs { color:var(--mut); }
   .prose :global(h2) { font-family:var(--disp); font-size:18px; margin:30px 0 12px; }
   .prose :global(p) { color:#CFD9E4; line-height:1.7; margin:0 0 14px; }
   .prose :global(ol),.prose :global(ul) { margin:0 0 14px 22px; color:#CFD9E4; line-height:1.7; }

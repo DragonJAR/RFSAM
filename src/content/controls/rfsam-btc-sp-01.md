@@ -114,7 +114,7 @@ bsam:
   - BSAM-IG-01
 resources:
   - RFSAM-RES-26
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

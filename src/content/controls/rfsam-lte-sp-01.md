@@ -95,7 +95,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-08
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

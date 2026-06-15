@@ -130,7 +130,7 @@ bsam:
 resources:
   - RFSAM-RES-04
   - RFSAM-RES-05
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

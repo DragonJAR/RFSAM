@@ -34,6 +34,7 @@ h1,h2,h3 { font-family:var(--disp); letter-spacing:-.01em; }
 .review { font-family:var(--mono); font-size:10px; padding:2px 7px; border-radius:3px; border:1px solid var(--line2); letter-spacing:.06em; }
 .review.stub { color:var(--mut2); }
 .review.draft { color:var(--amber); border-color:var(--amber); }
+.review.reviewed { color:var(--cyan); border-color:var(--cyan); }
 .review.verified { color:var(--green); border-color:var(--green); }
 /* flag admonition (rendered from `> [!FLAG]` blockquotes) */
 blockquote.flag { border-left:3px solid var(--amber); background:rgba(255,194,75,.07);

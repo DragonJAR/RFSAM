@@ -123,7 +123,7 @@ bsam:
   - BSAM-SE-03
 resources:
   - RFSAM-RES-29
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

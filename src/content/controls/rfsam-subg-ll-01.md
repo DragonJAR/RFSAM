@@ -124,7 +124,7 @@ tools:
 bsam: []
 resources:
   - RFSAM-RES-15
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---

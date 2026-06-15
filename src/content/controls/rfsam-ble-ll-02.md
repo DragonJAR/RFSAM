@@ -122,7 +122,7 @@ bsam:
   - BSAM-EN-02
 resources:
   - RFSAM-RES-04
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: medium
 lastResearched: 2026-06-14
 ---

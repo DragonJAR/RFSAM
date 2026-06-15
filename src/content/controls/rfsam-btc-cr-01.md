@@ -129,7 +129,7 @@ bsam:
   - BSAM-EN-03
 resources:
   - RFSAM-RES-27
-reviewStatus: verified
+reviewStatus: reviewed
 confidence: high
 lastResearched: 2026-06-14
 ---
