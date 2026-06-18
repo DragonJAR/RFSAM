@@ -268,6 +268,28 @@ Real capture — a Fudan-based MIFARE Classic 1K clone (FNUID, fixed UID) on the
 
 The finding this records: **every Crypto1 key on a real Classic 1K recovered card-only in 37 seconds** — 15 sectors still on the transport default, and the one non-default key (`8A19D40CF2B5`) recovered by the static-nonce nested attack that plain nested and darkside cannot perform. The card offers no cryptographic protection; with the keys and dump in hand it is fully clonable to a magic Gen1a/Gen2 card or emulated from a Chameleon Ultra (see RFSAM-RES-14). The other nonce classes differ only in the attack chosen: a weak-PRNG card with no default key starts with `hf mf darkside`; a hardened EV1 card uses `hf mf hardnested` seeded with one known key, recovering a target key in about five minutes [`meijer2015hardnested`]; an FM11RF08S clone instead falls to the static-*encrypted*-nonce techniques and the shared hardware backdoor key [`teuwen2024fm11rf08s`].
 
+**A second card makes that last branch concrete — a genuine FM11RF08S.** This case is reconstructed from the saved dump and keyfile, not a live console log (the card was no longer on hand to re-capture the run); the recovery itself is what the artifacts prove — the FM11RF08S tool's `…-nonces_with_data.json` plus a complete 1 KB dump with every key resolved. It reads as a Classic 1K — UID `E2 96 C1 9A`, SAK `08`, ATQA `0004`, block 0 `E296C19A 2F 08 0400 0544FDD8A539F490` — but two things mark it as an FM11RF08S rather than the all-default clone above: the manufacturer bytes are *real* (`0544FDD8A539F490`, not the `bcdefghi` placeholder), and it carries the extra hidden config sector only that chip has. Unlike the Fudan card, it is genuinely keyed — diversified non-default keys on several sectors, with non-default access bits:
+
+```
+sec | key A        | key B        | access | note
+  0 | A0A1A2A3A4A5 | B578F38A5C61 | 787788 | key B non-default
+  1 | D203A62D6106 | 602A34A75AA4 | 787788 | both non-default
+  2 | A0A1A2A3A4A5 | 0000014B5C31 | 0F00FF | key B non-default
+  6 | FFFFFFFFFFFF | 96A301BCE267 | 0F00FF | key B non-default
+  3–5, 7–15        | default FFFFFFFFFFFF / FFFFFFFFFFFF
+  hidden config sector | key A 3E64977BDF58 | key B 00005BF0055A
+```
+
+Those keys are not guessable and there is no weak or predictable nonce to attack — the static-encrypted-nonce countermeasure was built specifically to defeat darkside, nested and hardnested alike. The FM11RF08S break sidesteps all three: a hardware backdoor key shared across the product line authenticates to the sectors without the user keys, exposes each sector's static encrypted nonce (the values the `nonces_with_data.json` recorded), and from those the user keys fall in a few minutes of card access [`teuwen2024fm11rf08s`, `teuwen2024blog`]. The saved artifacts are exactly that outcome — all 16 sector keys plus the hidden sector recovered, and the full 1 KB read, including the high-entropy sector-1 payload that was only readable once its non-default keys fell:
+
+```
+blk 4 (sec 1): 0B54C20A3DD92C5DC8E72B430EA01D9A
+blk 5 (sec 1): E565FA30CF15A6DEA2D4F0B734028E7F
+blk 6 (sec 1): 409B343083DE680526A03200FEFD0EA2
+```
+
+The finding this second case records: *a card sold as a hardened, non-cloneable MIFARE Classic — real diversified keys, non-default access bits, the static-encrypted-nonce defence — still surrenders every key to the shared FM11RF08S backdoor.* That is the whole lesson of the FM11RF08S story, and the reason the remediation below is the same for it as for the trivial clone: no Crypto1-compatible countermeasure, not even this one, has held.
+
 ## Remediation
 
 **Developer / product team.** Do not design new systems on MIFARE Classic or any Crypto1-compatible card (including MIFARE Plus operated in SL1 and "MIFARE-compatible" clones). Crypto1 is broken by design — a 48-bit key with a parity keystream leak — and no card-only countermeasure has held: even the static-encrypted-nonce FM11RF08S fell and shipped with a shared hardware backdoor [`teuwen2024fm11rf08s`]. Specify audited cryptographic credentials (MIFARE DESFire EV2/EV3 with AES, or equivalent) with per-card diversified keys and challenge-response that binds to card-authenticated data, not to the UID.
