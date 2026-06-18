@@ -255,6 +255,17 @@ Real capture — a Fudan-based MIFARE Classic 1K clone (FNUID, fixed UID) on the
    [=] Autopwn execution time: 37 seconds
    ```
 
+4. Reading the dump back (`hf mf dump`, then `hf mf view`) shows *why* the static-nonce attack earned its keep: the one key that wasn't the default — sector 1's `8A19D40CF2B5` — also guards the only sector on the card that holds data. Its trailer carries the recovered key in situ, and blocks 4–6 are the only non-zero bytes anywhere on the card:
+   ```
+   [=]  sec | blk | data                                            | ascii
+   [=]    0 |   0 | 8F 05 E5 D8 B7 08 04 00 62 63 64 65 66 67 68 69 | ........bcdefghi
+   [=]    1 |   4 | 4D B2 00 00 00 00 00 00 00 00 00 00 00 00 00 00 | M...............
+   [=]      |   5 | 00 20 12 C1 82 00 0E E8 3C F9 EF 31 9A B2 11 00 | . ......<..1....
+   [=]      |   6 | 9E 84 FF 6D 03 BE 00 00 00 00 00 00 00 00 00 00 | ...m............
+   [=]      |   7 | 8A 19 D4 0C F2 B5 FF 07 80 69 8A 19 D4 0C F2 B5 | .........i......
+   ```
+   Block 7 is sector 1's trailer: key A `8A19D40CF2B5`, access bits `FF 07 80`, GPB `69`, key B `8A19D40CF2B5` — the staticnested-recovered key, now readable on the card. Every other sector (0, 2–15) is blank data behind the default trailer `FF FF FF FF FF FF FF 07 80 69 FF FF FF FF FF FF`. The sector-1 bytes are an opaque application payload — recorded as captured, not interpreted.
+
 The finding this records: **every Crypto1 key on a real Classic 1K recovered card-only in 37 seconds** — 15 sectors still on the transport default, and the one non-default key (`8A19D40CF2B5`) recovered by the static-nonce nested attack that plain nested and darkside cannot perform. The card offers no cryptographic protection; with the keys and dump in hand it is fully clonable to a magic Gen1a/Gen2 card or emulated from a Chameleon Ultra (see RFSAM-RES-14). The other nonce classes differ only in the attack chosen: a weak-PRNG card with no default key starts with `hf mf darkside`; a hardened EV1 card uses `hf mf hardnested` seeded with one known key, recovering a target key in about five minutes [`meijer2015hardnested`]; an FM11RF08S clone instead falls to the static-*encrypted*-nonce techniques and the shared hardware backdoor key [`teuwen2024fm11rf08s`].
 
 ## Remediation
